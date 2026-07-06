@@ -7,11 +7,14 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Mimo">
-<meta name="theme-color" content="#fdd6c7">
+<meta name="theme-color" content="#ffd9ae">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" type="image/png" href="icon-180.png">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=2">
 </head>
 <body>
 
@@ -57,9 +60,34 @@
   </header>
 
   <section class="stage">
+    <svg class="scene" viewBox="0 0 480 300" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+      <circle class="sc-sun" cx="390" cy="70" r="30"/>
+      <g class="sc-moonstars">
+        <circle class="sc-moon" cx="388" cy="58" r="22"/>
+        <circle class="sc-moon-crater" cx="380" cy="52" r="5"/>
+        <circle class="sc-moon-crater" cx="396" cy="64" r="3.4"/>
+        <g class="sc-stars">
+          <circle cx="60" cy="50" r="2.4"/><circle cx="140" cy="30" r="1.8"/><circle cx="230" cy="62" r="2.2"/>
+          <circle cx="300" cy="26" r="1.7"/><circle cx="90" cy="110" r="1.6"/><circle cx="330" cy="96" r="2"/>
+          <circle cx="440" cy="130" r="1.7"/><circle cx="190" cy="104" r="1.5"/><circle cx="40" cy="160" r="1.8"/>
+        </g>
+      </g>
+      <g class="sc-clouds">
+        <g class="cloud cloud-a"><ellipse cx="0" cy="0" rx="42" ry="16"/><ellipse cx="-26" cy="6" rx="26" ry="12"/><ellipse cx="28" cy="7" rx="24" ry="11"/></g>
+        <g class="cloud cloud-b"><ellipse cx="0" cy="0" rx="34" ry="13"/><ellipse cx="-22" cy="5" rx="20" ry="10"/><ellipse cx="22" cy="6" rx="19" ry="9"/></g>
+      </g>
+      <path class="hill hill-3" d="M0,215 C90,168 180,192 260,181 C350,169 420,186 480,172 L480,300 L0,300 Z"/>
+      <path class="hill hill-2" d="M0,244 C70,214 170,236 250,226 C340,215 410,238 480,222 L480,300 L0,300 Z"/>
+      <g class="sc-bush"><ellipse cx="64" cy="252" rx="26" ry="17"/><ellipse cx="86" cy="258" rx="20" ry="13"/></g>
+      <path class="hill hill-1" d="M0,278 C90,252 200,272 290,264 C380,257 440,272 480,262 L480,300 L0,300 Z"/>
+      <g class="sc-flowers">
+        <g transform="translate(96 282)"><circle r="4.5" class="fl-a"/><circle cx="-9" cy="3" r="3" class="fl-leaf"/></g>
+        <g transform="translate(372 288)"><circle r="4" class="fl-b"/></g>
+        <g transform="translate(416 276)"><circle r="3.4" class="fl-a"/></g>
+        <g transform="translate(52 292)"><circle r="3.2" class="fl-b"/></g>
+      </g>
+    </svg>
     <div class="aura" id="moodAura"></div>
-    <div class="hill hill-back"></div>
-    <div class="hill hill-front"></div>
     <div class="bubble hidden" id="speechBubble"><span id="speechText"></span><i></i></div>
     <div id="petMount" class="pet-mount"></div>
     <div class="wake-hint hidden" id="wakeHint">Tippen zum Aufwecken</div>
@@ -72,10 +100,14 @@
   </section>
 
   <section class="card rings-card">
-    <div class="stat-ring" data-stat="energie"><svg viewBox="0 0 52 52"><circle class="ring-bg" cx="26" cy="26" r="21"/><circle class="ring-fg" cx="26" cy="26" r="21"/></svg><em>&#9889;</em><label>Energie</label></div>
-    <div class="stat-ring" data-stat="laune"><svg viewBox="0 0 52 52"><circle class="ring-bg" cx="26" cy="26" r="21"/><circle class="ring-fg" cx="26" cy="26" r="21"/></svg><em>&#9786;</em><label>Laune</label></div>
-    <div class="stat-ring" data-stat="saettigung"><svg viewBox="0 0 52 52"><circle class="ring-bg" cx="26" cy="26" r="21"/><circle class="ring-fg" cx="26" cy="26" r="21"/></svg><em>&#127860;</em><label>Sättigung</label></div>
-    <div class="stat-ring" data-stat="bond"><svg viewBox="0 0 52 52"><circle class="ring-bg" cx="26" cy="26" r="21"/><circle class="ring-fg" cx="26" cy="26" r="21"/></svg><em>&#9825;</em><label>Bond</label></div>
+    <div class="stat-ring" data-stat="energie"><svg viewBox="0 0 52 52"><circle class="ring-bg" cx="26" cy="26" r="21"/><circle class="ring-fg" cx="26" cy="26" r="21"/></svg>
+      <em><svg viewBox="0 0 24 24"><path d="M13 2 L5 14 h5 l-1 8 8-12 h-5 z"/></svg></em><label>Energie</label></div>
+    <div class="stat-ring" data-stat="laune"><svg viewBox="0 0 52 52"><circle class="ring-bg" cx="26" cy="26" r="21"/><circle class="ring-fg" cx="26" cy="26" r="21"/></svg>
+      <em><svg viewBox="0 0 24 24"><circle cx="8.5" cy="10" r="1.6"/><circle cx="15.5" cy="10" r="1.6"/><path d="M8 14.5 q4 3.4 8 0" fill="none" stroke-width="1.8" stroke-linecap="round"/></svg></em><label>Laune</label></div>
+    <div class="stat-ring" data-stat="saettigung"><svg viewBox="0 0 52 52"><circle class="ring-bg" cx="26" cy="26" r="21"/><circle class="ring-fg" cx="26" cy="26" r="21"/></svg>
+      <em><svg viewBox="0 0 24 24"><path d="M7 3 v7 M10 3 v7 M8.5 3 v18 M16.5 3 c-2 0-3 2.6-3 6 0 2.4 1 3.4 2 3.8 V21 h2 V3 z"/></svg></em><label>Sättigung</label></div>
+    <div class="stat-ring" data-stat="bond"><svg viewBox="0 0 52 52"><circle class="ring-bg" cx="26" cy="26" r="21"/><circle class="ring-fg" cx="26" cy="26" r="21"/></svg>
+      <em><svg viewBox="0 0 24 24"><path d="M12 20 C5 14.4 3.4 10.6 5.4 7.6 7 5.2 10.4 5.4 12 8 c1.6-2.6 5-2.8 6.6-0.4 2 3-0.4 6.8-6.6 12.4 z"/></svg></em><label>Bond</label></div>
   </section>
 
   <section class="card" id="questsCard">
@@ -84,31 +116,103 @@
   </section>
 
   <section class="action-grid">
-    <button class="action" data-action="streicheln"><span class="orb">&#10047;</span>Streicheln</button>
-    <button class="action" data-action="feed"><span class="orb">&#127860;</span>Füttern</button>
-    <button class="action" data-action="game"><span class="orb">&#9733;</span>Spielen</button>
-    <button class="action" data-action="talk"><span class="orb">&#128172;</span>Reden</button>
-    <button class="action" data-action="schlafen"><span class="orb">&#9789;</span>Schlafen</button>
-    <button class="action action-checkin" id="checkinBtn" data-action="checkin"><span class="orb orb-accent">&#10003;</span>Check-in</button>
+    <button class="action" data-action="streicheln"><span class="orb"><svg viewBox="0 0 24 24"><path d="M12 20 C5 14.4 3.4 10.6 5.4 7.6 7 5.2 10.4 5.4 12 8 c1.6-2.6 5-2.8 6.6-0.4 2 3-0.4 6.8-6.6 12.4 z"/></svg></span>Streicheln</button>
+    <button class="action" data-action="feed"><span class="orb"><svg viewBox="0 0 24 24"><path d="M4 11 h16 a8 8 0 0 1 -16 0 z"/><path d="M8 8 q1-2.4 4-2.4 T16 8" fill="none" stroke-width="1.8" stroke-linecap="round"/></svg></span>Füttern</button>
+    <button class="action" data-action="game"><span class="orb"><svg viewBox="0 0 24 24"><path d="M12 2.8 l2.5 5.6 6.1 0.6 -4.6 4.1 1.3 6 -5.3-3.1 -5.3 3.1 1.3-6 -4.6-4.1 6.1-0.6 z"/></svg></span>Spielen</button>
+    <button class="action" data-action="talk"><span class="orb"><svg viewBox="0 0 24 24"><path d="M12 4 c-4.7 0-8.5 3-8.5 6.8 0 2.2 1.3 4.2 3.3 5.4 L6 20.5 l4.1-2 c0.6 0.1 1.2 0.2 1.9 0.2 4.7 0 8.5-3 8.5-6.9 S16.7 4 12 4 z"/></svg></span>Reden</button>
+    <button class="action" data-action="schlafen"><span class="orb"><svg viewBox="0 0 24 24"><path d="M19.5 14.5 A8.5 8.5 0 1 1 9.5 4.5 7 7 0 0 0 19.5 14.5 z"/></svg></span>Schlafen</button>
+    <button class="action action-checkin" id="checkinBtn" data-action="checkin"><span class="orb orb-accent"><svg viewBox="0 0 24 24"><path d="M4.5 12.5 l5 5 L19.5 7.5" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Check-in</button>
   </section>
 </main>
 
 <!-- ===== Room ===== -->
 <main id="screen-room" class="screen hidden">
   <h1 class="serif screen-title" id="roomTitle">Mimos Zuhause</h1>
-  <section class="room-scene" id="roomScene">
-    <div class="room-wall"></div>
-    <div class="room-floor"></div>
-    <div class="room-skirting"></div>
-    <div class="frame" title="Selbstportrait"><div class="frame-inner"><span class="frame-blob"></span></div></div>
-    <div class="window"><div class="win-sky"></div><div class="win-sun"></div><div class="win-moon hidden"></div><div class="win-stars hidden"></div><div class="win-cross-v"></div><div class="win-cross-h"></div></div>
-    <div class="deco star-window hidden" id="decoStarwin"><span></span><span></span><span></span><span></span><span></span></div>
-    <div class="deco lamp hidden" id="decoLampe"><div class="lamp-glow"></div><div class="lamp-head"></div><div class="lamp-pole"></div><div class="lamp-foot"></div></div>
-    <div class="deco plant hidden" id="decoPflanze"><div class="leaves"><i></i><i></i><i></i></div><div class="pot"></div></div>
-    <div class="rug"></div>
-    <div class="deco pillow hidden" id="decoKissen"></div>
+  <section class="room-scene">
+    <svg class="room-svg" viewBox="0 0 420 380" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <defs>
+        <pattern id="wallDots" width="34" height="34" patternUnits="userSpaceOnUse">
+          <circle cx="8" cy="8" r="2.6" class="wp-dot"/><circle cx="25" cy="25" r="2.6" class="wp-dot"/>
+        </pattern>
+        <radialGradient id="lampGlowG" cx="0.5" cy="0.5" r="0.5">
+          <stop offset="0" stop-color="#ffdf9a" stop-opacity="0.75"/><stop offset="1" stop-color="#ffdf9a" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+      <rect class="room-wall" x="0" y="0" width="420" height="272"/>
+      <rect x="0" y="0" width="420" height="272" fill="url(#wallDots)"/>
+      <path class="room-floor" d="M0,272 L420,272 L420,380 L0,380 Z"/>
+      <ellipse class="floor-sheen" cx="210" cy="300" rx="200" ry="26"/>
+      <rect class="room-skirt" x="0" y="266" width="420" height="8" rx="4"/>
+
+      <!-- Fenster mit Vorhaengen -->
+      <g class="win" transform="translate(52 46)">
+        <rect x="-7" y="-7" width="118" height="102" rx="16" class="win-frame"/>
+        <rect x="0" y="0" width="104" height="88" rx="10" class="win-sky"/>
+        <circle class="win-sun" cx="76" cy="26" r="13"/>
+        <g class="win-night">
+          <circle class="win-moon" cx="78" cy="24" r="10"/>
+          <g class="win-stars"><circle cx="20" cy="18" r="1.8"/><circle cx="42" cy="40" r="1.5"/><circle cx="60" cy="14" r="1.4"/><circle cx="30" cy="62" r="1.6"/></g>
+        </g>
+        <rect x="48.5" y="0" width="7" height="88" class="win-bar"/>
+        <rect x="0" y="40.5" width="104" height="7" class="win-bar"/>
+        <path class="curtain" d="M-12,-10 C-2,26 -8,60 -14,96 L-24,96 C-20,58 -24,24 -26,-10 Z"/>
+        <path class="curtain" d="M116,-10 C106,26 112,60 118,96 L128,96 C124,58 128,24 130,-10 Z"/>
+        <rect x="-28" y="-14" width="160" height="9" rx="4.5" class="curtain-rod"/>
+      </g>
+
+      <!-- Bilderrahmen -->
+      <g transform="translate(300 64) rotate(-2)">
+        <rect x="-27" y="-32" width="54" height="64" rx="7" class="frame-wood"/>
+        <rect x="-20" y="-25" width="40" height="50" rx="4" class="frame-paper"/>
+        <ellipse cx="0" cy="2" rx="13" ry="12" class="frame-pet"/>
+        <ellipse cx="-8" cy="-9" rx="4" ry="5.4" class="frame-pet"/>
+        <ellipse cx="8" cy="-9" rx="4" ry="5.4" class="frame-pet"/>
+        <circle cx="-4.5" cy="0" r="1.7" class="frame-ink"/><circle cx="4.5" cy="0" r="1.7" class="frame-ink"/>
+        <path d="M-3.5,5 Q0,7.6 3.5,5" fill="none" class="frame-smile"/>
+      </g>
+
+      <!-- Sternenfenster (Level 5) -->
+      <g class="hidden" id="decoStarwin" transform="translate(330 160)">
+        <circle r="42" class="starwin-frame"/>
+        <circle r="34" class="starwin-sky"/>
+        <circle cx="-12" cy="-10" r="2.2" class="starwin-star"/><circle cx="10" cy="-16" r="1.7" class="starwin-star"/>
+        <circle cx="16" cy="6" r="2" class="starwin-star"/><circle cx="-4" cy="12" r="1.6" class="starwin-star"/>
+        <circle cx="-18" cy="8" r="1.4" class="starwin-star"/>
+        <path d="M2,-4 l1.4,3 3.2,0.3 -2.4,2.2 0.7,3.1 -2.9-1.7 -2.9,1.7 0.7-3.1 -2.4-2.2 3.2-0.3 z" class="starwin-star"/>
+      </g>
+
+      <!-- Lampe (Level 4) -->
+      <g class="hidden" id="decoLampe" transform="translate(368 210)">
+        <circle class="lamp-glow" cx="0" cy="-6" r="58" fill="url(#lampGlowG)"/>
+        <path d="M-20,4 L20,4 L12,-24 L-12,-24 Z" class="lamp-shade"/>
+        <rect x="-2.5" y="4" width="5" height="76" class="lamp-pole"/>
+        <ellipse cx="0" cy="82" rx="17" ry="5.5" class="lamp-pole"/>
+        <circle cx="0" cy="-2" r="6" class="lamp-bulb"/>
+      </g>
+
+      <!-- Pflanze (Level 3) -->
+      <g class="hidden" id="decoPflanze" transform="translate(74 246)">
+        <path d="M0,-6 C-4,-30 -20,-38 -26,-52 C-8,-46 -2,-30 0,-18 Z" class="leaf leaf-d"/>
+        <path d="M0,-6 C4,-30 20,-38 26,-52 C8,-46 2,-30 0,-18 Z" class="leaf leaf-d"/>
+        <path d="M0,-4 C-1,-28 -4,-44 0,-60 C4,-44 1,-28 0,-4 Z" class="leaf"/>
+        <path d="M-15,3 L15,3 L11,34 L-11,34 Z" class="pot"/>
+        <rect x="-17" y="0" width="34" height="8" rx="4" class="pot-rim"/>
+      </g>
+
+      <!-- Teppich -->
+      <ellipse cx="210" cy="316" rx="118" ry="34" class="rug-a"/>
+      <ellipse cx="210" cy="316" rx="92" ry="25" class="rug-b"/>
+      <ellipse cx="210" cy="316" rx="64" ry="17" class="rug-c"/>
+
+      <!-- Kissen (Level 2) -->
+      <g class="hidden" id="decoKissen" transform="translate(316 300) rotate(4)">
+        <rect x="-40" y="-19" width="80" height="38" rx="17" class="pillow"/>
+        <rect x="-33" y="-13" width="66" height="26" rx="12" class="pillow-inner"/>
+        <circle r="4" class="pillow-btn"/>
+      </g>
+      <rect class="room-vignette" x="0" y="0" width="420" height="380" rx="0"/>
+    </svg>
     <div id="roomPetMount" class="room-pet"></div>
-    <div class="vignette"></div>
   </section>
   <section class="card">
     <div class="card-head"><span class="section-label">Garderobe</span></div>
@@ -146,8 +250,8 @@
   <section class="tiles">
     <div class="tile"><em>&#9825;</em><strong id="tileBond">0</strong><label>Bond</label></div>
     <div class="tile"><em>&#10022;</em><strong id="tileXp">0</strong><label>XP gesamt</label></div>
-    <div class="tile"><em>&#128214;</em><strong id="tileDiary">0</strong><label>Einträge</label></div>
-    <div class="tile"><em>&#127942;</em><strong id="tileBest">0</strong><label>Rekord</label></div>
+    <div class="tile"><em>&#9998;</em><strong id="tileDiary">0</strong><label>Einträge</label></div>
+    <div class="tile"><em>&#9733;</em><strong id="tileBest">0</strong><label>Rekord</label></div>
   </section>
   <section class="card">
     <div class="card-head"><span class="section-label">Persönlichkeit</span></div>
@@ -167,28 +271,31 @@
 <!-- ===== Dock ===== -->
 <nav id="dock" class="hidden">
   <span class="dock-pill" id="dockPill"></span>
-  <button data-tab="home" class="active"><em>&#8962;</em>Home</button>
-  <button data-tab="room"><em>&#128715;</em>Room</button>
-  <button data-tab="diary"><em>&#128214;</em>Diary</button>
-  <button data-tab="profile"><em>&#9786;</em>Profil</button>
+  <button data-tab="home" class="active"><em><svg viewBox="0 0 24 24"><path d="M4 11.5 L12 4.5 20 11.5 V20 a1 1 0 0 1 -1 1 H15 v-5.5 h-6 V21 H5 a1 1 0 0 1 -1-1 z"/></svg></em>Home</button>
+  <button data-tab="room"><em><svg viewBox="0 0 24 24"><path d="M5 10 V7 a3 3 0 0 1 3-3 h8 a3 3 0 0 1 3 3 v3 M4 10 a2 2 0 0 1 2 2 v2 h12 v-2 a2 2 0 0 1 4 0 v6 h-2.5 v-2 h-15 v2 H2 v-6 a2 2 0 0 1 2-2 z"/></svg></em>Room</button>
+  <button data-tab="diary"><em><svg viewBox="0 0 24 24"><path d="M5 4 h10 a3 3 0 0 1 3 3 v13 H8 a3 3 0 0 0 -3 3 z M5 4 v16 a3 3 0 0 1 3-3 h10"/></svg></em>Diary</button>
+  <button data-tab="profile"><em><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 20 c1.4-4 4-6 7.5-6 s6.1 2 7.5 6 z"/></svg></em>Profil</button>
 </nav>
 
 <!-- ===== Sheets ===== -->
 <div class="sheet-backdrop hidden" id="sheetBackdrop"></div>
 
 <div class="sheet hidden" id="sheet-checkin">
+  <div class="sheet-grip"></div>
   <h2 class="serif">Wie war dein Tag?</h2>
   <p class="muted" id="checkinSub"></p>
   <div class="sheet-options" id="checkinOptions"></div>
 </div>
 
 <div class="sheet hidden" id="sheet-feed">
+  <div class="sheet-grip"></div>
   <h2 class="serif">Was gibt es heute?</h2>
   <p class="muted" id="feedSub"></p>
   <div class="feed-grid" id="feedGrid"></div>
 </div>
 
 <div class="sheet hidden" id="sheet-talk">
+  <div class="sheet-grip"></div>
   <h2 class="serif">Worüber wollt ihr reden?</h2>
   <p class="muted" id="talkSub"></p>
   <div class="sheet-options" id="talkOptions"></div>
@@ -199,7 +306,7 @@
   <canvas id="gameCanvas"></canvas>
   <div class="game-hud">
     <span class="hud-chip">&#9733; <b id="gameScore">0</b></span>
-    <span class="hud-chip">&#9200; <b id="gameTime">30</b>s</span>
+    <span class="hud-chip"><b id="gameTime">30</b>s</span>
     <button id="gameClose" class="hud-close">&#10005;</button>
   </div>
   <div class="game-panel" id="gameReady">
@@ -210,7 +317,7 @@
   </div>
   <div class="game-panel hidden" id="gameFinished">
     <h2 class="serif big" id="gameFinalScore">0 Sterne</h2>
-    <span class="chip hidden" id="gameNewBest">&#127942; Neuer Rekord</span>
+    <span class="chip hidden" id="gameNewBest">Neuer Rekord</span>
     <p class="muted" id="gameBestText"></p>
     <div class="row">
       <button class="btn-ghost" id="gameAgain">Nochmal</button>
@@ -233,7 +340,7 @@
 <!-- ===== Toast ===== -->
 <div id="toast" class="hidden"><span class="toast-icon" id="toastIcon">&#10022;</span><div><strong id="toastTitle"></strong><p id="toastDetail"></p></div></div>
 
-<script src="data.js"></script>
-<script src="app.js"></script>
+<script src="data.js?v=2"></script>
+<script src="app.js?v=2"></script>
 </body>
 </html>

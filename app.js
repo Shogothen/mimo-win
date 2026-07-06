@@ -435,82 +435,104 @@ function playSound(kind) {
 const petInstances = [];
 
 function createPet(mount, size, opts = {}) {
-  const NS = "http://www.w3.org/2000/svg";
   const uid = "p" + Math.random().toString(36).slice(2, 8);
   mount.innerHTML = `
-  <svg class="pet" width="${size}" height="${size * 0.92}" viewBox="0 0 260 240">
+  <svg class="pet" width="${size}" height="${size * 0.96}" viewBox="0 0 260 250">
     <defs>
-      <linearGradient id="g${uid}" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stop-color="#fcbd87"/><stop offset="1" stop-color="#f2916b"/>
+      <radialGradient id="gb${uid}" cx="0.38" cy="0.26" r="0.95">
+        <stop offset="0" stop-color="#ffdfae"/><stop offset="0.55" stop-color="#fdbb80"/><stop offset="1" stop-color="#ef8d5c"/>
+      </radialGradient>
+      <linearGradient id="gy${uid}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#fff3d9"/><stop offset="1" stop-color="#ffdcae"/>
       </linearGradient>
+      <filter id="soft${uid}" x="-40%" y="-40%" width="180%" height="180%">
+        <feGaussianBlur stdDeviation="9"/>
+      </filter>
     </defs>
-    <ellipse class="shadow" cx="130" cy="224" rx="72" ry="12" fill="#42303a" opacity="0.14"/>
+    <ellipse class="shadow" cx="130" cy="234" rx="68" ry="11" fill="#3a2434" opacity="0.18"/>
     <g class="breath"><g class="squishwrap"><g class="hop">
-      <ellipse cx="76" cy="46" rx="20" ry="27" fill="#f2916b"/>
-      <ellipse cx="184" cy="46" rx="20" ry="27" fill="#f2916b"/>
-      <g class="arms">
-        <rect class="armL" x="14" y="120" width="26" height="56" rx="13" fill="#f2916b"/>
-        <rect class="armR" x="220" y="120" width="26" height="56" rx="13" fill="#f2916b"/>
+      <g class="earL" transform="rotate(-6 84 66)">
+        <ellipse cx="84" cy="58" rx="21" ry="28" fill="#f79a67"/>
+        <ellipse cx="84" cy="62" rx="11" ry="16" fill="#ef7a52"/>
       </g>
-      <path class="blob" fill="url(#g${uid})" d=""/>
-      <ellipse cx="92" cy="66" rx="42" ry="22" fill="#fff" opacity="0.35" transform="rotate(-18 92 66)"/>
-      <ellipse cx="58" cy="140" rx="15" ry="9" fill="#f78c7a" opacity="0.5"/>
-      <ellipse cx="202" cy="140" rx="15" ry="9" fill="#f78c7a" opacity="0.5"/>
+      <g class="earR" transform="rotate(6 176 66)">
+        <ellipse cx="176" cy="58" rx="21" ry="28" fill="#f79a67"/>
+        <ellipse cx="176" cy="62" rx="11" ry="16" fill="#ef7a52"/>
+      </g>
+      <ellipse class="armL" cx="42" cy="152" rx="15" ry="22" fill="#f9a873"/>
+      <ellipse class="armR" cx="218" cy="152" rx="15" ry="22" fill="#f9a873"/>
+      <path class="blob" fill="url(#gb${uid})" d=""/>
+      <ellipse cx="130" cy="182" rx="80" ry="44" fill="#e2703f" opacity="0.26" filter="url(#soft${uid})"/>
+      <ellipse cx="130" cy="160" rx="50" ry="37" fill="url(#gy${uid})" opacity="0.95"/>
+      <ellipse cx="98" cy="68" rx="44" ry="19" fill="#ffffff" opacity="0.5" transform="rotate(-19 98 68)"/>
+      <ellipse cx="102" cy="212" rx="15" ry="9" fill="#ef8d5c"/>
+      <ellipse cx="158" cy="212" rx="15" ry="9" fill="#ef8d5c"/>
+      <ellipse cx="72" cy="146" rx="15" ry="10" fill="#ff8b76" opacity="0.6"/>
+      <ellipse cx="188" cy="146" rx="15" ry="10" fill="#ff8b76" opacity="0.6"/>
       <g class="eyes">
         <g class="eye-normal">
-          <circle cx="96" cy="104" r="11" fill="#42303a"/><circle cx="92" cy="100" r="3.4" fill="#fff"/>
-          <circle cx="164" cy="104" r="11" fill="#42303a"/><circle cx="160" cy="100" r="3.4" fill="#fff"/>
+          <ellipse cx="98" cy="112" rx="11.5" ry="13.5" fill="#3a2531"/>
+          <circle cx="94" cy="106" r="4.6" fill="#fff"/><circle cx="102" cy="117" r="2.1" fill="#fff" opacity="0.8"/>
+          <ellipse cx="162" cy="112" rx="11.5" ry="13.5" fill="#3a2531"/>
+          <circle cx="158" cy="106" r="4.6" fill="#fff"/><circle cx="166" cy="117" r="2.1" fill="#fff" opacity="0.8"/>
         </g>
         <g class="eye-big hidden">
-          <circle cx="96" cy="104" r="14" fill="#42303a"/><circle cx="91" cy="99" r="4.5" fill="#fff"/>
-          <circle cx="164" cy="104" r="14" fill="#42303a"/><circle cx="159" cy="99" r="4.5" fill="#fff"/>
+          <ellipse cx="98" cy="112" rx="14" ry="16" fill="#3a2531"/>
+          <circle cx="93" cy="105" r="5.6" fill="#fff"/><circle cx="103" cy="118" r="2.5" fill="#fff" opacity="0.8"/>
+          <ellipse cx="162" cy="112" rx="14" ry="16" fill="#3a2531"/>
+          <circle cx="157" cy="105" r="5.6" fill="#fff"/><circle cx="167" cy="118" r="2.5" fill="#fff" opacity="0.8"/>
         </g>
         <g class="eye-lid hidden">
-          <rect x="84" y="100" width="26" height="8" rx="4" fill="#42303a"/>
-          <rect x="150" y="100" width="26" height="8" rx="4" fill="#42303a"/>
+          <rect x="86" y="108" width="26" height="9" rx="4.5" fill="#3a2531"/>
+          <rect x="148" y="108" width="26" height="9" rx="4.5" fill="#3a2531"/>
         </g>
         <g class="eye-sly hidden">
-          <rect x="85" y="98" width="24" height="12" rx="6" fill="#42303a" transform="rotate(-12 97 104)"/>
-          <rect x="151" y="98" width="24" height="12" rx="6" fill="#42303a" transform="rotate(-12 163 104)"/>
+          <rect x="86" y="106" width="25" height="12" rx="6" fill="#3a2531" transform="rotate(-11 98 112)"/>
+          <rect x="149" y="106" width="25" height="12" rx="6" fill="#3a2531" transform="rotate(-11 161 112)"/>
         </g>
         <g class="eye-closed hidden">
-          <path d="M 84 104 Q 96 112 108 104" stroke="#42303a" stroke-width="5" fill="none" stroke-linecap="round"/>
-          <path d="M 152 104 Q 164 112 176 104" stroke="#42303a" stroke-width="5" fill="none" stroke-linecap="round"/>
+          <path d="M 86 112 Q 98 121 110 112" stroke="#3a2531" stroke-width="5.5" fill="none" stroke-linecap="round"/>
+          <path d="M 150 112 Q 162 121 174 112" stroke="#3a2531" stroke-width="5.5" fill="none" stroke-linecap="round"/>
         </g>
       </g>
       <g class="mouths">
-        <path class="m-smile" d="M 112 136 Q 130 152 148 136" stroke="#42303a" stroke-width="5" fill="none" stroke-linecap="round"/>
-        <path class="m-small hidden" d="M 118 138 Q 130 147 142 138" stroke="#42303a" stroke-width="4.5" fill="none" stroke-linecap="round"/>
-        <ellipse class="m-open hidden" cx="130" cy="141" rx="12" ry="11" fill="#42303a"/>
-        <rect class="m-flat hidden" x="117" y="138" width="26" height="5" rx="2.5" fill="#42303a"/>
-        <circle class="m-sleep hidden" cx="130" cy="141" r="5" fill="#42303a" opacity="0.85"/>
+        <path class="m-smile" d="M 112 142 Q 130 158 148 142" stroke="#6e3a3e" stroke-width="5" fill="none" stroke-linecap="round"/>
+        <path class="m-small hidden" d="M 118 144 Q 130 153 142 144" stroke="#6e3a3e" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+        <g class="m-open hidden">
+          <path d="M 113 141 Q 130 166 147 141 Q 130 149 113 141 Z" fill="#6e3a3e"/>
+          <ellipse cx="130" cy="152" rx="8" ry="4.6" fill="#ff8b76"/>
+        </g>
+        <rect class="m-flat hidden" x="117" y="143" width="26" height="5" rx="2.5" fill="#6e3a3e"/>
+        <circle class="m-sleep hidden" cx="130" cy="146" r="5" fill="#6e3a3e" opacity="0.85"/>
       </g>
       <g class="hats">
-        <g class="hat-schleife hidden" transform="translate(178 30) rotate(12)">
-          <ellipse cx="-14" cy="0" rx="16" ry="10" fill="#9e486b" transform="rotate(-28)"/>
-          <ellipse cx="14" cy="0" rx="16" ry="10" fill="#9e486b" transform="rotate(28)"/>
-          <circle cx="0" cy="0" r="6.5" fill="#6e2447"/>
+        <g class="hat-schleife hidden" transform="translate(176 32) rotate(14)">
+          <ellipse cx="-15" cy="0" rx="17" ry="10.5" fill="#b0507a" transform="rotate(-28)"/>
+          <ellipse cx="15" cy="0" rx="17" ry="10.5" fill="#b0507a" transform="rotate(28)"/>
+          <circle cx="0" cy="0" r="7" fill="#8a3a5f"/>
         </g>
         <g class="hat-muetze hidden">
-          <path d="M 86 34 Q 130 -14 174 34 L 174 40 L 86 40 Z" fill="#9e486b"/>
-          <rect x="82" y="36" width="96" height="12" rx="6" fill="#6e2447"/>
-          <circle cx="130" cy="-4" r="9" fill="#fff"/>
+          <path d="M 88 40 Q 130 -12 172 40 L 172 46 L 88 46 Z" fill="#b0507a"/>
+          <rect x="84" y="42" width="92" height="12" rx="6" fill="#8a3a5f"/>
+          <circle cx="130" cy="-2" r="9" fill="#fffdf6"/>
         </g>
-        <g class="hat-blume hidden" transform="translate(82 26)">
-          <ellipse cx="0" cy="-11" rx="7" ry="11" fill="#fff"/>
-          <ellipse cx="0" cy="-11" rx="7" ry="11" fill="#fff" transform="rotate(72)"/>
-          <ellipse cx="0" cy="-11" rx="7" ry="11" fill="#fff" transform="rotate(144)"/>
-          <ellipse cx="0" cy="-11" rx="7" ry="11" fill="#fff" transform="rotate(216)"/>
-          <ellipse cx="0" cy="-11" rx="7" ry="11" fill="#fff" transform="rotate(288)"/>
+        <g class="hat-blume hidden" transform="translate(84 26)">
+          <ellipse cx="0" cy="-11" rx="7" ry="11" fill="#fffdf6"/>
+          <ellipse cx="0" cy="-11" rx="7" ry="11" fill="#fffdf6" transform="rotate(72)"/>
+          <ellipse cx="0" cy="-11" rx="7" ry="11" fill="#fffdf6" transform="rotate(144)"/>
+          <ellipse cx="0" cy="-11" rx="7" ry="11" fill="#fffdf6" transform="rotate(216)"/>
+          <ellipse cx="0" cy="-11" rx="7" ry="11" fill="#fffdf6" transform="rotate(288)"/>
           <circle r="7" fill="#f2c237"/>
         </g>
         <g class="hat-krone hidden">
-          <path d="M 96 36 L 96 12 L 112 24 L 124 2 L 136 22 L 148 2 L 160 24 L 176 12 L 176 36 Z"
-                fill="#f2c237" stroke="#cc9418" stroke-width="2"/>
+          <path d="M 98 40 L 98 14 L 113 27 L 124 5 L 136 24 L 148 5 L 160 27 L 175 14 L 175 40 Z"
+                fill="#f5c542" stroke="#d19a1e" stroke-width="2"/>
+          <circle cx="112" cy="33" r="2.6" fill="#e05a5a"/><circle cx="136" cy="31" r="2.6" fill="#4f86d9"/>
+          <circle cx="160" cy="33" r="2.6" fill="#5aa85e"/>
         </g>
       </g>
     </g></g></g>
-    <text class="zzz hidden" x="196" y="42" font-size="26">z z z</text>
+    <text class="zzz hidden" x="194" y="44" font-size="26">z z z</text>
   </svg>`;
 
   const svg = mount.querySelector("svg");
@@ -543,26 +565,48 @@ function createPet(mount, size, opts = {}) {
         if (h.id === "none") continue;
         svg.querySelector(`.hat-${h.id}`).classList.toggle("hidden", h.id !== hat);
       }
-      const armAngle = (mood === "gluecklich" && !sleeping) ? -30 : 15;
-      svg.querySelector(".armL").setAttribute("transform", `rotate(${armAngle} 27 148)`);
-      svg.querySelector(".armR").setAttribute("transform", `rotate(${-armAngle} 233 148)`);
+      const up = (mood === "gluecklich" && !sleeping);
+      svg.querySelector(".armL").setAttribute("transform", up ? "rotate(-32 42 168)" : "rotate(12 42 168)");
+      svg.querySelector(".armR").setAttribute("transform", up ? "rotate(32 218 168)" : "rotate(-12 218 168)");
     },
     squish() {
       svg.classList.add("squish");
       setTimeout(() => svg.classList.remove("squish"), 180);
     }
   };
-  // Blob initial + Blinzeln
-  inst.blob.setAttribute("d", blobPath(130, 128, 92, 84, inst.phase));
+  inst.blob.setAttribute("d", blobPath(130, 128, 92, 86, inst.phase));
   if (inst.animated) {
+    // Blinzeln
     setInterval(() => {
       if (inst.sleeping) return;
-      inst.blinking = true; inst.update(inst.mood, inst.sleeping, currentHat(mount));
-      setTimeout(() => { inst.blinking = false; inst.update(inst.mood, inst.sleeping, currentHat(mount)); }, 150);
-    }, 3400 + Math.random() * 800);
+      inst.blinking = true; inst.update(inst.mood, inst.sleeping, currentHat());
+      setTimeout(() => { inst.blinking = false; inst.update(inst.mood, inst.sleeping, currentHat()); }, 150);
+    }, 3400 + Math.random() * 900);
+    // Blick wandert
+    const eyesEl = svg.querySelector(".eyes");
+    setInterval(() => {
+      if (inst.sleeping) return;
+      eyesEl.style.transform = `translateX(${pick([-5, 5, -4, 4])}px)`;
+      setTimeout(() => { eyesEl.style.transform = ""; }, 1100);
+    }, 4600 + Math.random() * 2200);
   }
   if (!opts.static) petInstances.push(inst);
   return inst;
+}
+
+// Herzchen beim Streicheln
+function spawnHearts(mount, count = 4) {
+  const w = mount.querySelector("svg")?.clientWidth || 200;
+  for (let i = 0; i < count; i++) {
+    const h = document.createElement("span");
+    h.className = "heart-fly";
+    h.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 21 C4.5 15 2.8 10.8 5 7.8 6.8 5.2 10.4 5.4 12 8 c1.6-2.6 5.2-2.8 7-0.2 2.2 3 0.5 7.2-7 13.2 z"/></svg>';
+    h.style.left = (w * 0.18 + Math.random() * w * 0.64) + "px";
+    h.style.top = (10 + Math.random() * 30) + "px";
+    h.style.animationDelay = (i * 0.09) + "s";
+    mount.appendChild(h);
+    setTimeout(() => h.remove(), 1400 + i * 90);
+  }
 }
 
 function currentHat() { return state.pet.hat; }
@@ -937,16 +981,16 @@ function drawGame() {
   c2.fillStyle = "rgba(66,48,58,.14)";
   c2.beginPath(); c2.ellipse(px, py + r * 0.95, r * 0.8, r * 0.16, 0, 0, 7); c2.fill();
   const grad = c2.createLinearGradient(0, py - r, 0, py + r);
-  grad.addColorStop(0, "#fcbd87"); grad.addColorStop(1, "#f2916b");
-  c2.fillStyle = "#f2916b";
+  grad.addColorStop(0, "#fdbb80"); grad.addColorStop(1, "#ef8d5c");
+  c2.fillStyle = "#f79a67";
   c2.beginPath(); c2.ellipse(px - r * 0.58, py - r * 0.82, r * 0.2, r * 0.28, 0, 0, 7); c2.fill();
   c2.beginPath(); c2.ellipse(px + r * 0.58, py - r * 0.82, r * 0.2, r * 0.28, 0, 0, 7); c2.fill();
   c2.fillStyle = grad;
   c2.beginPath(); c2.ellipse(px, py, r, r * 0.92, 0, 0, 7); c2.fill();
-  c2.fillStyle = "#42303a";
+  c2.fillStyle = "#3a2531";
   c2.beginPath(); c2.arc(px - r * 0.33, py - r * 0.2, r * 0.11, 0, 7); c2.fill();
   c2.beginPath(); c2.arc(px + r * 0.33, py - r * 0.2, r * 0.11, 0, 7); c2.fill();
-  c2.strokeStyle = "#42303a"; c2.lineWidth = 4 * dpr; c2.lineCap = "round";
+  c2.strokeStyle = "#6e3a3e"; c2.lineWidth = 4 * dpr; c2.lineCap = "round";
   c2.beginPath(); c2.moveTo(px - r * 0.18, py + r * 0.12);
   c2.quadraticCurveTo(px, py + r * 0.3, px + r * 0.18, py + r * 0.12); c2.stroke();
 }
@@ -1055,7 +1099,8 @@ function bootApp() {
   createPet($("#diaryPetMount"), 110).update("vertraeumt", false, "none");
   $("#petMount").addEventListener("click", () => {
     homePet.squish();
-    if (state.pet.sleeping) wakeUp(); else interact("streicheln");
+    if (state.pet.sleeping) { wakeUp(); }
+    else { spawnHearts($("#petMount")); interact("streicheln"); }
   });
   buildSheets();
   timeTick();
@@ -1070,7 +1115,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   $$(".action").forEach(btn => btn.addEventListener("click", () => {
     const a = btn.dataset.action;
-    if (a === "streicheln" || a === "schlafen") { homePet?.squish(); interact(a); }
+    if (a === "streicheln") { homePet?.squish(); spawnHearts($("#petMount")); interact(a); }
+    else if (a === "schlafen") { homePet?.squish(); interact(a); }
     else if (a === "feed") { buildSheets(); openSheet("sheet-feed"); }
     else if (a === "talk") { buildSheets(); openSheet("sheet-talk"); }
     else if (a === "checkin") { buildSheets(); openSheet("sheet-checkin"); }

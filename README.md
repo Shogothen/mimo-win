@@ -9,6 +9,10 @@ Erinnerungen, Macken, Quests, Erfolge, Garderobe, Mini-Game, Tagesphasen-Himmel.
 2. Settings -> Pages -> Branch "main", Ordner "/ (root)" -> Save
 3. URL öffnen; auf dem iPhone: Teilen -> "Zum Home-Bildschirm" für Vollbild-App-Feeling
 
+## Design
+Display-Font ist Fraunces (Google Fonts, Fallback Georgia). Vier Tagesphasen mit eigenen
+Paletten und Szenen: Morgen, Tag (Wolken, Sonne), Abend, Nacht (Indigo, Mond, Sterne, Glühwürmchen).
+
 ## Testen ohne Warten
 - Level: in app.js in addXP() den Divisor 100 senken (z. B. 20)
 - Tagesphasen: dayPhase() temporär eine Phase hart zurückgeben ("night")
