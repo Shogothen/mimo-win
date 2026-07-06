@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Mimo</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Mimo">
+<meta name="theme-color" content="#fdd6c7">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<canvas id="particles"></canvas>
+
+<!-- ===== Onboarding ===== -->
+<div id="onboarding" class="screen hidden">
+  <div class="ob-progress"><span class="dot" data-step="0"></span><span class="dot" data-step="1"></span><span class="dot" data-step="2"></span></div>
+  <div class="ob-pet"><div id="obPetMount"></div></div>
+  <div class="card ob-card">
+    <div class="ob-step" data-step="0">
+      <h2 class="serif">Hey. Da wohnt jetzt jemand in deinem iPhone.</h2>
+      <p class="muted">Wie heißt du?</p>
+      <input id="obUserName" type="text" placeholder="Dein Name" autocomplete="off">
+    </div>
+    <div class="ob-step hidden" data-step="1">
+      <h2 class="serif">Und wie soll dein kleines Wesen heißen?</h2>
+      <p class="muted">Es besteht auf einen würdevollen Namen.</p>
+      <input id="obPetName" type="text" placeholder="Mimo" autocomplete="off">
+    </div>
+    <div class="ob-step hidden" data-step="2">
+      <h2 class="serif" id="obPersTitle">Welcher Typ soll Mimo sein?</h2>
+      <div id="obPersList"></div>
+    </div>
+  </div>
+  <div class="ob-nav">
+    <button id="obBack" class="btn-ghost hidden">&#8249;</button>
+    <button id="obNext" class="btn-primary">Weiter</button>
+  </div>
+</div>
+
+<!-- ===== Home ===== -->
+<main id="screen-home" class="screen hidden">
+  <header class="home-header">
+    <div>
+      <h1 id="petNameTitle" class="serif pet-title">Mimo</h1>
+      <div class="chip-row">
+        <span class="chip" id="levelChip">Level 1</span>
+        <span class="chip chip-flame hidden" id="streakChip"></span>
+      </div>
+    </div>
+    <div class="xp-ring"><svg viewBox="0 0 44 44"><circle class="ring-bg" cx="22" cy="22" r="18"/><circle id="xpRing" class="ring-fg" cx="22" cy="22" r="18"/></svg><span>XP</span></div>
+  </header>
+
+  <section class="stage">
+    <div class="aura" id="moodAura"></div>
+    <div class="hill hill-back"></div>
+    <div class="hill hill-front"></div>
+    <div class="bubble hidden" id="speechBubble"><span id="speechText"></span><i></i></div>
+    <div id="petMount" class="pet-mount"></div>
+    <div class="wake-hint hidden" id="wakeHint">Tippen zum Aufwecken</div>
+  </section>
+
+  <section class="mood-block">
+    <span class="chip" id="moodChip">Glücklich</span>
+    <p class="mood-text" id="moodText"></p>
+    <p class="muted daily" id="dailyMsg"></p>
+  </section>
+
+  <section class="card rings-card">
+    <div class="stat-ring" data-stat="energie"><svg viewBox="0 0 52 52"><circle class="ring-bg" cx="26" cy="26" r="21"/><circle class="ring-fg" cx="26" cy="26" r="21"/></svg><em>&#9889;</em><label>Energie</label></div>
+    <div class="stat-ring" data-stat="laune"><svg viewBox="0 0 52 52"><circle class="ring-bg" cx="26" cy="26" r="21"/><circle class="ring-fg" cx="26" cy="26" r="21"/></svg><em>&#9786;</em><label>Laune</label></div>
+    <div class="stat-ring" data-stat="saettigung"><svg viewBox="0 0 52 52"><circle class="ring-bg" cx="26" cy="26" r="21"/><circle class="ring-fg" cx="26" cy="26" r="21"/></svg><em>&#127860;</em><label>Sättigung</label></div>
+    <div class="stat-ring" data-stat="bond"><svg viewBox="0 0 52 52"><circle class="ring-bg" cx="26" cy="26" r="21"/><circle class="ring-fg" cx="26" cy="26" r="21"/></svg><em>&#9825;</em><label>Bond</label></div>
+  </section>
+
+  <section class="card" id="questsCard">
+    <div class="card-head"><span class="section-label">Tagesziele</span><span class="chip chip-small" id="questBonusChip">+20 XP Bonus</span></div>
+    <div id="questList"></div>
+  </section>
+
+  <section class="action-grid">
+    <button class="action" data-action="streicheln"><span class="orb">&#10047;</span>Streicheln</button>
+    <button class="action" data-action="feed"><span class="orb">&#127860;</span>Füttern</button>
+    <button class="action" data-action="game"><span class="orb">&#9733;</span>Spielen</button>
+    <button class="action" data-action="talk"><span class="orb">&#128172;</span>Reden</button>
+    <button class="action" data-action="schlafen"><span class="orb">&#9789;</span>Schlafen</button>
+    <button class="action action-checkin" id="checkinBtn" data-action="checkin"><span class="orb orb-accent">&#10003;</span>Check-in</button>
+  </section>
+</main>
+
+<!-- ===== Room ===== -->
+<main id="screen-room" class="screen hidden">
+  <h1 class="serif screen-title" id="roomTitle">Mimos Zuhause</h1>
+  <section class="room-scene" id="roomScene">
+    <div class="room-wall"></div>
+    <div class="room-floor"></div>
+    <div class="room-skirting"></div>
+    <div class="frame" title="Selbstportrait"><div class="frame-inner"><span class="frame-blob"></span></div></div>
+    <div class="window"><div class="win-sky"></div><div class="win-sun"></div><div class="win-moon hidden"></div><div class="win-stars hidden"></div><div class="win-cross-v"></div><div class="win-cross-h"></div></div>
+    <div class="deco star-window hidden" id="decoStarwin"><span></span><span></span><span></span><span></span><span></span></div>
+    <div class="deco lamp hidden" id="decoLampe"><div class="lamp-glow"></div><div class="lamp-head"></div><div class="lamp-pole"></div><div class="lamp-foot"></div></div>
+    <div class="deco plant hidden" id="decoPflanze"><div class="leaves"><i></i><i></i><i></i></div><div class="pot"></div></div>
+    <div class="rug"></div>
+    <div class="deco pillow hidden" id="decoKissen"></div>
+    <div id="roomPetMount" class="room-pet"></div>
+    <div class="vignette"></div>
+  </section>
+  <section class="card">
+    <div class="card-head"><span class="section-label">Garderobe</span></div>
+    <div class="wardrobe" id="wardrobe"></div>
+  </section>
+  <section class="card">
+    <div class="card-head"><span class="section-label">Einrichtung</span></div>
+    <div id="unlockList"></div>
+  </section>
+</main>
+
+<!-- ===== Diary ===== -->
+<main id="screen-diary" class="screen hidden">
+  <h1 class="serif screen-title" id="diaryTitle">Mimos Tagebuch</h1>
+  <section class="card hidden" id="weekCard">
+    <div class="card-head"><span class="section-label">Deine letzten Tage</span></div>
+    <div class="week-dots" id="weekDots"></div>
+    <p class="muted small" id="weekSummary"></p>
+  </section>
+  <div id="diaryEmpty" class="diary-empty hidden">
+    <div id="diaryPetMount"></div>
+    <p class="muted" id="diaryEmptyText">Noch keine Einträge.</p>
+  </div>
+  <div id="diaryList" class="timeline"></div>
+</main>
+
+<!-- ===== Profile ===== -->
+<main id="screen-profile" class="screen hidden">
+  <section class="profile-hero">
+    <div id="profilePetMount"></div>
+    <h1 class="serif" id="profileName">Mimo</h1>
+    <p class="muted" id="profileSub">wohnt bei dir</p>
+    <div class="chip-row center" id="profileChips"></div>
+  </section>
+  <section class="tiles">
+    <div class="tile"><em>&#9825;</em><strong id="tileBond">0</strong><label>Bond</label></div>
+    <div class="tile"><em>&#10022;</em><strong id="tileXp">0</strong><label>XP gesamt</label></div>
+    <div class="tile"><em>&#128214;</em><strong id="tileDiary">0</strong><label>Einträge</label></div>
+    <div class="tile"><em>&#127942;</em><strong id="tileBest">0</strong><label>Rekord</label></div>
+  </section>
+  <section class="card">
+    <div class="card-head"><span class="section-label">Persönlichkeit</span></div>
+    <div id="persBars"></div>
+  </section>
+  <section class="card">
+    <div class="card-head"><span class="section-label">Macken</span><span class="muted small" id="quirkCount">0/10</span></div>
+    <div id="quirkList"></div>
+  </section>
+  <section class="card">
+    <div class="card-head"><span class="section-label">Erfolge</span><span class="muted small" id="achCount">0/9</span></div>
+    <div class="ach-grid" id="achGrid"></div>
+  </section>
+  <button class="btn-danger" id="resetBtn">App zurücksetzen</button>
+</main>
+
+<!-- ===== Dock ===== -->
+<nav id="dock" class="hidden">
+  <span class="dock-pill" id="dockPill"></span>
+  <button data-tab="home" class="active"><em>&#8962;</em>Home</button>
+  <button data-tab="room"><em>&#128715;</em>Room</button>
+  <button data-tab="diary"><em>&#128214;</em>Diary</button>
+  <button data-tab="profile"><em>&#9786;</em>Profil</button>
+</nav>
+
+<!-- ===== Sheets ===== -->
+<div class="sheet-backdrop hidden" id="sheetBackdrop"></div>
+
+<div class="sheet hidden" id="sheet-checkin">
+  <h2 class="serif">Wie war dein Tag?</h2>
+  <p class="muted" id="checkinSub"></p>
+  <div class="sheet-options" id="checkinOptions"></div>
+</div>
+
+<div class="sheet hidden" id="sheet-feed">
+  <h2 class="serif">Was gibt es heute?</h2>
+  <p class="muted" id="feedSub"></p>
+  <div class="feed-grid" id="feedGrid"></div>
+</div>
+
+<div class="sheet hidden" id="sheet-talk">
+  <h2 class="serif">Worüber wollt ihr reden?</h2>
+  <p class="muted" id="talkSub"></p>
+  <div class="sheet-options" id="talkOptions"></div>
+</div>
+
+<!-- ===== Mini-Game ===== -->
+<div id="gameOverlay" class="hidden">
+  <canvas id="gameCanvas"></canvas>
+  <div class="game-hud">
+    <span class="hud-chip">&#9733; <b id="gameScore">0</b></span>
+    <span class="hud-chip">&#9200; <b id="gameTime">30</b>s</span>
+    <button id="gameClose" class="hud-close">&#10005;</button>
+  </div>
+  <div class="game-panel" id="gameReady">
+    <h2 class="serif">Sterne fangen</h2>
+    <p class="muted" id="gameIntro">Zieh Mimo mit dem Finger hin und her. Goldene Sterne zählen dreifach. 30 Sekunden.</p>
+    <span class="chip hidden" id="gameBestChip"></span>
+    <button class="btn-primary" id="gameStart">Los</button>
+  </div>
+  <div class="game-panel hidden" id="gameFinished">
+    <h2 class="serif big" id="gameFinalScore">0 Sterne</h2>
+    <span class="chip hidden" id="gameNewBest">&#127942; Neuer Rekord</span>
+    <p class="muted" id="gameBestText"></p>
+    <div class="row">
+      <button class="btn-ghost" id="gameAgain">Nochmal</button>
+      <button class="btn-primary" id="gameDone">Fertig</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Level-Up ===== -->
+<div id="levelupOverlay" class="hidden">
+  <canvas id="confetti"></canvas>
+  <div class="levelup-panel">
+    <h2 class="serif" id="levelupTitle">Level 2</h2>
+    <div id="levelupPetMount"></div>
+    <p id="levelupText"></p>
+    <button class="btn-primary" id="levelupClose">Weiter</button>
+  </div>
+</div>
+
+<!-- ===== Toast ===== -->
+<div id="toast" class="hidden"><span class="toast-icon" id="toastIcon">&#10022;</span><div><strong id="toastTitle"></strong><p id="toastDetail"></p></div></div>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
