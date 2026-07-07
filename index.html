@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=12">
+<link rel="stylesheet" href="style.css?v=13">
 </head>
 <body>
 
@@ -138,6 +138,15 @@
       <span class="tr-text"><strong>Dankbarkeit</strong><small>Eine Sache reicht</small></span>
       <span class="tr-done hidden">&#10003;</span>
     </button>
+  </section>
+
+  <section class="card arc-card" id="arcCard">
+    <div class="card-head"><span class="section-label">Die Brief-Ermittlung</span><span class="chip chip-small" id="arcChip"></span></div>
+    <div class="today-row" id="arcRow">
+      <span class="tr-icon arc-icon"><svg viewBox="0 0 24 24"><path d="M3.5 6 h17 v12 h-17 z M3.5 6 L12 13 L20.5 6" fill="none" stroke-width="1.8"/></svg></span>
+      <span class="tr-text"><strong id="arcTitle"></strong><small id="arcSub"></small></span>
+      <span class="tr-go" id="arcGo">&#8250;</span>
+    </div>
   </section>
 
   <section class="card" id="expedCard">
@@ -535,7 +544,7 @@
 
 <div id="toast" class="hidden"><span class="toast-icon" id="toastIcon">&#10022;</span><div><strong id="toastTitle"></strong><p id="toastDetail"></p></div></div>
 
-<script src="data.js?v=12"></script>
-<script src="app.js?v=12"></script>
+<script src="data.js?v=13"></script>
+<script src="app.js?v=13"></script>
 </body>
 </html>

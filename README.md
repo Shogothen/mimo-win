@@ -3,6 +3,7 @@
 Virtuelles Haustier als Web-App. Vanilla JS/HTML/CSS, keine Dependencies, Speicherung in localStorage.
 Portiert vom nativen SwiftUI-Projekt (Repo "mimo") mit allen Systemen: Stimmung, Persönlichkeit,
 Erinnerungen, Macken, Quests, Erfolge, Garderobe, zwei Mini-Games, Tagesphasen-Himmel.
+v13 Story: 6-Kapitel-Arc 'Der Brief unterm Fenster' mit Tages-/Level-/Bond-Gates, gespeicherten Entscheidungen und legendärem Finale; Körperzonen-Haptik (Ohren, Kopf, Nase, Bauch).
 v12 Lebendigkeit: Drag-Füttern (Snack zum Mund ziehen, Augen und Körper folgen), Augenverfolgung, Idle-Leben (Umsehen, Hopser, Schmetterling zum Fangen), Schnurr-Sound unter der Hand, Mampf-Geräusche.
 v11 Körpersprache: Animations-Clip-System (Sprung, Wackeln, Mampf-Bob, Zungen-Schlecker), Anlehnen an die Hand beim Streicheln mit Schnurr-Puls, 5-Phasen-Fütter-Choreografie mit Backen-Beulen und Feier.
 v10 Pflege & Langzeit: Hygiene-System mit Dreck und Bade-Rubbel-Modus, Streichel-Geste statt Tippen, Futter-Hüpfer, XP-Kurve bis Level 30, gestreckte Bond-Stufen/Preise/Drops, 10 Langzeit-Erfolge, 30 Fundstücke.

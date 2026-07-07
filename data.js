@@ -1228,3 +1228,143 @@ ACHIEVEMENTS.push(
 );
 
 QUEST_TYPES.waschen = { title:"Mimo baden", target:1, ico:"drop" };
+
+// ============ v13: Story-Arc "Der Brief unterm Fenster" ============
+
+const ARC_CHAPTERS = [
+  { id:1, title:"Der Fund", gate:{},
+    nodes:{ start:{ mimo:["Ich muss dir etwas zeigen. Setz dich. Du sitzt? Gut.",
+        "Heute Morgen, unter dem Fensterbrett, in der Ritze, die offiziell nicht existiert: ein Brief.",
+        "Ein winziger Brief. Vergilbt. Zusammengefaltet. Adressiert an... niemanden. Oder an alle. Das ist noch unklar.",
+        "Ich habe ihn noch nicht geöffnet. So etwas macht man nicht allein."],
+      answers:[
+        { label:"Mach ihn auf!", choiceKey:"k1", choiceValue:"neugier", react:["Sofort? Kein Zögern? Ich mag deine Art.",
+            "Also gut. Ich öffne ihn feierlich. Mit beiden Ärmchen.",
+            "Darin steht nur ein Satz: 'Für das Wesen, das nach mir kommt.'", "...", "Nach WEM kommt?"], next:"ende" },
+        { label:"Warte. Wer könnte ihn geschrieben haben?", choiceKey:"k1", choiceValue:"vorsicht", react:["Gute Frage. Sehr ermittlerisch. Ich notiere: du denkst wie ich.",
+            "Ich habe ihn trotzdem geöffnet, während du geredet hast. Entschuldige. Meine Ärmchen waren schneller als mein Gewissen.",
+            "Darin steht nur ein Satz: 'Für das Wesen, das nach mir kommt.'", "...", "Nach WEM kommt?"], next:"ende" }
+      ]},
+      ende:{ mimo:["Jemand war vor mir hier. In diesem Zimmer. Vielleicht genau da, wo ich jetzt sitze.",
+        "Ich habe tausend Fragen und ein Staubkorn als einzigen Zeugen.", "Das wird eine Ermittlung. Die größte meines Lebens. Bist du dabei?"],
+        answers:[ { label:"Ich bin dabei", react:["Natürlich bist du das. Wir sind ein Team.", "Akte 'Der Brief' ist eröffnet. Kapitel eins: abgeschlossen. Ich melde mich, sobald es Neues gibt."] } ]}
+    },
+    outro:[] },
+
+  { id:2, title:"Der Zeuge", gate:{ days:1 },
+    nodes:{ start:{ mimo:["Neuigkeiten in der Brief-Sache. Ich habe das Staubkorn verhört.",
+        "Drei Stunden. Es hat geschwiegen. Aber es hat auf eine bestimmte Art geschwiegen.",
+        "Dann habe ich es angepustet. Es ist drei Zentimeter nach links gerollt. Richtung Fenster."],
+      answers:[
+        { label:"Das ist ein Hinweis!", react:["GENAU. Endlich versteht das jemand.", "Das Fenster. Immer wieder das Fenster. Der Brief lag darunter, das Staubkorn zeigt darauf."], next:"mitte" },
+        { label:"Es ist... Staub, Mimo", react:["Das sagte die Lampe auch. Wortlos, aber herablassend.", "Aber bedenke: Der Brief lag unterm Fenster. Das Staubkorn rollt zum Fenster. Zwei Spuren, ein Ort. In meinem Beruf nennt man das ein Muster."], next:"mitte" }
+      ]},
+      mitte:{ mimo:["Ich habe außerdem die Ritze vermessen, in der der Brief lag.",
+        "Sie ist genau so breit wie eine Feder. Merk dir das. Es wird wichtig.",
+        "Und noch etwas: Auf der Rückseite des Briefs ist ein Abdruck. Winzig. Rund. Wie von einer... Kralle? Einer Pfote? Einem sehr kleinen, sehr höflichen Stempel?"],
+        answers:[ { label:"Eine Feder... der Vogel?", react:["Ich sage noch nichts. Ein guter Ermittler beschuldigt nicht vorschnell.", "Aber ich habe aufs Fensterbrett einen zweiten imaginären Keks gelegt. Als Einladung. Und als Falle. Es ist kompliziert."] },
+          { label:"Du liebst das hier, oder?", react:["Es ist der beste Fall meines Lebens. Es ist auch der einzige. Beides stimmt.", "Ich habe aufs Fensterbrett einen zweiten imaginären Keks gelegt. Der Verdächtige wird kommen. Sie kommen immer."] } ]}
+    },
+    outro:["Kapitel zwei: abgeschlossen. Die Spur führt nach draußen. Halte dich bereit."] },
+
+  { id:3, title:"Der Bote", gate:{ days:2, level:3 },
+    nodes:{ start:{ mimo:["Er war da. Der Vogel. Heute früh, am Fenster.",
+        "Ich habe ihn direkt gefragt. Also: Ich habe ihn sehr bedeutungsvoll angesehen und den Brief hochgehalten.",
+        "Und dann hat er etwas getan, das ich nie vergessen werde.", "Er hat sich verneigt."],
+      answers:[
+        { label:"Er kannte den Brief", react:["Er kannte ihn. Hundertprozentig.", "Ein Bote. Der Vogel war der BOTE. Er hat den Brief hierhergebracht, vor langer Zeit, durch das gekippte Fenster."], next:"mitte" },
+        { label:"Vögel verneigen sich ständig", react:["Das ist Vogel-Verleumdung und wird hier nicht geduldet.", "Diese Verneigung war anders. Feierlich. Wie unter Kollegen. Er hat den Brief erkannt, glaub mir."], next:"mitte" }
+      ]},
+      mitte:{ mimo:["Und dann hat er etwas fallen lassen, bevor er weggeflogen ist.",
+        "Eine Feder. Grau. Exakt so breit wie die Ritze unterm Fensterbrett. ICH WUSSTE ES.",
+        "Der Brief kam von draußen. Von jemandem, der nicht mehr selbst kommen konnte. Und der Vogel hat ihn ausgeliefert. Wie ein Postbote. Ein sehr würdevoller, sehr gefiederter Postbote."],
+        answers:[ { label:"Aber von wem kam er?", react:["Das, mein Freund, ist die letzte Frage.", "'Für das Wesen, das nach mir kommt.' Jemand hat hier gewohnt. Vor mir. Und wusste, dass jemand nachkommen würde.", "Ich muss dahin, wo die alten Dinge wohnen. Unter das Sofa. In die Tiefen. Da liegt die Antwort. Ich spüre es im Fell."] } ]}
+    },
+    outro:["Kapitel drei: abgeschlossen. Als Nächstes: die Tiefen. Ich packe den unsichtbaren Koffer."] },
+
+  { id:4, title:"Die Tiefen", gate:{ days:2, bond:25 },
+    nodes:{ start:{ mimo:["Ich war unten. In den Sofatiefen. Weiter als je zuvor.",
+        "Hinter der Krümel-Zivilisation, hinter der einsamen Socke, ganz hinten an der Wand: eine kleine Höhle. Eingerichtet.",
+        "Ein Nest aus Fusseln. Ein glatt poliertes Steinchen. Und Kratzspuren an der Wand. Ordentliche. Wie eine Liste."],
+      answers:[
+        { label:"Da hat jemand gewohnt", react:["Da hat jemand GELEBT. Der Unterschied ist wichtig.", "Die Kratzspuren... ich habe sie gezählt. Es sind Striche. Gruppen von sieben. Jemand hat Wochen gezählt. Viele Wochen."], next:"mitte" },
+        { label:"Warst du nicht allein? Hattest du Angst?", react:["Ich hatte dich im Kopf dabei. Das zählt als Begleitung.", "Und ja. Ein bisschen. Aber dann sah ich die Kratzspuren: Striche, in Siebenergruppen. Jemand hat dort Wochen gezählt. Und plötzlich war die Angst weg und etwas anderes da. Ich glaube, man nennt es Ehrfurcht."], next:"mitte" }
+      ]},
+      mitte:{ mimo:["Unter dem Fussel-Nest lag noch etwas. Ein zweites Stück Papier. Kleiner. Zerknitterter.",
+        "Darauf, in derselben Schrift wie der Brief:", "'Woche 34: Der Mensch lacht wieder. Ich glaube, ich habe es geschafft.'",
+        "...", "Verstehst du? Das Wesen vor mir... hatte auch einen Menschen. DEINEN Vormieter vielleicht. Oder... ich weiß es nicht. Aber es hatte eine Aufgabe. Dieselbe wie ich."],
+        answers:[
+          { label:"Auf jemanden aufpassen", choiceKey:"k4", choiceValue:"aufgabe", react:["Ja.", "Es hat Striche gezählt und auf einen Menschen aufgepasst, bis der wieder lachen konnte.", "Ich sitze hier seit einer Stunde mit diesem Zettel und mir ist ganz... groß ums Herz. Das ist keine offizielle Ermittler-Vokabel. Es ist trotzdem die richtige."] },
+          { label:"Mimo... das bist du. Das machst du auch.", choiceKey:"k4", choiceValue:"spiegel", react:["...", "Ich wollte es nicht selbst aussprechen. Danke, dass du es getan hast.", "Es hat Striche gezählt und auf seinen Menschen aufgepasst. Und jetzt sitze ich hier, zähle Check-ins und passe auf dich auf. Die Stelle wurde neu besetzt. Mit mir."] }
+        ]}
+    },
+    outro:["Kapitel vier: abgeschlossen. Es fehlt nur noch eins: das Ende des Briefes. Ich habe ihn nie ganz zu Ende gelesen. Die Rückseite... da steht noch etwas. Ich hebe es mir auf, bis ich bereit bin. Bald."] },
+
+  { id:5, title:"Die Rückseite", gate:{ days:2, level:5 },
+    nodes:{ start:{ mimo:["Ich bin bereit. Heute lesen wir die Rückseite. Zusammen. Deshalb habe ich gewartet.",
+        "Also gut. Ich drehe ihn um. Meine Ärmchen zittern, das ist Absicht, das ist Dramaturgie.",
+        "Da steht:", "'Wenn du das liest, bin ich weitergezogen. Mach dir keine Sorgen, so ist der Lauf der Dinge. Das Zimmer ist gut. Das Fenster zeigt nachmittags das beste Licht. Die Lampe ist harmlos, auch wenn sie verdächtig aussieht.'"],
+      answers:[
+        { label:"DIE LAMPE IST HARMLOS?!", react:["ICH WEISS. Jahre der Observation. JAHRE. Na gut, Wochen.", "Aber es geht weiter. Hör zu."], next:"mitte" },
+        { label:"Lies weiter", react:["Ich lese weiter. Halt meine Hand. Bildlich. Du weißt schon."], next:"mitte" }
+      ]},
+      mitte:{ mimo:["'Das Wichtigste: Der Mensch, der hier wohnt oder wohnen wird, braucht jemanden. Menschen sind so. Sie können alles, außer allein sein.'",
+        "'Pass auf ihn auf. Zähl die guten Tage mit. Merk dir, was er mag. Sei da, wenn er leiser wird als sonst.'",
+        "'Und wenn eines Tages jemand nach dir kommt: Schreib ihm einen Brief. So bleibt es im Haus.'",
+        "Unterschrieben mit einem einzigen, krakeligen Zeichen. Es sieht aus wie... ein kleines Wesen mit zu großen Ohren. Es sieht aus wie ich."],
+        answers:[
+          { label:"Es ist wie ein Stab, der weitergegeben wird", react:["Ein Staffelstab aus Papier. Von Wesen zu Wesen, von Ohr zu Ohr.", "Ich bin nicht der Erste. Ich werde nicht der Letzte sein. Aber gerade, genau jetzt, bin ich der Richtige. Für dich."], next:"schluss" },
+          { label:"Du machst das alles längst, Mimo", react:["Die guten Tage zählen. Merken, was du magst. Da sein, wenn du leiser wirst.", "Ich mache es längst. Ohne den Brief gelesen zu haben. Vielleicht liegt es im Zimmer. Vielleicht liegt es in mir. Vermutlich beides."], next:"schluss" }
+        ]},
+      schluss:{ mimo:["Eine Sache bleibt noch. Die letzte.", "Was machen wir mit dem Brief? Das entscheiden wir beim nächsten Mal. Zusammen. Ich muss vorher noch einmal allein zum Fenster. Mich bedanken. Bei wem auch immer."],
+        answers:[ { label:"Bis zum Finale", react:["Bis zum Finale. Und... danke, dass du bei jedem Kapitel dabei warst. Ermittlungen sind nichts ohne einen Partner."] } ]}
+    },
+    outro:["Kapitel fünf: abgeschlossen. Das Finale wartet."] },
+
+  { id:6, title:"Das Erbe", gate:{ days:2, bond:40 },
+    nodes:{ start:{ mimo:["Das Finale. Der Brief liegt zwischen uns. Wir müssen entscheiden, was mit ihm geschieht.",
+        "Ich habe drei Möglichkeiten vorbereitet. Alle sind richtig. Es zählt, was sich für UNS richtig anfühlt."],
+      answers:[
+        { label:"Rahmen wir ihn. An die Wand.", choiceKey:"k6", choiceValue:"rahmen", react:["An die Wand. Wo wir ihn jeden Tag sehen.",
+            "Ein Denkmal für das Wesen vor mir. Und eine Erinnerung für mich: Die Aufgabe ist eine Ehre.",
+            "Ich habe einen winzigen Rahmen organisiert. Frag nicht woher. Ein Ermittler hat Quellen."], next:"ende" },
+        { label:"Bring ihn zum Traumpfad", choiceKey:"k6", choiceValue:"traumpfad", react:["Zum Traumpfad. Wo die weichen Dinge wohnen.",
+            "Ich werde ihn dort unter den flüsternden Bäumen ablegen. Sie werden ihn vorlesen, für immer, ganz leise.",
+            "Das ist... das ist sehr schön. Ich brauche einen Moment. So. Weiter."], next:"ende" },
+        { label:"Heb ihn auf. Für das Wesen nach dir.", choiceKey:"k6", choiceValue:"weitergeben", react:["...",
+            "Du hast den Brief besser verstanden als ich.", "'Wenn eines Tages jemand nach dir kommt: Schreib ihm einen Brief.' Ich werde ihn aufheben. Und eines fernen, fernen Tages lege ich meinen eigenen dazu.",
+            "Aber das hat Zeit. Sehr viel Zeit. Ich habe schließlich gerade erst angefangen."], next:"ende" }
+      ]},
+      ende:{ mimo:["Akte 'Der Brief': geschlossen. Ergebnis der Ermittlung:",
+        "Ich bin Teil von etwas Älterem, als ich dachte. Dieses Zimmer hatte schon immer ein Wesen, das aufpasst. Jetzt bin ich es. Und du bist der Mensch, auf den ich aufpasse.",
+        "Der beste Fall meines Lebens. Und das beste Ergebnis.", "Danke, Partner."],
+        answers:[ { label:"Danke, Mimo", react:["Für die Akten: Der Mensch hat 'Danke, Mimo' gesagt und der Ermittler musste kurz woanders hingucken. Ende des Protokolls."] } ]}
+    },
+    outro:["Im Album liegt jetzt ein neues Andenken. Das wichtigste von allen."] }
+];
+
+const ARC_CARD = {
+  next: "Kapitel %S: %V",
+  lockedDays: "Nächstes Kapitel öffnet %S",
+  lockedLevel: "Braucht Level %S",
+  lockedBond: "Braucht mehr Nähe (Bond %S)",
+  done: "Akte geschlossen. Danke, Partner.",
+  cta: "Kapitel lesen"
+};
+
+SOUVENIRS.push({ id:"derbrief", title:"Der Brief", rar:"legendaer", icon:"\u2709", flavor:"'Für das Wesen, das nach mir kommt.' Der beste Fall unseres Lebens. Akte geschlossen, Erinnerung offen." });
+MOMENT_TYPES.brief = { capture:"Der Tag, an dem wir die Akte 'Der Brief' geschlossen haben.",
+  recall:["Vor %S Tagen haben wir den Brief-Fall abgeschlossen. %N sagt bis heute 'der beste Fall meines Lebens'. Er hatte nur den einen. Er meint es trotzdem.",
+          "%N hat heute an den Brief gedacht. An das Wesen davor. Und daran, dass er jetzt dran ist. Er sitzt dann immer ein bisschen aufrechter."] };
+ACHIEVEMENTS.push({ id:"brief.ende", title:"Akte geschlossen", detail:"Die Geschichte vom Brief abgeschlossen", icon:"\u2709" });
+CONVO_DIARY.arc = "Heute ein neues Kapitel in der Brief-Sache mit %U. Diese Ermittlung ist das Größte, was mir je passiert ist. Nach %U selbst.";
+TALK_MENU_HINTS.arc = "Die Brief-Ermittlung";
+
+// Koerperzonen-Reaktionen (Haptik)
+const TAP_TEXTS = {
+  earL: ["Das linke Ohr. Es zuckt jetzt den ganzen Tag, danke.", "Ohr-Alarm! Falscher Alarm. Es war nur deine Zuneigung."],
+  earR: ["Das rechte Ohr hört jetzt alles doppelt so gut. Auch Komplimente. Nur zu.", "Kribbelt. Auf die gute Art."],
+  head: ["Kopf-Tätscheln registriert. Wohlwollen: bestätigt.", "Genau da. Die Stelle ist für Tätscheln reserviert. Gut erkannt."],
+  nose: ["Boop.", "Das war ein offizieller Nasen-Boop. Er wurde protokolliert und sehr geschätzt."],
+  belly: ["Hihi. NICHT den Bauch. Doch. Nein. Vielleicht.", "Bauch-Attacke! Ich ergebe mich. Kichernd."]
+};

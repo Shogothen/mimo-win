@@ -616,6 +616,64 @@ function wishBump(kind, snackId) {
   }
 }
 
+// ---------- Engine: Story-Arc ----------
+function arcState() {
+  if (!state.arc) state.arc = { chapter: 0, doneAt: 0, choices: {} };
+  return state.arc;
+}
+
+function arcNextChapter() {
+  const a = arcState();
+  return ARC_CHAPTERS.find(ch => ch.id === a.chapter + 1) || null;
+}
+
+// Rueckgabe: { ready:true } oder { ready:false, reason, value }
+function arcGateCheck() {
+  const a = arcState();
+  const ch = arcNextChapter();
+  if (!ch) return { ready: false, reason: "done" };
+  const g = ch.gate || {};
+  if (g.days && a.doneAt) {
+    const daysSince = (Date.now() - a.doneAt) / 864e5;
+    if (daysSince < g.days) {
+      const opens = new Date(a.doneAt + g.days * 864e5);
+      const label = todayKey(opens) === todayKey() ? "später heute" : opens.toLocaleDateString("de-DE", { weekday: "long" });
+      return { ready: false, reason: "days", value: label };
+    }
+  }
+  if (g.level && state.pet.stats.level < g.level) return { ready: false, reason: "level", value: g.level };
+  if (g.bond && state.pet.stats.bond < g.bond) return { ready: false, reason: "bond", value: g.bond };
+  return { ready: true, chapter: ch };
+}
+
+function buildArcConvo(ch) {
+  return { id: "arc." + ch.id, type: "arc", nodes: ch.nodes, outro: ch.outro, _arc: ch };
+}
+
+function startArcChapter() {
+  const gate = arcGateCheck();
+  if (!gate.ready) return;
+  startConversation(buildArcConvo(gate.chapter));
+}
+
+function finishArcChapter(ch) {
+  const a = arcState();
+  if (ch.id !== a.chapter + 1) return; // Schutz vor Doppelabschluss
+  a.chapter = ch.id;
+  a.doneAt = Date.now();
+  handleLevelUp(addXP(15));
+  state.pet.stats.bond = clamp(state.pet.stats.bond + 3, 0, 100);
+  state.diary.unshift({ date: Date.now(), mood: "dramatisch", text: fmt(CONVO_DIARY.arc, ctx()) });
+  if (ch.id === ARC_CHAPTERS.length) {
+    if (!state.souvenirs.includes("derbrief")) state.souvenirs.push("derbrief");
+    captureMoment("brief");
+    unlockAchievement("brief.ende");
+    showToast({ icon: "\u2709", title: "Der Brief", detail: "Ein legendäres Andenken liegt jetzt im Album." });
+    playSound("level");
+  }
+  checkUnlocks(); save();
+}
+
 // ---------- Engine: Momente ----------
 function captureMoment(type, detail) {
   if (!MOMENT_TYPES[type]) return;
@@ -761,6 +819,7 @@ function showAnswers(answers) {
         state.talkFacts[chat.conv.factKey] = a.factValue;
         state.lastFactDay = todayKey();
       }
+      if (a.choiceKey) arcState().choices[a.choiceKey] = a.choiceValue;
       if (a.bond) chat.bondExtra += a.bond;
       pushMimoLines(a.react || [], () => {
         if (a.next) playNode(a.next);
@@ -805,7 +864,8 @@ function finishConvo() {
       const dust = rewarded ? (conv.type === "fact" || conv.type === "deep" ? 5 : 0) : 0;
       if (dust) earnDust(dust);
       wishBump("reden");
-      const diaryChance = { fact: 1, deep: 1, context: 0.6, story: 0.5, quatsch: 0.2, erinnerung: 0 }[conv.type] || 0.3;
+      if (conv.type === "arc" && conv._arc) finishArcChapter(conv._arc);
+      const diaryChance = { fact: 1, deep: 1, context: 0.6, story: 0.5, quatsch: 0.2, erinnerung: 0, arc: 0 }[conv.type] || 0.3;
       if (Math.random() < diaryChance)
         state.diary.unshift({ date: Date.now(), mood: computeMood(), text: fmt(CONVO_DIARY[conv.type], ctx()) });
       const rw = document.createElement("div");
@@ -1191,6 +1251,7 @@ function playSound(kind) {
   try {
     audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
     const notes = kind === "catch" ? [[880, 0.06]] :
+                  kind === "giggle" ? [[740, 0.05], [988, 0.05], [880, 0.07]] :
                   kind === "level" ? [[523, 0.1], [784, 0.14]] : [[659, 0.09], [880, 0.12]];
     let t = audioCtx.currentTime;
     for (const [f, d] of notes) {
@@ -1694,6 +1755,35 @@ function renderAll() {
     $("#expedIdleText").textContent = fmt("%N steht bereit. Der unsichtbare Koffer ist immer gepackt.", ctx());
   }
 
+  // Story-Arc-Karte
+  {
+    const a = arcState();
+    const gate = arcGateCheck();
+    const ch = arcNextChapter();
+    $("#arcCard").classList.toggle("hidden", a.chapter >= ARC_CHAPTERS.length && !gate.ready && gate.reason === "done" && a.chapter === 0);
+    if (!ch) {
+      $("#arcTitle").textContent = "Akte geschlossen";
+      $("#arcSub").textContent = ARC_CARD.done;
+      $("#arcChip").textContent = ARC_CHAPTERS.length + "/" + ARC_CHAPTERS.length;
+      $("#arcGo").style.display = "none";
+      $("#arcRow").classList.add("done");
+    } else {
+      $("#arcChip").textContent = a.chapter + "/" + ARC_CHAPTERS.length;
+      $("#arcTitle").textContent = fmt(ARC_CARD.next, ctx({ S: ch.id, V: ch.title }));
+      if (gate.ready) {
+        $("#arcSub").textContent = ARC_CARD.cta;
+        $("#arcGo").style.display = "";
+        $("#arcRow").classList.remove("done");
+        $("#arcRow").style.opacity = "";
+      } else {
+        const map = { days: ARC_CARD.lockedDays, level: ARC_CARD.lockedLevel, bond: ARC_CARD.lockedBond };
+        $("#arcSub").textContent = fmt(map[gate.reason] || "", ctx({ S: gate.value }));
+        $("#arcGo").style.display = "none";
+        $("#arcRow").style.opacity = ".55";
+      }
+    }
+  }
+
   // Schwamm bei Bedarf
   $("#spongeBtn").classList.toggle("hidden", !bathNeeded() || !!state.expedition);
 
@@ -2091,6 +2181,39 @@ function cancelBath() {
   $("#bathOverlay").classList.add("hidden");
   showReaction(fmt(HYGIENE_TEXTS.bathSkip, ctx()));
   renderAll();
+}
+
+// ---------- Koerperzonen: gezielte Beruehrungen ----------
+function zoneFor(rx, ry) {
+  if (ry < 0.3) return rx < 0.42 ? "earL" : rx > 0.58 ? "earR" : "head";
+  if (ry < 0.58) return "nose";
+  return "belly";
+}
+
+function petTap(zone) {
+  if (!homePet || state.pet.sleeping || expeditionActive()) return;
+  idleBusy(1600);
+  if (zone === "earL" || zone === "earR") {
+    homePet.svg.classList.add("clip-" + zone);
+    setTimeout(() => homePet.svg.classList.remove("clip-" + zone), 650);
+  } else if (zone === "head") {
+    homePet.emote("bliss", 1100);
+    homePet.setPurr(true);
+    setTimeout(() => homePet.setPurr(false), 1100);
+  } else if (zone === "nose") {
+    homePet.squish();
+    homePet.emote("excite", 800);
+    playSound("catch");
+  } else if (zone === "belly") {
+    homePet.chain([["wiggle", 500]]);
+    homePet.squish();
+    setTimeout(() => homePet.squish(), 220);
+    playSound("giggle");
+  }
+  if (Math.random() < 0.45) showReaction(fmt(pick(TAP_TEXTS[zone]), ctx()));
+  applyDecay();
+  state.pet.stats.laune = clamp(state.pet.stats.laune + 1, 0, 100);
+  save();
 }
 
 // ---------- Idle-Leben: Mimo tut Dinge von allein ----------
@@ -2929,11 +3052,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const petArea = $("#petMount");
   const stageEl = $(".stage");
-  const pd = (e) => { rub.mode = "pet"; rubStart(e.clientX, e.clientY); };
+  let tapInfo = null;
+  const pd = (e) => {
+    rub.mode = "pet";
+    rubStart(e.clientX, e.clientY);
+    const r = petArea.getBoundingClientRect();
+    tapInfo = { t: Date.now(), x: e.clientX, y: e.clientY, rx: (e.clientX - r.left) / r.width, ry: (e.clientY - r.top) / r.height };
+  };
   const pm = (e) => rubMove(e.clientX, e.clientY);
   petArea.addEventListener("pointerdown", pd);
   stageEl.addEventListener("pointermove", pm);
-  window.addEventListener("pointerup", () => { rubEnd(); rubRelease(); });
+  window.addEventListener("pointerup", (e) => {
+    if (tapInfo && Date.now() - tapInfo.t < 320 && Math.hypot(e.clientX - tapInfo.x, e.clientY - tapInfo.y) < 12) {
+      petTap(zoneFor(tapInfo.rx, tapInfo.ry));
+    }
+    tapInfo = null;
+    rubEnd(); rubRelease();
+  });
   stageEl.addEventListener("pointerleave", () => { rubEnd(); rubRelease(); });
 
   const bathStage = $("#bathStage");
@@ -2942,6 +3077,7 @@ document.addEventListener("DOMContentLoaded", () => {
   bathStage.addEventListener("pointerleave", rubEnd);
   $("#bathSkip").addEventListener("click", cancelBath);
   $("#spongeBtn").addEventListener("click", startBath);
+  $("#arcRow").addEventListener("click", () => { if (arcGateCheck().ready) startArcChapter(); });
 
   $("#chatClose").addEventListener("click", () => { closeSheets(); renderAll(); });
   $("#expedOpen").addEventListener("click", () => { buildSheets(); openSheet("sheet-exped"); });

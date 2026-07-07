@@ -751,3 +751,12 @@ body.phase-night #dock { border-color:rgba(255,255,255,.14); }
 .butterfly.dart { animation: bflyDart .55s ease-in forwards !important; }
 @keyframes bflyDart { to { transform:translateY(-140px) scale(.5); opacity:0; } }
 .pet .eyes, .pet .brows { transition: transform .16s ease; }
+
+/* ============ v13: Story-Karte + Ohr-Zucken ============ */
+.arc-card { background:linear-gradient(160deg, rgba(255,251,240,.94), rgba(248,236,244,.94)); border:1px solid rgba(158,72,107,.18); }
+.arc-icon { background:linear-gradient(160deg,#c9a13f,#9e486b); }
+.arc-icon svg { stroke:#fff; fill:none; }
+#arcRow { border-top:none; padding-top:2px; }
+.pet.clip-earL .earL { animation: earTwitch .6s ease; }
+.pet.clip-earR .earR { animation: earTwitch .6s ease; }
+@keyframes earTwitch { 20% { transform:rotate(-14deg);} 45% { transform:rotate(8deg);} 70% { transform:rotate(-5deg);} }
