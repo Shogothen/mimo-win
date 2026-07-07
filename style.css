@@ -626,3 +626,14 @@ body.phase-night .lk-bulb { filter: drop-shadow(0 0 5px currentColor); }
   transition: bottom .55s cubic-bezier(.3,1.1,.5,1), transform .55s ease, opacity .2s ease .45s; }
 .fly-snack.arrive { bottom:34%; transform:translateX(-50%) scale(.4) rotate(20deg); opacity:0; }
 .feed-fx { display:block; font-size:9.5px; font-weight:700; color:var(--accent); margin-top:4px; letter-spacing:.2px; }
+
+/* ============ v8: Emotionen & Bond-Visuals ============ */
+@keyframes waveArm { 0%,100% { transform:rotate(0);} 20% { transform:rotate(-52deg);} 40% { transform:rotate(-28deg);} 60% { transform:rotate(-52deg);} 80% { transform:rotate(-20deg);} }
+.pet.soulbond .blob { filter: drop-shadow(0 0 14px rgba(255,214,150,.55)); }
+.heart-cheeks .hc { animation: hcPulse 2.6s ease-in-out infinite; transform-origin:center; }
+.heart-cheeks .hc2 { animation-delay:1.3s; }
+@keyframes hcPulse { 0%,100% { opacity:.55; transform:scale(1);} 50% { opacity:.9; transform:scale(1.12);} }
+.eye-star path { animation: starSpin 1.4s ease-in-out; transform-origin:center; }
+@keyframes starSpin { from { transform:scale(.3) rotate(-40deg);} 60% { transform:scale(1.2) rotate(8deg);} to { transform:scale(1) rotate(0);} }
+.eye-heart path { animation: heartBeat .9s ease-in-out infinite; transform-origin:center; }
+@keyframes heartBeat { 0%,100% { transform:scale(1);} 30% { transform:scale(1.15);} }

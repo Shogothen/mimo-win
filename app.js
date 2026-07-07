@@ -25,7 +25,8 @@ const twoDaysAgoKey = () => todayKey(new Date(Date.now() - 2 * 864e5));
 const fmt = (tpl, ctx) => tpl
   .replaceAll("%N", ctx.N ?? "").replaceAll("%U", ctx.U ?? "")
   .replaceAll("%S", ctx.S ?? "").replaceAll("%L", ctx.L ?? "")
-  .replaceAll("%V", ctx.V ?? "");
+  .replaceAll("%V", ctx.V ?? "")
+  .replaceAll("%K", ctx.K ?? "");
 
 function dayPhase(d = new Date()) {
   const h = d.getHours();
@@ -68,7 +69,8 @@ function defaultState() {
     gratitude: [], lastGratitudeDay: null, lastBreathDay: null, breathsDone: 0,
     streakFreezes: 0,
     bondTierSeen: 0, destVisits: {}, weekly: null, weeklyDone: 0,
-    care: { streichel: [], quatschDay: null, quatschCount: 0, gamesDay: null, gamesCount: 0 }
+    care: { streichel: [], quatschDay: null, quatschCount: 0, gamesDay: null, gamesCount: 0 },
+    moments: [], lastGreetDay: null
   };
 }
 
@@ -142,6 +144,7 @@ function checkBondTier() {
   if (t > (state.bondTierSeen || 0)) {
     state.bondTierSeen = t;
     pendingBondTier = t;
+    if (t === 4) captureMoment("seelen");
     state.diary.unshift({ date: Date.now(), mood: "anhaenglich", text: fmt(BOND_TIER_DIARY, ctx({ S: BOND_TIERS[t].name })) });
   }
 }
@@ -174,6 +177,7 @@ function computeMood() {
   if (s.energie < 25) return "muede";
   if (s.saettigung < 30) return "hungrig";
   if (hrs > 12) return p.pers.anhaenglich >= p.pers.frech ? "anhaenglich" : "dramatisch";
+  if (s.laune < 25) return "traurig";
   if (s.laune > 75 && s.energie > 50) return "gluecklich";
   if (s.laune < 40) return "gelangweilt";
   if (h >= 21 || h < 6) return "vertraeumt";
@@ -255,7 +259,11 @@ function grantQuirk() {
   state.diary.unshift({ date: Date.now(), mood: computeMood(), text: q.diary });
 }
 
-const ctx = (extra = {}) => ({ N: state.pet.name, U: state.userName, ...extra });
+function nickname() {
+  const nn = state.talkFacts?.kosename;
+  return !nn || nn === "__name__" ? state.userName : nn;
+}
+const ctx = (extra = {}) => ({ N: state.pet.name, U: state.userName, K: nickname(), ...extra });
 
 // ---------- Engine: Diary, Reactions ----------
 function addDiary(kind, extra = {}) {
@@ -310,6 +318,8 @@ function dailyMessage() {
   }
   const oldGrat = state.gratitude.filter(g => Date.now() - g.d > 2 * 864e5);
   if (oldGrat.length) pool.push(fmt(pick(GRATITUDE_TEXTS.daily), ctx({ V: pick(oldGrat).text })));
+  const mems = recallableMoments();
+  if (mems.length) pool.push(momentRecallLine(pick(mems)));
   return fmt(pick(pool), ctx());
 }
 
@@ -367,7 +377,10 @@ function interact(type) {
   recordInteraction(type);
   showReaction(reactionOverride || genericReaction(type));
   if (Math.random() < 0.25) addDiary("interaction", { type });
-  if (type === "streicheln") wishBump("streicheln");
+  if (type === "streicheln") {
+    wishBump("streicheln");
+    if (bondTier() >= 2 && Math.random() < 0.35) homePet?.emote("heart", 1600);
+  }
   if (rewarded) {
     sceneFloat(`+${xp} XP`, "#9e486b");
     handleLevelUp(addXP(xp));
@@ -416,8 +429,11 @@ function feed(snackId) {
     p.favDiscovered = true;
     text = fmt(FEED_REACTIONS.discovery, ctx({ S: snack.title }));
     addDiary("snack", { S: snack.title });
+    captureMoment("favsnack", snack.title);
+    homePet?.emote("star", 2200);
     playSound("success");
   } else if (isFav) {
+    homePet?.emote("star", 1500);
     text = fmt(pick(FEED_REACTIONS.favorite), ctx({ S: snack.title }));
   } else if (wasHungry) {
     text = fmt(pick(FEED_REACTIONS[snackId].concat(FEED_REACTIONS.hungry)), ctx());
@@ -465,7 +481,10 @@ function doCheckIn(answerId) {
   const p = state.pet;
   if (p.lastCheckInDay === todayKey()) return;
   applyDecay();
-  if (p.lastCheckInDay === yesterdayKey()) p.streak += 1;
+  if (p.lastCheckInDay === yesterdayKey()) {
+    p.streak += 1;
+    if (p.streak === 7) captureMoment("streak7");
+  }
   else if (p.lastCheckInDay === twoDaysAgoKey() && state.streakFreezes > 0) {
     state.streakFreezes--;
     p.streak += 1;
@@ -572,6 +591,35 @@ function wishBump(kind, snackId) {
   }
 }
 
+// ---------- Engine: Momente ----------
+function captureMoment(type, detail) {
+  if (!MOMENT_TYPES[type]) return;
+  if (state.moments.some(m => m.type === type && m.detail === (detail || ""))) return; // keine Duplikate
+  state.moments.unshift({ type, detail: detail || "", d: Date.now() });
+  state.moments = state.moments.slice(0, 30);
+}
+
+function recallableMoments() {
+  return state.moments.filter(m => (Date.now() - m.d) / 864e5 >= 3);
+}
+
+function momentRecallLine(m) {
+  const days = Math.max(3, Math.round((Date.now() - m.d) / 864e5));
+  return fmt(pick(MOMENT_TYPES[m.type].recall), ctx({ S: days, V: m.detail }));
+}
+
+function buildMemoryConvo(m) {
+  const days = Math.max(3, Math.round((Date.now() - m.d) / 864e5));
+  return {
+    id: "erinnerung", type: "erinnerung",
+    nodes: { start: {
+      mimo: [...MEMORY_CONVO_INTRO, fmt(pick(MOMENT_TYPES[m.type].recall), ctx({ S: days, V: m.detail }))],
+      answers: MEMORY_CONVO_ANSWERS
+    }},
+    outro: MEMORY_CONVO_OUTRO
+  };
+}
+
 // ---------- Engine: Gespraeche ----------
 function convoCond(cond) {
   const m = state.pet.memory, today = state.pet.lastCheckInDay === todayKey();
@@ -590,6 +638,10 @@ function availableConversations() {
     if (conv && convoCond(conv.cond) && !seenToday(id)) { menu.push(conv); break; }
   }
   // Bond-Gespraeche (einmalig)
+  if (!CONVERSATIONS.some(x => x.id === "deep.kosename")) CONVERSATIONS.push(NICKNAME_CONVO);
+  const mems = recallableMoments();
+  if (mems.length && state.convoSeen["erinnerung"] !== todayKey() && Math.random() < 0.6)
+    menu.push(buildMemoryConvo(pick(mems)));
   const deeps = CONVERSATIONS.filter(x => x.type === "deep").sort((a, b) => a.minBond - b.minBond);
   for (const conv of deeps) {
     if (state.pet.stats.bond >= conv.minBond && !state.convoSeen[conv.id]) { menu.push(conv); break; }
@@ -728,7 +780,7 @@ function finishConvo() {
       const dust = rewarded ? (conv.type === "fact" || conv.type === "deep" ? 5 : 0) : 0;
       if (dust) earnDust(dust);
       wishBump("reden");
-      const diaryChance = { fact: 1, deep: 1, context: 0.6, story: 0.5, quatsch: 0.2 }[conv.type] || 0.3;
+      const diaryChance = { fact: 1, deep: 1, context: 0.6, story: 0.5, quatsch: 0.2, erinnerung: 0 }[conv.type] || 0.3;
       if (Math.random() < diaryChance)
         state.diary.unshift({ date: Date.now(), mood: computeMood(), text: fmt(CONVO_DIARY[conv.type], ctx()) });
       const rw = document.createElement("div");
@@ -809,10 +861,15 @@ function checkExpeditionReturn() {
   let souvenirNew = false, bonusDust = 0;
   if (souvenir) {
     if (state.souvenirs.includes(souvenir.id)) bonusDust = Math.ceil(dust / 2);
-    else { state.souvenirs.push(souvenir.id); souvenirNew = true; }
+    else {
+      state.souvenirs.push(souvenir.id);
+      souvenirNew = true;
+      if (souvenir.rar === "episch" || souvenir.rar === "legendaer") captureMoment("fund", souvenir.title);
+    }
   }
   state.expedition = null;
   state.expeditionsDone++;
+  if (tier.id === "lang" && !state.moments.some(m => m.type === "reise")) captureMoment("reise");
   weeklyProgress("expeds");
   earnDust(dust + bonusDust);
   state.pet.stats.laune = clamp(state.pet.stats.laune + 10, 0, 100);
@@ -1151,7 +1208,43 @@ function createPet(mount, size, opts = {}) {
         <ellipse cx="70" cy="92" rx="10" ry="7" fill="#ef8d5c" opacity="0.55" transform="rotate(-18 70 92)"/>
         <ellipse cx="196" cy="86" rx="8" ry="6" fill="#ef8d5c" opacity="0.5" transform="rotate(14 196 86)"/>
       </g>
+      <g class="tuft-baby hidden">
+        <path d="M 126 34 Q 118 16 132 12 Q 128 22 138 24 Q 130 28 130 36" fill="#f79a67"/>
+      </g>
+      <g class="tuft-teen hidden">
+        <path d="M 124 32 Q 116 8 134 4 Q 148 2 146 14 Q 138 10 134 16 Q 132 24 130 34" fill="#f79a67"/>
+      </g>
+      <g class="tail hidden" transform="translate(222 196)">
+        <path d="M 0 0 Q 26 -6 30 -30 Q 33 -48 20 -52 Q 28 -38 18 -28 Q 10 -20 2 -16 Z" fill="#f2916b"/>
+        <circle cx="24" cy="-46" r="9" fill="#f9a873"/>
+      </g>
+      <g class="heart-cheeks hidden">
+        <path class="hc" d="M 66 140 c -3 -4 -9 -3 -9 2 c 0 4 5 7 9 10 c 4 -3 9 -6 9 -10 c 0 -5 -6 -6 -9 -2 z" fill="#e56b6b" opacity="0.75"/>
+        <path class="hc hc2" d="M 194 140 c -3 -4 -9 -3 -9 2 c 0 4 5 7 9 10 c 4 -3 9 -6 9 -10 c 0 -5 -6 -6 -9 -2 z" fill="#e56b6b" opacity="0.75"/>
+      </g>
+      <g class="brows hidden">
+        <path class="brow-sad hidden" d="M 86 92 Q 98 86 108 94" stroke="#3a2531" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+        <path class="brow-sad hidden" d="M 174 92 Q 162 86 152 94" stroke="#3a2531" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+        <path class="brow-up hidden" d="M 86 88 Q 98 82 110 88" stroke="#3a2531" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+        <path class="brow-up hidden" d="M 174 88 Q 162 82 150 88" stroke="#3a2531" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+      </g>
       <g class="eyes">
+        <g class="eye-star hidden">
+          <path d="M 98 100 l 3.6 7.8 8.6 0.9 -6.4 5.8 1.8 8.4 -7.6 -4.3 -7.6 4.3 1.8 -8.4 -6.4 -5.8 8.6 -0.9 z" fill="#f2b035"/>
+          <path d="M 162 100 l 3.6 7.8 8.6 0.9 -6.4 5.8 1.8 8.4 -7.6 -4.3 -7.6 4.3 1.8 -8.4 -6.4 -5.8 8.6 -0.9 z" fill="#f2b035"/>
+        </g>
+        <g class="eye-heart hidden">
+          <path d="M 98 104 c -5 -7 -15 -5 -15 3 c 0 7 8 12 15 17 c 7 -5 15 -10 15 -17 c 0 -8 -10 -10 -15 -3 z" fill="#e56b6b"/>
+          <path d="M 162 104 c -5 -7 -15 -5 -15 3 c 0 7 8 12 15 17 c 7 -5 15 -10 15 -17 c 0 -8 -10 -10 -15 -3 z" fill="#e56b6b"/>
+        </g>
+        <g class="eye-teary hidden">
+          <ellipse cx="98" cy="112" rx="11" ry="12" fill="#3a2531"/>
+          <ellipse cx="98" cy="116" rx="7" ry="5" fill="#8fb8e8" opacity="0.85"/>
+          <circle cx="94" cy="106" r="4" fill="#fff"/>
+          <ellipse cx="162" cy="112" rx="11" ry="12" fill="#3a2531"/>
+          <ellipse cx="162" cy="116" rx="7" ry="5" fill="#8fb8e8" opacity="0.85"/>
+          <circle cx="158" cy="106" r="4" fill="#fff"/>
+        </g>
         <g class="eye-normal">
           <ellipse cx="98" cy="112" rx="11.5" ry="13.5" fill="#3a2531"/>
           <circle cx="94" cy="106" r="4.6" fill="#fff"/><circle cx="102" cy="117" r="2.1" fill="#fff" opacity="0.8"/>
@@ -1176,6 +1269,10 @@ function createPet(mount, size, opts = {}) {
           <path d="M 86 112 Q 98 121 110 112" stroke="#3a2531" stroke-width="5.5" fill="none" stroke-linecap="round"/>
           <path d="M 150 112 Q 162 121 174 112" stroke="#3a2531" stroke-width="5.5" fill="none" stroke-linecap="round"/>
         </g>
+      </g>
+      <g class="bond-sparkle hidden">
+        <circle cx="104" cy="119" r="1.8" fill="#fff" opacity="0.95"/>
+        <circle cx="168" cy="119" r="1.8" fill="#fff" opacity="0.95"/>
       </g>
       <g class="mouths">
         <path class="m-smile" d="M 112 142 Q 130 158 148 142" stroke="#6e3a3e" stroke-width="5" fill="none" stroke-linecap="round"/>
@@ -1246,23 +1343,50 @@ function createPet(mount, size, opts = {}) {
     animated: !opts.static,
     blinking: false,
     mood: "gluecklich", sleeping: false,
+    emoteType: null, emoteUntil: 0,
+    emote(type, ms = 1600) {
+      this.emoteType = type;
+      this.emoteUntil = Date.now() + ms;
+      this.update(this.mood, this.sleeping, currentHat());
+      setTimeout(() => {
+        if (Date.now() >= this.emoteUntil) { this.emoteType = null; this.update(this.mood, this.sleeping, currentHat()); }
+      }, ms + 40);
+    },
     update(mood, sleeping, hat) {
       this.mood = mood; this.sleeping = sleeping;
+      const emote = this.emoteType && Date.now() < this.emoteUntil ? this.emoteType : null;
       svg.classList.toggle("sleeping", sleeping);
       svg.classList.toggle("happy", mood === "gluecklich" && !sleeping);
       svg.querySelector(".zzz").classList.toggle("hidden", !sleeping);
-      const eyes = { normal: 0, big: 0, lid: 0, sly: 0, closed: 0 };
+      const eyes = { normal: 0, big: 0, lid: 0, sly: 0, closed: 0, star: 0, heart: 0, teary: 0 };
       const mouth = { smile: 0, small: 0, open: 0, flat: 0, sleep: 0 };
-      if (sleeping || this.blinking) { eyes.closed = 1; }
+      let brow = null; // null | "sad" | "up"
+      if (emote === "star") { eyes.star = 1; mouth.open = 1; brow = "up"; }
+      else if (emote === "heart") { eyes.heart = 1; mouth.smile = 1; }
+      else if (sleeping || this.blinking) { eyes.closed = 1; }
+      else if (mood === "traurig") { eyes.teary = 1; brow = "sad"; }
       else if (mood === "muede" || mood === "vertraeumt") eyes.lid = 1;
       else if (mood === "frech") eyes.sly = 1;
-      else if (mood === "dramatisch") eyes.big = 1;
+      else if (mood === "dramatisch") { eyes.big = 1; brow = "up"; }
       else eyes.normal = 1;
-      if (sleeping) mouth.sleep = 1;
-      else if (mood === "gluecklich" || mood === "anhaenglich") mouth.smile = 1;
-      else if (mood === "hungrig" || mood === "dramatisch") mouth.open = 1;
-      else if (mood === "muede" || mood === "gelangweilt") mouth.flat = 1;
-      else mouth.small = 1;
+      if (!emote) {
+        if (sleeping) mouth.sleep = 1;
+        else if (mood === "traurig") mouth.flat = 1;
+        else if (mood === "gluecklich" || mood === "anhaenglich") mouth.smile = 1;
+        else if (mood === "hungrig" || mood === "dramatisch") mouth.open = 1;
+        else if (mood === "muede" || mood === "gelangweilt") mouth.flat = 1;
+        else mouth.small = 1;
+      }
+      // Brauen
+      const browsG = svg.querySelector(".brows");
+      browsG.classList.toggle("hidden", !brow);
+      svg.querySelectorAll(".brow-sad").forEach(el => el.classList.toggle("hidden", brow !== "sad"));
+      svg.querySelectorAll(".brow-up").forEach(el => el.classList.toggle("hidden", brow !== "up"));
+      // Bond-Visuals: 2. Glanz ab Stufe 2, Herz-Wangen ab 3, Schimmer ab 4
+      const bt = typeof bondTier === "function" ? bondTier() : 0;
+      svg.querySelector(".bond-sparkle").classList.toggle("hidden", bt < 2 || sleeping || eyes.star || eyes.heart || eyes.teary || eyes.closed);
+      svg.querySelector(".heart-cheeks").classList.toggle("hidden", bt < 3);
+      svg.classList.toggle("soulbond", bt >= 4);
       for (const k of Object.keys(eyes)) svg.querySelector(`.eye-${k}`).classList.toggle("hidden", !eyes[k]);
       for (const k of Object.keys(mouth)) svg.querySelector(`.m-${k}`).classList.toggle("hidden", !mouth[k]);
       for (const h of HATS) {
@@ -1289,7 +1413,7 @@ function createPet(mount, size, opts = {}) {
       const cfg = {
         1: { body: 0.84, eyes: 1.16, ears: 0.88, spots: false },
         2: { body: 1.0,  eyes: 1.0,  ears: 1.0,  spots: false },
-        3: { body: 1.1,  eyes: 0.94, ears: 1.06, spots: true }
+        3: { body: 1.1,  eyes: 0.94, ears: 1.18, spots: true }
       }[stage] || { body: 1, eyes: 1, ears: 1, spots: false };
       svg.querySelector(".stagewrap").setAttribute("transform",
         `translate(130 234) scale(${cfg.body}) translate(-130 -234)`);
@@ -1298,6 +1422,9 @@ function createPet(mount, size, opts = {}) {
       svg.querySelector(".earswrap").setAttribute("transform",
         `translate(130 58) scale(${cfg.ears}) translate(-130 -58)`);
       svg.querySelector(".spots").classList.toggle("hidden", !cfg.spots);
+      svg.querySelector(".tuft-baby").classList.toggle("hidden", stage !== 1);
+      svg.querySelector(".tuft-teen").classList.toggle("hidden", stage !== 2);
+      svg.querySelector(".tail").classList.toggle("hidden", stage !== 3);
     }
   };
   inst.blob.setAttribute("d", blobPath(130, 128, 92, 86, inst.phase));
@@ -1309,6 +1436,17 @@ function createPet(mount, size, opts = {}) {
       inst.blinking = true; inst.update(inst.mood, inst.sleeping, currentHat());
       setTimeout(() => { inst.blinking = false; inst.update(inst.mood, inst.sleeping, currentHat()); }, 150);
     }, 3400 + Math.random() * 900);
+    // Gelegentliches Winken bei guter Laune
+    setInterval(() => {
+      if (inst.sleeping || Math.random() > 0.45) return;
+      if (inst.mood !== "gluecklich" && inst.mood !== "anhaenglich") return;
+      const arm = svg.querySelector(".armR");
+      if (!arm) return;
+      arm.style.transformOrigin = "218px 172px";
+      arm.style.animation = "waveArm 1.1s ease-in-out";
+      setTimeout(() => { arm.style.animation = ""; }, 1200);
+    }, 24000 + Math.random() * 16000);
+
     // Blick wandert
     setInterval(() => {
       if (inst.sleeping) return;
@@ -2095,6 +2233,10 @@ function endGame() {
   game.running = false;
   if (game.comboBest >= 5) unlockAchievement("combo.5");
   submitGame();
+  if (game.score > 0 && game.score >= (state.best[game.mode] || 0)) {
+    homePet?.emote("star", 2200);
+    if (game.score >= 12) captureMoment("rekord", `${game.score} bei ${GAME_DEFS[game.mode].title}`);
+  }
   $("#gameFinalScore").textContent = `${game.score} ${game.mode === "blasen" ? "Blasen" : "Sterne"}`;
   const isBest = game.score >= (state.best[game.mode] || 0) && game.score > 0;
   $("#gameNewBest").classList.toggle("hidden", !isBest);
@@ -2190,6 +2332,18 @@ function switchTab(tab) {
   window.scrollTo(0, 0);
 }
 
+function dailyGreeting() {
+  if (!state.onboarded || state.lastGreetDay === todayKey()) return;
+  state.lastGreetDay = todayKey();
+  let text;
+  const last = state.pet.memory.recent[0];
+  if (last === "stressig" && state.pet.lastCheckInDay === yesterdayKey()) text = GREETINGS.afterStress;
+  else if (last === "super" && state.pet.lastCheckInDay === yesterdayKey()) text = GREETINGS.afterSuper;
+  else text = pick(GREETINGS[dayPhase()]);
+  setTimeout(() => showReaction(fmt(text, ctx())), 900);
+  save();
+}
+
 function timeTick() {
   document.body.className = "phase-" + dayPhase();
   checkExpeditionReturn();
@@ -2222,6 +2376,7 @@ function bootApp() {
   switchTab("home");
   showAway();
   showReturn();
+  dailyGreeting();
   setInterval(timeTick, 60000);
   document.addEventListener("visibilitychange", () => { if (!document.hidden) { timeTick(); showReturn(); } });
 }

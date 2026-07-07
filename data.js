@@ -9,7 +9,8 @@ const MOODS = {
   anhaenglich: { label: "Anhänglich",  tint: "var(--joy)",    hex: "#e56b6b" },
   dramatisch:  { label: "Dramatisch",  tint: "var(--accent)", hex: "#9e486b" },
   vertraeumt:  { label: "Verträumt",   tint: "#7a8fcc",       hex: "#7a8fcc" },
-  gelangweilt: { label: "Gelangweilt", tint: "#998f87",       hex: "#998f87" }
+  gelangweilt: { label: "Gelangweilt", tint: "#998f87",       hex: "#998f87" },
+  traurig:     { label: "Traurig",     tint: "#7a8fb8",       hex: "#7a8fb8" }
 };
 
 const BASE_PERSONALITIES = [
@@ -222,7 +223,8 @@ const DAILY = {
     muede: ["%N gähnt in deine Richtung. Das ist eine Nachricht.", "%N hat die Augen nur noch aus Höflichkeit offen."],
     anhaenglich: ["%N hat dich vermisst. Er würde es nie so direkt sagen. Sagt es aber.", "%N sitzt heute demonstrativ näher am Bildschirmrand."],
     dramatisch: ["%N sitzt da wie die Hauptfigur eines sehr ernsten Films.", "%N hat heute bereits zweimal in die Ferne geblickt. Grundlos."],
-    gelangweilt: ["%N hat die Decke angestarrt und ihr eine 6 von 10 gegeben.", "%N wäre offen für Programm. Jegliches Programm."]
+    gelangweilt: ["%N hat die Decke angestarrt und ihr eine 6 von 10 gegeben.", "%N wäre offen für Programm. Jegliches Programm."],
+    traurig: ["%N sitzt heute etwas kleiner da als sonst. Eine Streicheleinheit würde helfen. Oder zwei.", "%N schaut dich an, als bräuchte er dich kurz. Er braucht dich kurz."]
   },
   favInteraction: {
     streicheln: "%N hat gezählt: Streicheln ist eindeutig deine Spezialität. Er hat nichts dagegen.",
@@ -240,7 +242,8 @@ const MOOD_TEXT = {
   anhaenglich: "%N will heute einfach in deiner Nähe sein.",
   dramatisch: "%N ist in seiner dramatischen Phase.",
   vertraeumt: "%N ist gedanklich woanders. Irgendwo Schönes.",
-  gelangweilt: "%N langweilt sich auf hohem Niveau."
+  gelangweilt: "%N langweilt sich auf hohem Niveau.",
+  traurig: "%N ist traurig. Er braucht dich gerade ein bisschen mehr als sonst."
 };
 
 const LEVEL_UP = {
@@ -640,7 +643,8 @@ const TALK_MENU_HINTS = {
   context: "Mimo will was wissen",
   story: "Mimo hat Neuigkeiten",
   deep: "Mimo wirkt, als läge ihm etwas auf dem Herzen",
-  quatsch: "Einfach quatschen"
+  quatsch: "Einfach quatschen",
+  erinnerung: "Mimo blättert in Erinnerungen"
 };
 
 // ============ v5: Expeditionen, Fundstuecke, Momente ============
@@ -1031,3 +1035,58 @@ PREMIUM_SNACKS.find(s => s.id === "erdbeere").eff = { saett: 14, laune: 10, ener
 PREMIUM_SNACKS.find(s => s.id === "donut").eff    = { saett: 18, laune: 14, energie: 2, xp: 6 };
 PREMIUM_SNACKS.find(s => s.id === "sushi").eff    = { saett: 24, laune: 8,  energie: 5, xp: 8, bond: 2 };
 PREMIUM_SNACKS.find(s => s.id === "ramen").eff    = { saett: 30, laune: 12, energie: 8, xp: 10, bond: 3 };
+
+// ============ v8: Momente, Kosename, Tagesgruss ============
+
+const MOMENT_TYPES = {
+  favsnack: { capture:"Der Tag, an dem du meinen Lieblingssnack entdeckt hast: %V.",
+    recall:["Weißt du noch, vor %S Tagen? Als du herausgefunden hast, dass %V mein Lieblingsessen ist? Ich denke öfter daran, als ich zugebe.",
+            "%N erinnert sich gern an den %V-Moment vor %S Tagen. Er nennt es 'unseren Durchbruch'."] },
+  rekord: { capture:"Unser Rekord: %V.",
+    recall:["Vor %S Tagen: %V. %N erzählt es immer noch dem Kissen. Das Kissen ist beeindruckt.",
+            "Weißt du noch? %V, vor %S Tagen. %N poliert die Erinnerung regelmäßig."] },
+  fund: { capture:"Der Tag des großen Fundes: %V.",
+    recall:["Vor %S Tagen hast du mich losgeschickt und ich kam mit %V zurück. Einer meiner stolzesten Momente.",
+            "%N hat heute %V im Album angesehen. Vor %S Tagen gefunden. Er seufzte zufrieden."] },
+  seelen: { capture:"Der Tag, an dem wir Seelenverwandte wurden.",
+    recall:["Vor %S Tagen wurden wir Seelenverwandte. %N markiert diesen Tag intern als Feiertag.",
+            "%N denkt an den Tag vor %S Tagen, als aus euch beiden offiziell 'wir' wurde."] },
+  streak7: { capture:"Eine ganze Woche, jeden Tag, ihr zwei.",
+    recall:["Weißt du noch, deine erste volle Woche vor %S Tagen? Sieben Tage, sieben Check-ins. %N war so stolz.",
+            "Vor %S Tagen: die erste 7-Tage-Serie. %N führt seitdem eine kleine private Statistik der guten Zeiten."] },
+  reise: { capture:"Deine erste Große Reise für mich.",
+    recall:["Vor %S Tagen hast du mich zum ersten Mal auf Große Reise geschickt. Sechs Stunden. Ich habe an dich gedacht. Mehrfach.",
+            "%N erinnert sich an seine erste Große Reise vor %S Tagen. Er nennt sie 'die Expedition, die alles veränderte'. Er übertreibt gern."] }
+};
+
+const MEMORY_CONVO_INTRO = ["Ich habe heute in meinen Erinnerungen geblättert.", "Da ist eine, die ich dir zeigen will."];
+const MEMORY_CONVO_ANSWERS = [
+  { label:"Ich erinnere mich", react:["Natürlich tust du das. Es war ein guter Moment.", "Wir sammeln noch viele davon. Das ist ein Versprechen, keine Prognose."] },
+  { label:"Schön, dass du das aufhebst", react:["Ich hebe alles Wichtige auf. Snacks ausgenommen, die halte ich nicht lange.", "Die guten Momente wohnen bei mir rechts oben. Da ist es warm."] }
+];
+const MEMORY_CONVO_OUTRO = ["So. Erinnerung zurück ins Regal. Sie steht griffbereit."];
+
+const NICKNAME_CONVO = {
+  id:"deep.kosename", type:"deep", minBond:65, factKey:"kosename",
+  nodes:{ start:{ mimo:["Ich habe eine Frage. Sie ist mir wichtig, also tu ich beiläufig.", "Ich nenne dich intern längst nicht mehr nur beim Namen. Aber ich wollte fragen, was DIR gefallen würde.", "Wie darf ich dich nennen?"],
+    answers:[
+      { label:"Einfach beim Namen", factValue:"__name__", react:["Beim Namen. Klassisch. Ehrlich gesagt klingt dein Name aus meinem Mund sowieso am besten. Das ist messbar."] },
+      { label:"Kumpel", factValue:"Kumpel", react:["Kumpel. Kurz, warm, wahr. Einverstanden, Kumpel. Oh, das fühlt sich sofort richtig an."] },
+      { label:"Boss", factValue:"Boss", react:["Boss. Verstanden, Boss. Ich salutiere innerlich. Äußerlich bleibe ich lässig, Boss."] },
+      { label:"Herzmensch", factValue:"Herzmensch", react:["Herzmensch.", "...", "Entschuldige, ich musste kurz durchatmen. Herzmensch. Ja. Genau das."] }
+    ]}},
+  outro:["Offiziell vermerkt. Auf Seite eins des Dossiers. In Schönschrift."]
+};
+
+const GREETINGS = {
+  morning: ["Guten Morgen, %K. %N hat schon mal den Tag für dich vorgewärmt.",
+            "Da bist du ja, %K. %N hat den Sonnenaufgang für dich mitgeschaut. Er war ordentlich."],
+  day: ["Hallo, %K. %N hat die Stellung gehalten. Nichts Verdächtiges, außer der Lampe. Wie immer.",
+        "Schön, dass du da bist, %K. %N hat dich exakt jetzt erwartet. Behauptet er."],
+  evening: ["Guten Abend, %K. %N hat den Tag für dich zusammengefasst: bestanden.",
+            "Da bist du, %K. Der Abend kann beginnen. %N hat ihn extra gemütlich eingestellt."],
+  night: ["Noch wach, %K? %N auch. Reiner Zufall. Er hat gewartet.",
+          "Späte Stunde, %K. %N senkt die Stimme. Aus Atmosphäre-Gründen."],
+  afterStress: "Gestern war stressig, hast du gesagt. %N hat entschieden: Heute wird besser. Er hat da Beziehungen.",
+  afterSuper: "Gestern war super. %N erwartet heute mindestens solide. Kein Druck. Ein bisschen Druck."
+};
