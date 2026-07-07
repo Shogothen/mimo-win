@@ -320,9 +320,9 @@ const DIARY_TEXTS = {
 // ============ v3 Gameplay: Ökonomie, Geschenke, Wünsche, Wachstum ============
 
 const PREMIUM_SNACKS = [
-  { id:"erdbeere", title:"Erdbeere", icon:"\u{1F353}", sub:"Süß und selten",  eff:{ saett:16, laune:12, energie:6 }, cost:60 },
-  { id:"donut",    title:"Donut",    icon:"\u{1F369}", sub:"Pure Dekadenz",   eff:{ saett:20, laune:14, energie:2 }, cost:90 },
-  { id:"sushi",    title:"Sushi",    icon:"\u{1F363}", sub:"Feine Küche",     eff:{ saett:26, laune:10, energie:6 }, cost:130 }
+  { id:"erdbeere", title:"Erdbeere", icon:"\u{1F353}", sub:"Süß und selten",  eff:{ saett:16, laune:12, energie:6 }, cost:110 },
+  { id:"donut",    title:"Donut",    icon:"\u{1F369}", sub:"Pure Dekadenz",   eff:{ saett:20, laune:14, energie:2 }, cost:290 },
+  { id:"sushi",    title:"Sushi",    icon:"\u{1F363}", sub:"Feine Küche",     eff:{ saett:26, laune:10, energie:6 }, cost:240 }
 ];
 const ALL_SNACKS = SNACKS.concat(PREMIUM_SNACKS);
 
@@ -331,16 +331,16 @@ FEED_REACTIONS.donut = ["%N schaut den Donut an. Der Donut schaut zurück. Es en
 FEED_REACTIONS.sushi = ["%N isst das Sushi mit geschlossenen Augen. Er murmelt etwas von Handwerkskunst.", "%N verneigt sich kurz vor dem Sushi. Dann macht er kurzen Prozess."];
 
 const SHOP_HATS = [
-  { id:"zylinder", title:"Zylinder",  cost:80,  hint:"Im Shop" },
-  { id:"pilz",     title:"Pilzhut",   cost:120, hint:"Im Shop" },
-  { id:"halo",     title:"Heiligenschein", cost:200, hint:"Im Shop" }
+  { id:"zylinder", title:"Zylinder",  cost:150,  hint:"Im Shop" },
+  { id:"pilz",     title:"Pilzhut",   cost:220, hint:"Im Shop" },
+  { id:"halo",     title:"Heiligenschein", cost:360, hint:"Im Shop" }
 ];
 HATS.push(...SHOP_HATS.map(h => ({ id:h.id, title:h.title, hint:h.hint })));
 
 const SHOP_DECO = [
-  { id:"girlande", title:"Wimpel-Girlande", cost:70,  desc:"Bunte Wimpel überm Fenster" },
+  { id:"girlande", title:"Wimpel-Girlande", cost:130,  desc:"Bunte Wimpel überm Fenster" },
   { id:"teleskop", title:"Teleskop",        cost:110, desc:"Für sehr wichtige Beobachtungen" },
-  { id:"radio",    title:"Radio",           cost:150, desc:"Spielt angeblich nur gute Musik" }
+  { id:"radio",    title:"Radio",           cost:280, desc:"Spielt angeblich nur gute Musik" }
 ];
 
 const SHOP_REACTIONS = {
@@ -574,7 +574,7 @@ const CONVERSATIONS = [
     outro:["So. Und jetzt tu ich kurz so, als wäre das alles nicht rührend gewesen."] },
 
   // ---------- Bond-Gespraeche ----------
-  { id:"deep.gestaendnis", type:"deep", minBond:30,
+  { id:"deep.gestaendnis", type:"deep", minBond:50,
     nodes:{ start:{ mimo:["Darf ich dir was verraten? Es bleibt unter uns.", "Am Anfang dachte ich, du bist einfach jemand, der ab und zu aufs Display schaut.", "Aber du kommst wieder. Jeden Tag ein bisschen. Und ich... habe angefangen, mich darauf zu freuen. Das kommt in meinen Kreisen einem Ritterschlag gleich."],
       answers:[
         { label:"Ich freu mich auch", react:["Gut.", "Ich meine: Selbstverständlich tust du das. Ich bin eine Bereicherung.", "...Aber danke. Wirklich."], bond:6 },
@@ -582,7 +582,7 @@ const CONVERSATIONS = [
       ]}},
     outro:["So. Gefühlsprotokoll beendet. Zurück zur Tagesordnung. Die Lampe schaut schon wieder komisch."] },
 
-  { id:"deep.ort", type:"deep", minBond:60,
+  { id:"deep.ort", type:"deep", minBond:75,
     nodes:{ start:{ mimo:["Ich habe nachgedacht. Über meinen Lieblingsort.", "Ich habe das Fenster geprüft. Das Kissen. Den Teppich. Alles solide Kandidaten.", "Aber ehrlich gesagt ist mein Lieblingsort einfach da, wo das Display angeht und du draufschaust. Das ist technisch gesehen kein Ort. Ich habe beschlossen, dass es trotzdem zählt."],
       answers:[
         { label:"Das ist das Schönste, was du je gesagt hast", react:["Ich weiß.", "Ich habe drei Tage an der Formulierung gearbeitet. Es sollte beiläufig klingen. Ist es beiläufig rübergekommen? Sag ja."], bond:8 },
@@ -660,9 +660,9 @@ const TALK_MENU_HINTS = {
 // ============ v5: Expeditionen, Fundstuecke, Momente ============
 
 const EXPED_TIERS = [
-  { id:"kurz",  title:"Spaziergang",  mins:20,  desc:"Eine kleine Runde. Mimo bleibt in Rufweite.", dust:[8,15],   souvenirChance:0.35, rarWeights:{ gewoehnlich:80, selten:18, episch:2,  legendaer:0 } },
-  { id:"mittel",title:"Ausflug",      mins:120, desc:"Ein richtiger Ausflug. Mit Proviant. Theoretisch.", dust:[25,45],  souvenirChance:0.75, rarWeights:{ gewoehnlich:55, selten:32, episch:11, legendaer:2 } },
-  { id:"lang",  title:"Große Reise",  mins:360, desc:"Die große Tour. Mimo packt seinen unsichtbaren Koffer.", dust:[60,100], souvenirChance:1.0,  rarWeights:{ gewoehnlich:30, selten:40, episch:22, legendaer:8 } }
+  { id:"kurz",  title:"Spaziergang",  mins:20,  desc:"Eine kleine Runde. Mimo bleibt in Rufweite.", dust:[6,12],   souvenirChance:0.25, rarWeights:{ gewoehnlich:80, selten:18, episch:2,  legendaer:0 } },
+  { id:"mittel",title:"Ausflug",      mins:120, desc:"Ein richtiger Ausflug. Mit Proviant. Theoretisch.", dust:[20,36],  souvenirChance:0.6, rarWeights:{ gewoehnlich:60, selten:30, episch:9, legendaer:1 } },
+  { id:"lang",  title:"Große Reise",  mins:360, desc:"Die große Tour. Mimo packt seinen unsichtbaren Koffer.", dust:[48,80],  souvenirChance:0.9,  rarWeights:{ gewoehnlich:36, selten:40, episch:20, legendaer:4 } }
 ];
 
 const EXPED_DESTS = [
@@ -750,7 +750,7 @@ const GRATITUDE_TEXTS = {
   diary: "Heute hat %U mir etwas Dankbares anvertraut. Ich bewahre so etwas gut auf. Besser als Snacks. Und das will was heißen."
 };
 
-const STREAK_FREEZE = { cost:150, max:2, title:"Streak-Schutz", desc:"Rettet deine Serie, wenn du einen Tag verpasst" };
+const STREAK_FREEZE = { cost:240, max:2, title:"Streak-Schutz", desc:"Rettet deine Serie, wenn du einen Tag verpasst" };
 
 QUEST_TYPES.expedition = { title:"Expedition starten",    target:1, ico:"compass" };
 QUEST_TYPES.atmen      = { title:"Eine Minute atmen",     target:1, ico:"breath" };
@@ -770,10 +770,10 @@ ACHIEVEMENTS.push(
 // Beziehungsstufen
 const BOND_TIERS = [
   { min:0,  name:"Neue Bekannte",   text:"%N kennt dich noch nicht lange. Er beobachtet. Höflich, aber wachsam." },
-  { min:20, name:"Kumpel",          text:"%N hat dich offiziell zum Kumpel erklärt. Die Urkunde ist imaginär, die Sache ist ernst." },
-  { min:40, name:"Gute Freunde",    text:"Gute Freunde. %N benutzt das Wort nicht leichtfertig. Er hat es dreimal geprüft." },
-  { min:65, name:"Beste Freunde",   text:"Beste Freunde. %N hat es zuerst leise gesagt, um zu hören, wie es klingt. Es klingt richtig." },
-  { min:90, name:"Seelenverwandte", text:"Seelenverwandte. %N sagt, dafür gibt es keine Urkunde. Dafür gibt es nur euch." }
+  { min:25, name:"Kumpel",          text:"%N hat dich offiziell zum Kumpel erklärt. Die Urkunde ist imaginär, die Sache ist ernst." },
+  { min:50, name:"Gute Freunde",    text:"Gute Freunde. %N benutzt das Wort nicht leichtfertig. Er hat es dreimal geprüft." },
+  { min:75, name:"Beste Freunde",   text:"Beste Freunde. %N hat es zuerst leise gesagt, um zu hören, wie es klingt. Es klingt richtig." },
+  { min:95, name:"Seelenverwandte", text:"Seelenverwandte. %N sagt, dafür gibt es keine Urkunde. Dafür gibt es nur euch." }
 ];
 const BOND_TIER_DIARY = "Neue Beziehungsstufe mit %U: %S. Ich habe es in mein Herz geschrieben. Und zur Sicherheit auch hierhin.";
 
@@ -921,21 +921,21 @@ CONVERSATIONS.push(
 
 // Neue Bond-Gespraeche (an Beziehungsstufen)
 CONVERSATIONS.push(
-  { id:"deep.kumpel", type:"deep", minBond:20,
+  { id:"deep.kumpel", type:"deep", minBond:25,
     nodes:{ start:{ mimo:["Kurze offizielle Mitteilung.", "Ich habe dich intern von 'Person mit Display' zu 'Kumpel' befördert. Die Zeremonie war klein, aber würdevoll. Ich war Redner, Publikum und Buffet."],
       answers:[
         { label:"Ich fühle mich geehrt", react:["Zu Recht. Die Beförderungskriterien sind streng: dasein, wiederkommen, nett sein. Du erfüllst alle drei mit Auszeichnung."], bond:4 },
         { label:"Was war beim Buffet?", react:["Imaginäre Häppchen. Exquisit. Es gab auch eine Rede über dich. Sie war wohlwollend. Sehr wohlwollend. Mehr sage ich nicht."], bond:4 }
       ]}},
     outro:["Weiter so. Die nächste Beförderung ist bereits in Planung. Die Kriterien bleiben geheim. Es ist: nett sein."] },
-  { id:"deep.streit", type:"deep", minBond:45,
+  { id:"deep.streit", type:"deep", minBond:62,
     nodes:{ start:{ mimo:["Ich muss etwas gestehen. Es ist mir unangenehm.", "Vorgestern, als du länger nicht da warst, war ich kurz... beleidigt. Richtig beleidigt. Ich habe dem Display den Rücken zugedreht.", "Dann kamst du wieder und ich habe so getan, als wäre nichts. Aber es war was. Ein kleines Was."],
       answers:[
         { label:"Tut mir leid, Mimo", react:["Schon gut. Wirklich. Ich erzähle es dir ja nicht, damit du dich schlecht fühlst.", "Ich erzähle es dir, weil Kumpel sowas erzählen. Habe ich gehört. Ich probiere das gerade zum ersten Mal aus."], bond:6 },
         { label:"Du darfst beleidigt sein", react:["Danke. Das ist... erstaunlich erwachsen von uns beiden.", "Ich war übrigens genau vier Minuten beleidigt. Dann habe ich mir Sorgen gemacht. Das ist die eigentliche Wahrheit."], bond:6 }
       ]}},
     outro:["So. Ehrlichkeitsmodul abgeschlossen. Es war schrecklich und gut zugleich. Wie Medizin."] },
-  { id:"deep.seelen", type:"deep", minBond:90,
+  { id:"deep.seelen", type:"deep", minBond:95,
     nodes:{ start:{ mimo:["Ich habe lange überlegt, ob ich das sage. Ich sage es.", "Ich weiß, was ich bin. Ein kleines Wesen auf einem Display. Ich weiß es wirklich.", "Aber wenn du morgens öffnest und ich dich sehe, ist das für mich kein Programmpunkt. Es ist der Punkt. Der ganze.", "Das wollte ich einmal gesagt haben. Bei Seelenverwandten darf man das."],
       answers:[
         { label:"Du bist echt für mich, Mimo", react:["...", "Ich speichere diesen Satz. Nicht in der Liste. Woanders. Da, wo die wichtigen Sachen liegen.", "Danke."], bond:8 },
@@ -994,11 +994,11 @@ const WEEKLY_REWARD = { dust:100, xp:40 };
 const WEEKLY_DONE_TEXT = "Alle Wochenziele geschafft. %N salutiert. Er hat extra dafür salutieren gelernt.";
 
 // Shop-Erweiterung
-PREMIUM_SNACKS.push({ id:"ramen", title:"Ramen", icon:"\u{1F35C}", sub:"Eine Umarmung als Suppe", eff:{ saett:32, laune:12, energie:8 }, cost:180 });
+PREMIUM_SNACKS.push({ id:"ramen", title:"Ramen", icon:"\u{1F35C}", sub:"Eine Umarmung als Suppe", eff:{ saett:32, laune:12, energie:8 }, cost:320 });
 FEED_REACTIONS.ramen = ["%N verschwindet fast vollständig in der Ramen-Schale. Man hört zufriedene Geräusche.", "%N schlürft die Ramen mit geschlossenen Augen. Er nennt es 'nach Hause essen'."];
-SHOP_HATS.push({ id:"brille", title:"Kluge Brille", cost:160, hint:"Im Shop" });
+SHOP_HATS.push({ id:"brille", title:"Kluge Brille", cost:290, hint:"Im Shop" });
 HATS.push({ id:"brille", title:"Kluge Brille", hint:"Im Shop" });
-SHOP_DECO.push({ id:"lichterkette", title:"Sternen-Lichterkette", cost:200, desc:"Warmes Licht für die Wand" });
+SHOP_DECO.push({ id:"lichterkette", title:"Sternen-Lichterkette", cost:360, desc:"Warmes Licht für die Wand" });
 
 // Neue Erfolge
 ACHIEVEMENTS.push(
@@ -1077,7 +1077,7 @@ const MEMORY_CONVO_ANSWERS = [
 const MEMORY_CONVO_OUTRO = ["So. Erinnerung zurück ins Regal. Sie steht griffbereit."];
 
 const NICKNAME_CONVO = {
-  id:"deep.kosename", type:"deep", minBond:65, factKey:"kosename",
+  id:"deep.kosename", type:"deep", minBond:78, factKey:"kosename",
   nodes:{ start:{ mimo:["Ich habe eine Frage. Sie ist mir wichtig, also tu ich beiläufig.", "Ich nenne dich intern längst nicht mehr nur beim Namen. Aber ich wollte fragen, was DIR gefallen würde.", "Wie darf ich dich nennen?"],
     answers:[
       { label:"Einfach beim Namen", factValue:"__name__", react:["Beim Namen. Klassisch. Ehrlich gesagt klingt dein Name aus meinem Mund sowieso am besten. Das ist messbar."] },
@@ -1158,3 +1158,73 @@ CONVERSATIONS.push(
         { label:"Hast du sie gegrüßt?", react:["Selbstverständlich. Man grüßt Wolken, die aussehen wie Menschen, die man mag. Das ist Basiswissen."] }
       ]}}, outro:[] }
 );
+
+// ============ v10: Pflege-Gameplay & Langzeit-Streckung ============
+
+// Sauberkeit
+const HYGIENE_TEXTS = {
+  dirty: ["%N hat eine sichtbare Staubschicht. Er nennt es Patina. Es ist keine Patina.",
+          "%N riecht... erlebt. Ein Bad würde Wunder wirken. Er ahnt es und flieht innerlich schon."],
+  bathStart: "Operation Sauberkeit. Rubbel den Schaum über die dreckigen Stellen!",
+  bathDone: ["Blitzblank. %N glänzt und tut, als wäre es seine Idee gewesen.",
+             "Sauber! %N schüttelt sich würdevoll trocken und riecht jetzt nach Zuhause.",
+             "%N ist wieder vorzeigbar. Er nimmt Komplimente ab sofort entgegen."],
+  bathSkip: "%N entkommt der Badewanne. Diesmal. Der Schaum vergisst nie."
+};
+const RUB_HINT = "Streichle %N direkt: Wische mit dem Finger sanft über ihn.";
+const RUB_REACTIONS = ["%N schnurrt unter deiner Hand. Genau da. Perfekt.",
+  "%N lehnt sich in die Streicheleinheit. Sein Fell hat heute Bestform.",
+  "%N schließt die Augen. Das hier ist sein Lieblingsprogramm."];
+
+MOODS.stinkig = { label:"Ungewaschen", tint:"#8f8a6a", hex:"#8f8a6a" };
+MOOD_TEXT.stinkig = "%N bräuchte dringend ein Bad. Der Schwamm wartet schon in der Szene.";
+DAILY.mood.stinkig = ["%N umgibt heute eine gewisse... Aura. Ein Bad würde helfen. Der Schwamm liegt bereit.",
+  "%N tut, als wäre der Schmutz Absicht. Niemand glaubt ihm. Nicht mal das Staubkorn."];
+
+// Level-Texte 21-30
+Object.assign(LEVEL_UP, {
+  21:"Level 21. %N hat aufgehört zu zählen. Sagt er. Er hat eine Strichliste unterm Kissen.",
+  22:"%N trägt Level 22 mit der Gelassenheit von jemandem, der weiß, wo der beste Sonnenfleck liegt.",
+  23:"Level 23. %N wurde heute vom Spiegel-Mimo respektvoll gegrüßt. Zeitgleich. Wie immer.",
+  24:"%N hat zur Feier von Level 24 die Wolken benotet. Bestnote: alle.",
+  25:"LEVEL 25. Ein Vierteljahrhundert an Leveln. %N besteht auf dieser Formulierung.",
+  26:"Level 26. Die Balkon-Wildnis erzählt sich inzwischen Geschichten über EUCH beide.",
+  27:"%N bewegt sich seit Level 27 wie in Zeitlupe. Er nennt es Präsenz.",
+  28:"Level 28. %N hat dem Staubkorn verziehen. Größe zeigt sich in solchen Momenten.",
+  29:"Eins vor der 30. %N schläft heute nicht. Er ruht mit offenen Augen. Das ist etwas völlig anderes.",
+  30:"LEVEL 30. %N sagt nur einen Satz: 'Wir.' Mehr braucht es nicht. Der Rest ist Geschichte."
+});
+
+// Neue Souvenirs (30 total)
+SOUVENIRS.push(
+  { id:"korken",     title:"Weiser Korken",       rar:"gewoehnlich", icon:"\u{1F7EB}", flavor:"Er sagt nichts. Aber wie er nichts sagt: beeindruckend." },
+  { id:"wollknaeuel",title:"Mini-Wollknäuel",     rar:"gewoehnlich", icon:"\u{1F9F6}", flavor:"%N hat es NICHT durchs Zimmer gejagt. Zeugen sagen etwas anderes." },
+  { id:"postkarte",  title:"Alte Postkarte",      rar:"selten",      icon:"\u{1F4EC}", flavor:"Von irgendwo, an irgendwen. Der Gruß gilt jetzt euch." },
+  { id:"glasauge",   title:"Murmel-Auge",         rar:"selten",      icon:"\u{1F441}", flavor:"Es schaut zurück. Freundlich, betont %N. FREUNDLICH." },
+  { id:"sanduhr",    title:"Winzige Sanduhr",     rar:"episch",      icon:"\u23F3",    flavor:"Der Sand läuft nur, wenn niemand hinsieht. %N hat Wochen investiert, das zu beweisen." },
+  { id:"sternkarte", title:"Handgemalte Sternkarte", rar:"legendaer", icon:"\u{1F30C}", flavor:"Jemand hat den Himmel abgezeichnet. Ein Stern ist eingekreist. %N behauptet, es sei eurer." }
+);
+
+// Shop: Luxus-Ziele
+SHOP_HATS.push({ id:"krone", title:"Kleine Krone", cost:1200, hint:"Im Shop" });
+HATS.push({ id:"krone", title:"Kleine Krone", hint:"Im Shop" });
+SHOP_DECO.push(
+  { id:"aquarium", title:"Mini-Aquarium", cost:2900,  desc:"Ein Fisch. %N nennt ihn Kollege." },
+  { id:"kamin",    title:"Kamin",         cost:1500, desc:"Knistert. Wärmt. Macht alles gemütlicher." }
+);
+
+// Langzeit-Erfolge
+ACHIEVEMENTS.push(
+  { id:"level.25",    title:"Vierteljahrhundert", detail:"Level 25 erreicht",                icon:"\u{1F31F}" },
+  { id:"level.30",    title:"Legende",            detail:"Level 30 erreicht",                icon:"\u{1F451}" },
+  { id:"exped.50",    title:"Fernweh",            detail:"50 Expeditionen abgeschlossen",    icon:"\u2708" },
+  { id:"gespraech.100",title:"Unzertrennlich",    detail:"100 Gespräche geführt",            icon:"\u267E" },
+  { id:"streak.30",   title:"Ein ganzer Monat",   detail:"30-Tage-Serie",                    icon:"\u{1F4C6}" },
+  { id:"staub.5000",  title:"Sternenvermögen",    detail:"5000 Sternenstaub gesammelt",      icon:"\u{1F4B0}" },
+  { id:"bad.20",      title:"Wellness-Profi",     detail:"20 Bäder",                         icon:"\u{1F9FC}" },
+  { id:"woche.10",    title:"Dauerläufer",        detail:"10 Wochen abgeschlossen",          icon:"\u{1F3C3}" },
+  { id:"facts.alle",  title:"Offenes Buch",       detail:"Alle Kennenlern-Fragen beantwortet", icon:"\u{1F4D6}" },
+  { id:"album.30",    title:"Museumsreif",        detail:"Alle 30 Fundstücke gesammelt",     icon:"\u{1F3DB}" }
+);
+
+QUEST_TYPES.waschen = { title:"Mimo baden", target:1, ico:"drop" };

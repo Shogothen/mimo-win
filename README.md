@@ -3,6 +3,7 @@
 Virtuelles Haustier als Web-App. Vanilla JS/HTML/CSS, keine Dependencies, Speicherung in localStorage.
 Portiert vom nativen SwiftUI-Projekt (Repo "mimo") mit allen Systemen: Stimmung, Persönlichkeit,
 Erinnerungen, Macken, Quests, Erfolge, Garderobe, zwei Mini-Games, Tagesphasen-Himmel.
+v10 Pflege & Langzeit: Hygiene-System mit Dreck und Bade-Rubbel-Modus, Streichel-Geste statt Tippen, Futter-Hüpfer, XP-Kurve bis Level 30, gestreckte Bond-Stufen/Preise/Drops, 10 Langzeit-Erfolge, 30 Fundstücke.
 v9 Politur: konsolidiertes Home (Heute-Karte, kombinierte Ziele), konsistentes SVG-Icon-System, Stat-Ring- und Dock-Fixes, Text-Qualitätspass, +5 Gespräche.
 v8 Seele: sichtbares Wachstum (Wirbel, Schweif, Ohren), Bond wird sichtbar (Augenglanz, Herz-Wangen, Schimmer), Emotions-Bursts, Traurig-Stimmung, Momente-System mit Erinnerungs-Gesprächen, Kosename, Tagesgruß.
 v7 Balancing: Anti-Spam-Budgets, Hunger mit Konsequenz, Premium-Snacks mit XP/Bond-Boni, Belohnungen sichtbar in der Szene, fliegende Snacks mit Kau-Animation.

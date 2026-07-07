@@ -46,7 +46,7 @@ function defaultState() {
     createdAt: Date.now(),
     pet: {
       name: "Mimo", base: "frech",
-      stats: { energie: 80, laune: 70, saettigung: 70, bond: 10, xp: 0, level: 1 },
+      stats: { energie: 80, laune: 70, saettigung: 70, bond: 10, hygiene: 85, xp: 0, level: 1 },
       pers: { frech: 20, lieb: 20, chaotisch: 20, vertraeumt: 20, anhaenglich: 20 },
       lastInteraction: Date.now(), lastUpdate: Date.now(),
       lastCheckInDay: null, streak: 0, sleeping: false,
@@ -69,8 +69,9 @@ function defaultState() {
     gratitude: [], lastGratitudeDay: null, lastBreathDay: null, breathsDone: 0,
     streakFreezes: 0,
     bondTierSeen: 0, destVisits: {}, weekly: null, weeklyDone: 0,
-    care: { streichel: [], quatschDay: null, quatschCount: 0, gamesDay: null, gamesCount: 0 },
-    moments: [], lastGreetDay: null
+    care: { streichel: [], quatschDay: null, quatschCount: 0, gamesDay: null, gamesCount: 0, bathDay: null },
+    moments: [], lastGreetDay: null,
+    bathsDone: 0
   };
 }
 
@@ -94,10 +95,13 @@ try {
 
 // Migration aelterer Spielstaende
 if (state.best.sterne === 0 && state.pet.bestScore > 0) state.best.sterne = state.pet.bestScore;
+if (state.pet.stats.hygiene === undefined) state.pet.stats.hygiene = 75;
+if (state.care.bathDay === undefined) state.care.bathDay = null;
+if (state.bathsDone === undefined) state.bathsDone = 0;
 // Neue XP-Kurve: bestehendes Level bleibt mindestens erhalten
 state.pet.stats.level = Math.max(state.pet.stats.level, (function () {
   let lvl = 1, sum = 0;
-  while (state.pet.stats.xp >= sum + 100 + (lvl - 1) * 30) { sum += 100 + (lvl - 1) * 30; lvl++; }
+  while (state.pet.stats.xp >= sum + 120 + (lvl - 1) * 45) { sum += 120 + (lvl - 1) * 45; lvl++; }
   return lvl;
 })());
 
@@ -178,6 +182,7 @@ function computeMood() {
   if (s.saettigung < 30) return "hungrig";
   if (hrs > 12) return p.pers.anhaenglich >= p.pers.frech ? "anhaenglich" : "dramatisch";
   if (s.laune < 25) return "traurig";
+  if (s.hygiene < 35) return "stinkig";
   if (s.laune > 75 && s.energie > 50) return "gluecklich";
   if (s.laune < 40) return "gelangweilt";
   if (h >= 21 || h < 6) return "vertraeumt";
@@ -195,7 +200,8 @@ function applyDecay() {
   if (hrs < 0.05) return;
   s.energie += p.sleeping ? hrs * 6 : -hrs * 1.5;
   s.saettigung -= hrs * 3.2;
-  s.laune -= hrs * (s.saettigung < 30 ? 2.6 : 1.2); // Hunger macht schlechte Laune
+  s.hygiene = (s.hygiene ?? 85) - hrs * 1.1;
+  s.laune -= hrs * ((s.saettigung < 30 ? 1.4 : 0) + (s.hygiene < 35 ? 1.0 : 0) + 1.2);
   s.energie = Math.max(s.energie, 10);
   s.saettigung = Math.max(s.saettigung, 10);
   s.laune = Math.max(s.laune, 15);
@@ -210,11 +216,12 @@ function clampStats() {
   const s = state.pet.stats;
   s.energie = clamp(s.energie, 0, 100); s.laune = clamp(s.laune, 0, 100);
   s.saettigung = clamp(s.saettigung, 0, 100); s.bond = clamp(s.bond, 0, 100);
+  s.hygiene = clamp(s.hygiene ?? 85, 0, 100);
 }
 function bump(trait, amt) { state.pet.pers[trait] = clamp(state.pet.pers[trait] + amt, 0, 100); }
 
 // Level n -> n+1 kostet 100 + (n-1)*30 XP; Gesamtbedarf steigt quadratisch
-function xpForNext(level) { return 100 + (level - 1) * 30; }
+function xpForNext(level) { return 120 + (level - 1) * 45; }
 function xpThreshold(level) { // Gesamt-XP, um dieses Level zu ERREICHEN
   let sum = 0;
   for (let l = 1; l < level; l++) sum += xpForNext(l);
@@ -332,7 +339,7 @@ function favoriteInteraction() {
 
 // ---------- Engine: Interaktionen ----------
 const EFFECTS = {
-  streicheln: { laune: 8, bond: 2, trait: "lieb", xp: 3 },
+  streicheln: { laune: 8, bond: 1, trait: "lieb", xp: 3 },
   reden:      { laune: 6, bond: 3, trait: "anhaenglich", xp: 6 },
   schlafen:   { energie: 25, trait: "vertraeumt", xp: 3 }
 };
@@ -419,7 +426,7 @@ function feed(snackId) {
   p.stats.saettigung += snack.eff.saett;
   p.stats.laune += snack.eff.laune + (isFav ? 8 : 0);
   p.stats.energie += snack.eff.energie;
-  p.stats.bond += (snack.eff.bond || 0) + (isFav ? 2 : 0);
+  p.stats.bond += (snack.eff.bond || 0) + (isFav ? 1 : 0);
   clampStats();
   p.lastInteraction = Date.now(); p.lastUpdate = Date.now();
   recordInteraction("fuettern");
@@ -444,8 +451,9 @@ function feed(snackId) {
   let xp = 4 + (snack.eff.xp || 0);
   if (wasHungry) { xp *= 2; text = fmt(HUNGER_BONUS_TEXT, ctx()) + " " + text; }
 
-  flyToPet(snack.icon, () => {
+  dropSnackAndHop(snack.icon, () => {
     petEat();
+    spawnCrumbs();
     showReaction(text);
     sceneFloat(`+${snack.eff.saett} Sättigung`, "#8ca659");
     setTimeout(() => sceneFloat(`+${xp} XP`, "#9e486b"), 350);
@@ -770,7 +778,7 @@ function finishConvo() {
         if (rewarded) state.care.quatschCount++;
       }
       p.stats.laune = clamp(p.stats.laune + 6, 0, 100);
-      p.stats.bond = clamp(p.stats.bond + (rewarded ? (quatsch ? 2 : 4) : 0) + chat.bondExtra, 0, 100);
+      p.stats.bond = clamp(p.stats.bond + (rewarded ? (quatsch ? 1 : 2) : 0) + chat.bondExtra, 0, 100);
       bump("anhaenglich", 1.5);
       p.lastInteraction = Date.now(); p.lastUpdate = Date.now();
       recordInteraction("reden");
@@ -826,7 +834,7 @@ function startExpedition(tierId) {
 
 function destMastery(destId) {
   const v = state.destVisits[destId] || 0;
-  return v >= 6 ? 3 : v >= 3 ? 2 : v >= 1 ? 1 : 0;
+  return v >= 12 ? 3 : v >= 5 ? 2 : v >= 1 ? 1 : 0;
 }
 
 function rollSouvenir(tier, destId) {
@@ -860,7 +868,7 @@ function checkExpeditionReturn() {
   const souvenir = rollSouvenir(tier, dest.id);
   let souvenirNew = false, bonusDust = 0;
   if (souvenir) {
-    if (state.souvenirs.includes(souvenir.id)) bonusDust = Math.ceil(dust / 2);
+    if (state.souvenirs.includes(souvenir.id)) bonusDust = Math.ceil(dust / 3);
     else {
       state.souvenirs.push(souvenir.id);
       souvenirNew = true;
@@ -873,7 +881,8 @@ function checkExpeditionReturn() {
   weeklyProgress("expeds");
   earnDust(dust + bonusDust);
   state.pet.stats.laune = clamp(state.pet.stats.laune + 10, 0, 100);
-  state.pet.stats.bond = clamp(state.pet.stats.bond + 3, 0, 100);
+  state.pet.stats.hygiene = clamp(state.pet.stats.hygiene - (tier.id === "lang" ? 30 : tier.id === "mittel" ? 22 : 14), 0, 100);
+  state.pet.stats.bond = clamp(state.pet.stats.bond + 2, 0, 100);
   state.pet.lastInteraction = Date.now(); state.pet.lastUpdate = Date.now();
   handleLevelUp(addXP(tier.id === "lang" ? 50 : tier.id === "mittel" ? 25 : 10));
   state.diary.unshift({ date: Date.now(), mood: "gluecklich", text: fmt(EXPED_TEXTS.diary, ctx({ S: dest.title })) });
@@ -941,7 +950,7 @@ function finishBreath(skipped) {
   if (skipped && breath.cycle < 3) { renderAll(); return; } // zu frueh abgebrochen: keine Belohnung
   applyDecay();
   state.pet.stats.laune = clamp(state.pet.stats.laune + 8, 0, 100);
-  state.pet.stats.bond = clamp(state.pet.stats.bond + 2, 0, 100);
+  state.pet.stats.bond = clamp(state.pet.stats.bond + 1, 0, 100);
   if (state.lastBreathDay !== todayKey()) { earnDust(5); state.lastBreathDay = todayKey(); }
   state.breathsDone++;
   weeklyProgress("momente");
@@ -954,7 +963,7 @@ function saveGratitude(text) {
   state.gratitude.unshift({ d: Date.now(), text });
   state.gratitude = state.gratitude.slice(0, 40);
   applyDecay();
-  state.pet.stats.bond = clamp(state.pet.stats.bond + 3, 0, 100);
+  state.pet.stats.bond = clamp(state.pet.stats.bond + 2, 0, 100);
   state.pet.stats.laune = clamp(state.pet.stats.laune + 5, 0, 100);
   if (state.lastGratitudeDay !== todayKey()) { earnDust(8); state.lastGratitudeDay = todayKey(); }
   weeklyProgress("momente");
@@ -1136,7 +1145,17 @@ function checkUnlocks() {
     "level.20": p.stats.level >= 20,
     "woche.1": state.weeklyDone >= 1,
     "meister.1": Object.values(state.destVisits).some(v => v >= 6),
-    "gespraech.15": state.convosDone >= 15
+    "gespraech.15": state.convosDone >= 15,
+    "level.25": p.stats.level >= 25,
+    "level.30": p.stats.level >= 30,
+    "exped.50": state.expeditionsDone >= 50,
+    "gespraech.100": state.convosDone >= 100,
+    "streak.30": p.streak >= 30,
+    "staub.5000": p.dustEarned >= 5000,
+    "bad.20": (state.bathsDone || 0) >= 20,
+    "woche.10": state.weeklyDone >= 10,
+    "facts.alle": CONVERSATIONS.filter(x => x.type === "fact").every(x => state.talkFacts[x.factKey]),
+    "album.30": state.souvenirs.length >= SOUVENIRS.length
   };
   for (const id of Object.keys(cond)) if (cond[id]) unlockAchievement(id);
   checkBondTier();
@@ -1207,6 +1226,11 @@ function createPet(mount, size, opts = {}) {
       <g class="spots hidden">
         <ellipse cx="70" cy="92" rx="10" ry="7" fill="#ef8d5c" opacity="0.55" transform="rotate(-18 70 92)"/>
         <ellipse cx="196" cy="86" rx="8" ry="6" fill="#ef8d5c" opacity="0.5" transform="rotate(14 196 86)"/>
+      </g>
+      <g class="dirt hidden">
+        <ellipse class="d1" cx="86" cy="150" rx="13" ry="8" fill="#8a7355" opacity="0.5" transform="rotate(-12 86 150)"/>
+        <ellipse class="d2" cx="176" cy="128" rx="10" ry="7" fill="#7d6a4e" opacity="0.45" transform="rotate(15 176 128)"/>
+        <ellipse class="d3" cx="132" cy="176" rx="12" ry="7" fill="#8a7355" opacity="0.5" transform="rotate(5 132 176)"/>
       </g>
       <g class="tuft-baby hidden">
         <path d="M 126 34 Q 118 16 132 12 Q 128 22 138 24 Q 130 28 130 36" fill="#f79a67"/>
@@ -1382,6 +1406,15 @@ function createPet(mount, size, opts = {}) {
       browsG.classList.toggle("hidden", !brow);
       svg.querySelectorAll(".brow-sad").forEach(el => el.classList.toggle("hidden", brow !== "sad"));
       svg.querySelectorAll(".brow-up").forEach(el => el.classList.toggle("hidden", brow !== "up"));
+      // Schmutz nach Hygiene-Stand
+      const hyg = state?.pet?.stats?.hygiene ?? 100;
+      const dirtG = svg.querySelector(".dirt");
+      if (dirtG) {
+        dirtG.classList.toggle("hidden", hyg >= 75);
+        dirtG.querySelector(".d1").style.display = hyg < 75 ? "" : "none";
+        dirtG.querySelector(".d2").style.display = hyg < 55 ? "" : "none";
+        dirtG.querySelector(".d3").style.display = hyg < 35 ? "" : "none";
+      }
       // Bond-Visuals: 2. Glanz ab Stufe 2, Herz-Wangen ab 3, Schimmer ab 4
       const bt = typeof bondTier === "function" ? bondTier() : 0;
       svg.querySelector(".bond-sparkle").classList.toggle("hidden", bt < 2 || sleeping || eyes.star || eyes.heart || eyes.teary || eyes.closed);
@@ -1551,6 +1584,7 @@ function renderAll() {
   $("#streakChip").classList.toggle("hidden", p.streak < 2);
   $("#streakChip").innerHTML = `&#128293; ${p.streak} Tage`;
   const lvlBase = xpThreshold(p.stats.level);
+  setRing($(".stat-ring[data-stat=hygiene] .ring-fg"), p.stats.hygiene / 100, 21);
   setRing($("#xpRing"), (p.stats.xp - lvlBase) / xpForNext(p.stats.level), 18);
   $("#moodAura").style.background = MOODS[mood].hex;
   const stage = petStage();
@@ -1579,6 +1613,9 @@ function renderAll() {
   } else {
     $("#expedIdleText").textContent = fmt("%N steht bereit. Der unsichtbare Koffer ist immer gepackt.", ctx());
   }
+
+  // Schwamm bei Bedarf
+  $("#spongeBtn").classList.toggle("hidden", !bathNeeded() || !!state.expedition);
 
   // Rituale
   $("#ritualBreath").classList.toggle("done", state.lastBreathDay === todayKey());
@@ -1704,7 +1741,8 @@ const ICONS = (() => {
     sparkle: w('<path d="M12 3.5 l1.7 5.1 5.1 1.7 -5.1 1.7 -1.7 5.1 -1.7 -5.1 -5.1 -1.7 5.1 -1.7 z M18.5 15.5 l0.8 2.4 2.4 0.8 -2.4 0.8 -0.8 2.4 -0.8 -2.4 -2.4 -0.8 2.4 -0.8 z"/>'),
     compass: w('<circle cx="12" cy="12" r="8.5"/><path d="M15.5 8.5 l-2.2 5 -5 2.2 2.2 -5 z"/>'),
     breath:  w('<circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="3"/>'),
-    heart:   w('<path d="M12 19.5 C6 14.6 4.6 11.2 6.3 8.7 7.7 6.6 10.6 6.8 12 9 c1.4-2.2 4.3-2.4 5.7-0.3 1.7 2.5 0.3 5.9-5.7 10.8 z"/>')
+    heart:   w('<path d="M12 19.5 C6 14.6 4.6 11.2 6.3 8.7 7.7 6.6 10.6 6.8 12 9 c1.4-2.2 4.3-2.4 5.7-0.3 1.7 2.5 0.3 5.9-5.7 10.8 z"/>'),
+    drop:    w('<path d="M12 3.5 C12 3.5 6 10.5 6 14.5 a6 6 0 0 0 12 0 C18 10.5 12 3.5 12 3.5 z"/>')
   };
 })();
 const qIcon = (def) => ICONS[def.ico] || def.icon || "";
@@ -1827,6 +1865,134 @@ setInterval(() => {
   if (Date.now() >= state.expedition.end) { checkExpeditionReturn(); renderAll(); showReturn(); }
 }, 1000);
 
+// ---------- Rubbel-Gesten: Streicheln & Baden ----------
+const rub = { active: false, x: 0, y: 0, sum: 0, heartsAcc: 0, mode: "pet" };
+
+function rubStart(x, y) { rub.active = true; rub.x = x; rub.y = y; }
+function rubEnd() { rub.active = false; }
+
+function rubMove(x, y) {
+  if (!rub.active) return;
+  const d = Math.hypot(x - rub.x, y - rub.y);
+  rub.x = x; rub.y = y;
+  if (d <= 0 || d > 120) return; // Spruenge ignorieren
+  if (rub.mode === "pet") rubPetProgress(d);
+  else bathProgress(d);
+}
+
+function rubPetProgress(d) {
+  if (expeditionActive() || state.pet.sleeping) return;
+  rub.sum += d; rub.heartsAcc += d;
+  if (rub.heartsAcc >= 130) { rub.heartsAcc = 0; spawnHearts($("#petMount")); if (navigator.vibrate) navigator.vibrate(8); }
+  if (rub.sum >= 340) {
+    rub.sum = 0;
+    homePet?.squish();
+    applyDecay();
+    const p = state.pet;
+    p.stats.laune = clamp(p.stats.laune + 6, 0, 100);
+    const rewarded = affectionRewarded();
+    if (rewarded) {
+      p.stats.bond = clamp(p.stats.bond + 1, 0, 100);
+      sceneFloat("+3 XP", "#9e486b");
+      handleLevelUp(addXP(3));
+      showReaction(fmt(pick(RUB_REACTIONS), ctx()));
+    } else {
+      showReaction(fmt(pick(AFFECTION_FULL), ctx()));
+    }
+    bump("lieb", 1.5);
+    p.lastInteraction = Date.now(); p.lastUpdate = Date.now();
+    recordInteraction("streicheln");
+    wishBump("streicheln");
+    questProgress("streicheln");
+    if (bondTier() >= 2 && Math.random() < 0.35) homePet?.emote("heart", 1600);
+    checkUnlocks(); save(); renderAll();
+  }
+}
+
+// ---------- Baden ----------
+const bath = { pet: null, spots: 3, rubbed: 0, finished: false };
+
+function bathNeeded() { return state.pet.stats.hygiene < 70; }
+
+function startBath() {
+  if (expeditionActive()) { blockIfAway(); return; }
+  $("#bathOverlay").classList.remove("hidden");
+  const mount = $("#bathPetMount"); mount.innerHTML = "";
+  bath.pet = createPet(mount, 170, { static: true });
+  bath.pet.update("frech", false, "none");
+  const svg = mount.querySelector("svg");
+  svg.querySelector(".dirt").classList.remove("hidden");
+  svg.querySelectorAll(".dirt ellipse").forEach(el => { el.style.display = ""; });
+  bath.spots = 3; bath.rubbed = 0; bath.finished = false;
+  rub.mode = "wash"; rub.sum = 0;
+  $("#bathHint").textContent = fmt(HYGIENE_TEXTS.bathStart, ctx());
+  $("#bathProgress").style.width = "0%";
+  playSound("open");
+}
+
+function bathProgress(d) {
+  if (bath.finished || $("#bathOverlay").classList.contains("hidden")) return;
+  bath.rubbed += d;
+  if (Math.random() < 0.4) spawnFoam();
+  const per = 480;
+  const cleaned = Math.min(3, Math.floor(bath.rubbed / per));
+  const svg = $("#bathPetMount svg");
+  if (svg) {
+    if (cleaned >= 1) svg.querySelector(".dirt .d1").style.display = "none";
+    if (cleaned >= 2) svg.querySelector(".dirt .d2").style.display = "none";
+    if (cleaned >= 3) svg.querySelector(".dirt .d3").style.display = "none";
+  }
+  $("#bathProgress").style.width = Math.min(100, bath.rubbed / (per * 3) * 100) + "%";
+  if (navigator.vibrate && Math.random() < 0.2) navigator.vibrate(6);
+  if (bath.rubbed >= per * 3) finishBath();
+}
+
+function spawnFoam() {
+  const stage = $("#bathStage");
+  if (!stage) return;
+  const f = document.createElement("span");
+  f.className = "foam";
+  f.style.left = (18 + Math.random() * 64) + "%";
+  f.style.top = (24 + Math.random() * 46) + "%";
+  f.style.setProperty("--fs", (10 + Math.random() * 18) + "px");
+  stage.appendChild(f);
+  setTimeout(() => f.remove(), 1300);
+}
+
+function finishBath() {
+  if (bath.finished) return;
+  bath.finished = true;
+  rub.mode = "pet";
+  applyDecay();
+  const p = state.pet;
+  p.stats.hygiene = 100;
+  p.stats.laune = clamp(p.stats.laune + 10, 0, 100);
+  state.bathsDone++;
+  const rewarded = state.care.bathDay !== todayKey();
+  if (rewarded) {
+    state.care.bathDay = todayKey();
+    earnDust(6);
+    handleLevelUp(addXP(12));
+  }
+  p.lastInteraction = Date.now(); p.lastUpdate = Date.now();
+  questProgress("waschen");
+  bath.pet?.emote("star", 1800);
+  setTimeout(() => {
+    $("#bathOverlay").classList.add("hidden");
+    showReaction(fmt(pick(HYGIENE_TEXTS.bathDone), ctx()));
+    if (rewarded) { sceneFloat("+12 XP", "#9e486b"); }
+    checkUnlocks(); save(); renderAll();
+  }, 900);
+  playSound("success");
+}
+
+function cancelBath() {
+  rub.mode = "pet";
+  $("#bathOverlay").classList.add("hidden");
+  showReaction(fmt(HYGIENE_TEXTS.bathSkip, ctx()));
+  renderAll();
+}
+
 // ---------- Szenen-Feedback ----------
 function scrollToScene() {
   try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch (e) { window.scrollTo(0, 0); }
@@ -1854,6 +2020,46 @@ function flyToPet(icon, done) {
   stage.appendChild(el);
   requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add("arrive")));
   setTimeout(() => { el.remove(); done && done(); }, 620);
+}
+
+function dropSnackAndHop(icon, done) {
+  scrollToScene();
+  const stage = $(".stage"), mount = $("#petMount");
+  if (!stage || !mount) { done && done(); return; }
+  const side = Math.random() < 0.5 ? -1 : 1;
+  const offset = side * (60 + Math.random() * 40); // px neben Mimo
+  const el = document.createElement("div");
+  el.className = "drop-snack";
+  el.textContent = icon;
+  el.style.left = `calc(50% + ${offset}px)`;
+  stage.appendChild(el);
+  requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add("land")));
+  // Mimo huepft zum Snack
+  setTimeout(() => {
+    mount.style.transition = "transform .5s cubic-bezier(.4,1.3,.5,1)";
+    mount.style.transform = `translateX(${offset}px)`;
+    homePet?.squish();
+  }, 480);
+  // Essen + zurueck
+  setTimeout(() => { el.classList.add("eaten"); done && done(); }, 1050);
+  setTimeout(() => {
+    el.remove();
+    mount.style.transform = "translateX(0)";
+    setTimeout(() => { mount.style.transition = ""; }, 550);
+  }, 1900);
+}
+
+function spawnCrumbs() {
+  const stage = $(".stage");
+  if (!stage) return;
+  for (let i = 0; i < 6; i++) {
+    const cr = document.createElement("span");
+    cr.className = "crumb";
+    cr.style.left = `calc(50% + ${(Math.random() * 80 - 40)}px)`;
+    cr.style.setProperty("--dx", (Math.random() * 60 - 30) + "px");
+    stage.appendChild(cr);
+    setTimeout(() => cr.remove(), 900);
+  }
 }
 
 function petEat() {
@@ -2036,7 +2242,7 @@ function buildSheets() {
   $$("#expedOptions button").forEach(b => b.onclick = () => { closeSheets(); startExpedition(b.dataset.tier); });
   $("#expedLog").innerHTML = EXPED_DESTS.map(d => {
     const v = state.destVisits[d.id] || 0, m = destMastery(d.id);
-    const next = m >= 3 ? "" : ` \u00b7 noch ${(m >= 2 ? 6 : m >= 1 ? 3 : 1) - v} bis ${MASTERY_NAMES[m + 1] || "Besucher"}`;
+    const next = m >= 3 ? "" : ` \u00b7 noch ${(m >= 2 ? 12 : m >= 1 ? 5 : 1) - v} bis ${MASTERY_NAMES[m + 1] || "Besucher"}`;
     return `<div class="log-row"><span class="log-icon">${d.icon}</span>
       <span class="log-info"><strong>${d.title}</strong><small>${v}x besucht${next}</small></span>
       <span class="chip chip-small" style="${m >= 3 ? "color:#c98a12;background:#c98a1222" : ""}">${m ? MASTERY_NAMES[m] : "Neu"}</span></div>`;
@@ -2406,13 +2612,34 @@ document.addEventListener("DOMContentLoaded", () => {
 
   $$(".action").forEach(btn => btn.addEventListener("click", () => {
     const a = btn.dataset.action;
-    if (a === "streicheln") { scrollToScene(); homePet?.squish(); spawnHearts($("#petMount")); interact(a); }
+    if (a === "streicheln") {
+      scrollToScene();
+      showReaction(fmt(RUB_HINT, ctx()));
+      $("#petMount").classList.add("rub-pulse");
+      setTimeout(() => $("#petMount").classList.remove("rub-pulse"), 2600);
+    }
     else if (a === "schlafen") { scrollToScene(); homePet?.squish(); interact(a); }
     else if (a === "feed") { buildSheets(); openSheet("sheet-feed"); }
     else if (a === "talk") { buildSheets(); openSheet("sheet-talk"); }
     else if (a === "checkin") { buildSheets(); openSheet("sheet-checkin"); }
     else if (a === "game") { buildSheets(); openSheet("sheet-games"); }
   }));
+
+  const petArea = $("#petMount");
+  const stageEl = $(".stage");
+  const pd = (e) => { rub.mode = "pet"; rubStart(e.clientX, e.clientY); };
+  const pm = (e) => rubMove(e.clientX, e.clientY);
+  petArea.addEventListener("pointerdown", pd);
+  stageEl.addEventListener("pointermove", pm);
+  window.addEventListener("pointerup", rubEnd);
+  stageEl.addEventListener("pointerleave", rubEnd);
+
+  const bathStage = $("#bathStage");
+  bathStage.addEventListener("pointerdown", (e) => { rub.mode = "wash"; rubStart(e.clientX, e.clientY); });
+  bathStage.addEventListener("pointermove", pm);
+  bathStage.addEventListener("pointerleave", rubEnd);
+  $("#bathSkip").addEventListener("click", cancelBath);
+  $("#spongeBtn").addEventListener("click", startBath);
 
   $("#chatClose").addEventListener("click", () => { closeSheets(); renderAll(); });
   $("#expedOpen").addEventListener("click", () => { buildSheets(); openSheet("sheet-exped"); });
