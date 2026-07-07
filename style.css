@@ -211,8 +211,8 @@ body.phase-night .aura { opacity:.4; }
 .stat-ring[data-stat="laune"] .ring-fg { stroke:var(--joy); }
 .stat-ring[data-stat="saettigung"] .ring-fg { stroke:var(--food); }
 .stat-ring[data-stat="bond"] .ring-fg { stroke:var(--accent); }
-.stat-ring em { position:absolute; left:0; right:0; top:14px; font-style:normal; }
-.stat-ring em svg { width:17px; height:17px; fill:var(--ink-soft); stroke:var(--ink-soft); }
+.stat-ring em { position:absolute; left:0; right:0; top:0; height:52px; display:grid; place-items:center; font-style:normal; pointer-events:none; }
+.stat-ring em svg { width:16px; height:16px; fill:none; stroke:var(--ink-soft); stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
 .stat-ring label { display:block; font-size:11px; font-weight:600; color:var(--ink-soft); margin-top:4px; }
 
 .quest-row { display:flex; align-items:center; gap:10px; padding:6px 0; font-size:14.5px; }
@@ -637,3 +637,37 @@ body.phase-night .lk-bulb { filter: drop-shadow(0 0 5px currentColor); }
 @keyframes starSpin { from { transform:scale(.3) rotate(-40deg);} 60% { transform:scale(1.2) rotate(8deg);} to { transform:scale(1) rotate(0);} }
 .eye-heart path { animation: heartBeat .9s ease-in-out infinite; transform-origin:center; }
 @keyframes heartBeat { 0%,100% { transform:scale(1);} 30% { transform:scale(1.15);} }
+
+/* ============ v9: Heute-Karte, Ziele, Dock-Fix ============ */
+.today-row { display:flex; align-items:center; gap:12px; width:100%; text-align:left; background:none;
+  padding:10px 2px; border-top:1px solid rgba(122,98,112,.1); }
+.today-row:first-of-type { border-top:none; padding-top:4px; }
+.tr-icon { flex:none; width:38px; height:38px; border-radius:13px; background:rgba(158,72,107,.1);
+  display:grid; place-items:center; }
+.tr-icon svg { width:18px; height:18px; fill:var(--accent); stroke:var(--accent); stroke-width:0; }
+.tr-icon svg [fill="none"] { fill:none; }
+.tr-gift { background:linear-gradient(160deg,#f6cf6a,#eda468); animation: giftWiggle 3s ease-in-out infinite; }
+.tr-gift svg { fill:none; stroke:#fff; stroke-width:1.7; }
+.tr-text { flex:1; min-width:0; }
+.tr-text strong { display:block; font-size:14px; color:var(--page-ink, var(--ink)); }
+.tr-text small { display:block; font-size:11.5px; color:var(--ink-soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.tr-go { font-size:22px; color:var(--accent); font-weight:700; }
+.tr-done { color:#5c7038; font-weight:800; font-size:15px; }
+.today-row.done { opacity:.55; }
+.today-row.done .tr-done { display:block !important; }
+.today-row.done .tr-go { display:none; }
+#wishCard .wish-progress { margin-top:4px; }
+#wishCard.done .tr-text small { color:#5c7038; font-weight:600; }
+#giftCard.opened { display:none; }
+.goals-divider { height:1px; background:rgba(122,98,112,.12); margin:10px 0; }
+.goals-week { margin-bottom:8px; }
+.q-icon svg { width:15px; height:15px; fill:none; stroke:var(--accent); stroke-width:2; stroke-linecap:round; stroke-linejoin:round; display:block; }
+.quest-row.done .q-icon svg { stroke:#5c7038; }
+
+/* Dock: sauber + Fade-Maske gegen durchscheinenden Inhalt */
+#dockFade { position:fixed; left:0; right:0; bottom:0; height:calc(var(--dock-h) + 34px + env(safe-area-inset-bottom));
+  z-index:49; pointer-events:none;
+  background:linear-gradient(180deg, transparent, var(--sky-b) 62%); }
+body.phase-night #dockFade { background:linear-gradient(180deg, transparent, var(--sky-b) 62%); }
+#dock { box-shadow:0 6px 18px rgba(60,30,55,.16); border:1px solid rgba(255,255,255,.7); }
+body.phase-night #dock { border-color:rgba(255,255,255,.14); }

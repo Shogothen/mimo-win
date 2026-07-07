@@ -36,12 +36,12 @@ const HATS = [
 ];
 
 const QUEST_TYPES = {
-  streicheln: { title:"2x streicheln",               target:2, icon:"\u2740" },
-  fuettern:   { title:"Einmal füttern",              target:1, icon:"\u{1F374}" },
-  spielen:    { title:"Eine Runde Sterne fangen",    target:1, icon:"\u2605" },
-  reden:      { title:"Einmal reden",                target:1, icon:"\u{1F4AC}" },
-  checkin:    { title:"Tages-Check-in machen",       target:1, icon:"\u2713" },
-  minigame:   { title:"10 Punkte in einer Runde",    target:1, icon:"\u{1F3C6}" }
+  streicheln: { title:"2x streicheln",               target:2, ico:"flower" },
+  fuettern:   { title:"Einmal füttern",              target:1, ico:"bowl" },
+  spielen:    { title:"Eine Runde Sterne fangen",    target:1, ico:"star" },
+  reden:      { title:"Einmal reden",                target:1, ico:"bubble" },
+  checkin:    { title:"Tages-Check-in machen",       target:1, ico:"check" },
+  minigame:   { title:"10 Punkte in einer Runde",    target:1, ico:"trophy" }
 };
 
 const ACHIEVEMENTS = [
@@ -192,31 +192,39 @@ const DAILY = {
     "%N schläft mit der Hingabe eines Profis."
   ],
   morning: [
-    "%N hat den Morgen offiziell genehmigt.",
-    "%N tut so, als wäre er schon lange wach. Ist er nicht.",
-    "%N findet, der Tag hat Potenzial. Vorsichtig formuliert.",
-    "%N hat heute schon einen Plan gemacht und ihn direkt wieder verworfen.",
-    "%N begrüßt dich mit der Energie von genau einer Tasse Kaffee."
+    "%N hat den Morgen inspiziert und freigegeben. Kleine Mängel, aber machbar.",
+    "%N tut so, als wäre er schon lange wach. Sein Fell erzählt eine andere Geschichte.",
+    "%N hat heute schon einen Plan gemacht und ihn direkt wieder verworfen. Beides mit Hingabe.",
+    "%N begrüßt dich mit der Energie von genau einer Tasse Kaffee. Halbvoll.",
+    "Der Morgen und %N verhandeln noch. Es sieht nach Einigung aus.",
+    "%N hat der Sonne beim Aufgehen zugesehen und ihr eine 8 von 10 gegeben. Solide Leistung.",
+    "%N reckt sich, als hätte er Großes vor. Das Große ist erstmal: da sein. Für dich."
   ],
   day: [
-    "%N beobachtet den Nachmittag mit professionellem Interesse.",
-    "%N hat heute schon dreimal die Position gewechselt. Produktiv.",
-    "%N denkt über Snacks nach. Rein theoretisch.",
-    "%N hat gerade eine Staubfluse verfolgt. Erfolgreich.",
-    "%N hält den Tag für machbar. Sein Zitat, nicht meins."
+    "%N beobachtet den Nachmittag mit professionellem Interesse. Der Nachmittag benimmt sich.",
+    "%N hat heute schon dreimal die Position gewechselt. Er nennt es Raumpflege.",
+    "%N denkt über Snacks nach. Rein akademisch. Der Magen ist da anderer Meinung.",
+    "%N hat eine Staubfluse verfolgt und gestellt. Die Verhandlungen laufen.",
+    "%N hält den Tag für machbar. Zitat: 'machbar'. Er zitiert sich gern selbst.",
+    "Das Licht steht heute gut. %N hat sich exakt in den hellsten Fleck gesetzt. Instinkt.",
+    "%N übt gerade Geduld. Mit allem. Es läuft mittelgut."
   ],
   evening: [
-    "%N hat den Abend für gemütlich erklärt.",
-    "%N findet, %U sollte jetzt langsam runterfahren. Er auch.",
-    "%N genießt das Abendlicht. Sehr dramatisch.",
-    "%N hat den Tag intern bewertet. Details bleiben vertraulich.",
-    "%N ist im Feierabendmodus. Der unterscheidet sich kaum vom Tagesmodus."
+    "%N hat den Abend für gemütlich erklärt. Per Dekret. Widerstand zwecklos.",
+    "%N findet, du solltest jetzt langsam runterfahren. Er geht mit gutem Beispiel voran. Seit Stunden.",
+    "%N sitzt im Abendlicht wie das Cover eines sehr ruhigen Albums.",
+    "%N hat den Tag intern bewertet. Details vertraulich, Tendenz: gut, weil du da warst.",
+    "Der Tag macht Feierabend. %N winkt ihm hinterher. Höflich, aber froh.",
+    "%N hat die besten Momente des Tages sortiert. Du kommst mehrfach vor.",
+    "Abends wird %N immer ein bisschen weicher. Er streitet das ab. Man sieht es trotzdem."
   ],
   night: [
     "%N flüstert, damit die Nacht nicht aufwacht.",
-    "%N findet, um diese Uhrzeit zählt nichts davon wirklich.",
-    "%N ist noch wach. Aus Prinzip.",
-    "%N fragt nicht, warum du noch wach bist. Er notiert es nur."
+    "Um diese Uhrzeit gelten andere Regeln, findet %N. Weichere.",
+    "%N ist noch wach. Aus Prinzip. Und vielleicht ein kleines bisschen deinetwegen.",
+    "%N fragt nicht, warum du noch wach bist. Er rückt nur ein Stück näher.",
+    "Die Nacht ist groß und still. %N ist klein und da. Das gleicht sich aus.",
+    "%N hält Nachtwache. Gegen was, ist unklar. Für wen, ist eindeutig."
   ],
   mood: {
     hungrig: ["%N erwähnt beiläufig, dass er seit gefühlt Jahren nichts gegessen hat.", "%N schaut abwechselnd dich und eine imaginäre Snackschale an."],
@@ -235,15 +243,15 @@ const DAILY = {
 };
 
 const MOOD_TEXT = {
-  gluecklich: "%N ist bester Laune.",
-  muede: "%N ist müde. Sehr müde. Historisch müde.",
-  hungrig: "%N denkt ausschließlich an Essen.",
-  frech: "%N plant etwas. Man sieht es ihm an.",
-  anhaenglich: "%N will heute einfach in deiner Nähe sein.",
-  dramatisch: "%N ist in seiner dramatischen Phase.",
-  vertraeumt: "%N ist gedanklich woanders. Irgendwo Schönes.",
-  gelangweilt: "%N langweilt sich auf hohem Niveau.",
-  traurig: "%N ist traurig. Er braucht dich gerade ein bisschen mehr als sonst."
+  gluecklich: "%N strahlt heute von innen. Der Grund bist übrigens du.",
+  muede: "%N kämpft gegen seine Augenlider. Die Augenlider führen klar.",
+  hungrig: "%N hat Hunger. Sein Magen hat gerade das Wort ergriffen.",
+  frech: "%N plant etwas. Die Ohren stehen auf Unfug.",
+  anhaenglich: "%N will heute nah bei dir sein. Kein besonderer Anlass. Du bist der Anlass.",
+  dramatisch: "%N durchlebt gerade große Gefühle. Alle gleichzeitig.",
+  vertraeumt: "%N ist halb hier, halb woanders. Woanders ist es schön, sagt sein Blick.",
+  gelangweilt: "%N wartet auf Programm. Du bist das Programm.",
+  traurig: "%N hat ein kleines Tief. Bleib kurz bei ihm, das hilft mehr, als du denkst."
 };
 
 const LEVEL_UP = {
@@ -261,16 +269,17 @@ const LEVEL_UP = {
 
 const GAME_REACTIONS = {
   newBest: "%S Punkte. Neuer Rekord. %N verbeugt sich vor imaginärem Publikum.",
-  zero: "%N hat keinen einzigen Stern gefangen. Er nennt es künstlerische Entscheidung.",
-  low: "%S Sterne gefangen. %N spricht von einer Aufwärmrunde.",
-  mid: "%S Sterne. %N ist zufrieden. Fast schon bescheiden. Fast.",
-  high: "%S Sterne. %N prüft, ob es dafür einen Pokal gibt. Es sollte."
+  zero: "Null Sterne. %N nennt es eine künstlerische Entscheidung. Der Himmel war heute einfach nicht käuflich.",
+  low: "%S Sterne. %N nickt: 'Aufwärmrunde.' Er sagt das seit drei Runden.",
+  mid: "%S Sterne. %N ist zufrieden und versucht, nicht zu grinsen. Er verliert.",
+  high: "%S Sterne! %N läuft eine kleine Ehrenrunde. Sie besteht aus einmal im Kreis hüpfen."
 };
 
 const QUEST_BONUS = [
-  "Alle Tagesziele geschafft. %N verteilt imaginäre Orden. Einen für dich, drei für sich.",
-  "Tagesziele komplett. %N hakt die Liste ab, die er angeblich die ganze Zeit geführt hat.",
-  "Alles erledigt. %N gönnt sich einen Moment stillen Triumphs. Er dauert auffällig lange."
+  "Alle Tagesziele geschafft. %N verteilt imaginäre Orden: einen für dich, drei für sich.",
+  "Liste komplett. %N zerknüllt sie feierlich. Morgen schreibt er eine neue, das ist der beste Teil.",
+  "Alles erledigt. %N lehnt sich zurück wie jemand, der hart delegiert hat.",
+  "Tagesziele: erledigt. %N hebt eine unsichtbare Trophäe. Das Publikum (ein Staubkorn) tobt."
 ];
 
 const DIARY_TEXTS = {
@@ -362,8 +371,9 @@ const WISH_TYPES = {
 };
 
 const WISH_DONE_REACTIONS = [
-  "Wunsch erfüllt. %N tut, als hätte er nie daran gezweifelt. +%S Sternenstaub.",
-  "%N bekommt genau, was er wollte. Er speichert das als Präzedenzfall. +%S Sternenstaub."
+  "Wunsch erfüllt. %N nickt langsam, wie jemand, dessen Plan aufgegangen ist. +%S Sternenstaub.",
+  "Genau das wollte er. %N merkt sich: Wünschen funktioniert. Das wird Konsequenzen haben. +%S Sternenstaub.",
+  "%N bekommt seinen Wunsch und dich dazu. Er findet, er hat heute alles richtig gemacht. +%S Sternenstaub."
 ];
 const WISH_DIARY = "Heute hat %U meinen Tageswunsch erfüllt. Ich habe es sehr würdevoll entgegengenommen. Innerlich: Konfetti.";
 
@@ -389,9 +399,9 @@ const GAME2_REACTIONS = {
   high: "%S Blasen. %N beantragt hiermit einen Titel für euch beide."
 };
 
-QUEST_TYPES.geschenk = { title:"Tagesgeschenk öffnen",        target:1, icon:"\u{1F381}" };
-QUEST_TYPES.wunsch   = { title:"Tageswunsch erfüllen",        target:1, icon:"\u2727" };
-QUEST_TYPES.blasen   = { title:"Eine Runde Seifenblasen",     target:1, icon:"\u25EF" };
+QUEST_TYPES.geschenk = { title:"Tagesgeschenk öffnen",        target:1, ico:"gift" };
+QUEST_TYPES.wunsch   = { title:"Tageswunsch erfüllen",        target:1, ico:"sparkle" };
+QUEST_TYPES.blasen   = { title:"Eine Runde Seifenblasen",     target:1, ico:"bubble2" };
 
 ACHIEVEMENTS.push(
   { id:"reich.300",  title:"Staubbaron",   detail:"300 Sternenstaub gesammelt",      icon:"\u2726" },
@@ -742,9 +752,9 @@ const GRATITUDE_TEXTS = {
 
 const STREAK_FREEZE = { cost:150, max:2, title:"Streak-Schutz", desc:"Rettet deine Serie, wenn du einen Tag verpasst" };
 
-QUEST_TYPES.expedition = { title:"Expedition starten",    target:1, icon:"\u{1F9ED}" };
-QUEST_TYPES.atmen      = { title:"Eine Minute atmen",     target:1, icon:"\u25CB" };
-QUEST_TYPES.dankbar    = { title:"Dankbarkeit notieren",  target:1, icon:"\u2661" };
+QUEST_TYPES.expedition = { title:"Expedition starten",    target:1, ico:"compass" };
+QUEST_TYPES.atmen      = { title:"Eine Minute atmen",     target:1, ico:"breath" };
+QUEST_TYPES.dankbar    = { title:"Dankbarkeit notieren",  target:1, ico:"heart" };
 
 ACHIEVEMENTS.push(
   { id:"exped.1",    title:"Aufbruch",       detail:"Erste Expedition abgeschlossen",      icon:"\u{1F9ED}" },
@@ -973,12 +983,12 @@ const MASTERY_TOAST = "%N ist jetzt %S: %V";
 
 // Wochenziele
 const WEEKLY_TYPES = {
-  checkins:   { title:"5 Tages-Check-ins",            target:5,   icon:"\u2713" },
-  expeds:     { title:"3 Expeditionen abschließen",   target:3,   icon:"\u{1F9ED}" },
-  staub:      { title:"250 Sternenstaub verdienen",   target:250, icon:"\u2726" },
-  spiele:     { title:"6 Runden spielen",             target:6,   icon:"\u2605" },
-  gespraeche: { title:"5 Gespräche führen",           target:5,   icon:"\u{1F4AC}" },
-  momente:    { title:"4 Momente (Atmen/Dankbarkeit)",target:4,   icon:"\u2661" }
+  checkins:   { title:"5 Tages-Check-ins",            target:5,   ico:"check" },
+  expeds:     { title:"3 Expeditionen abschließen",   target:3,   ico:"compass" },
+  staub:      { title:"250 Sternenstaub verdienen",   target:250, ico:"sparkle" },
+  spiele:     { title:"6 Runden spielen",             target:6,   ico:"star" },
+  gespraeche: { title:"5 Gespräche führen",           target:5,   ico:"bubble" },
+  momente:    { title:"4 Momente (Atmen/Dankbarkeit)",target:4,   ico:"heart" }
 };
 const WEEKLY_REWARD = { dust:100, xp:40 };
 const WEEKLY_DONE_TEXT = "Alle Wochenziele geschafft. %N salutiert. Er hat extra dafür salutieren gelernt.";
@@ -1090,3 +1100,61 @@ const GREETINGS = {
   afterStress: "Gestern war stressig, hast du gesagt. %N hat entschieden: Heute wird besser. Er hat da Beziehungen.",
   afterSuper: "Gestern war super. %N erwartet heute mindestens solide. Kein Druck. Ein bisschen Druck."
 };
+
+// ============ v9: Mehr Gespraechs-Umfang ============
+CONVERSATIONS.push(
+  { id:"story.pflanze", type:"story",
+    nodes:{
+      start:{ mimo:["Die Pflanze und ich hatten heute ein Missverständnis.", "Ich habe ihr von meinem Tag erzählt. Sie hat die ganze Zeit nur dagestanden."],
+        answers:[
+          { label:"Pflanzen sind gute Zuhörer", next:"gut", react:["Interessante These."] },
+          { label:"Vielleicht war sie beleidigt", next:"beleidigt", react:["Oh nein. Meinst du?"] }
+        ]},
+      gut:{ mimo:["Stimmt eigentlich. Sie hat nicht einmal unterbrochen. Nicht einmal gegähnt. Kein einziger Blick aufs Handy.", "Ich nehme alles zurück. Die Pflanze ist die beste Zuhörerin im Raum. Nach dir. Knapp nach dir."],
+        answers:[ { label:"Knapp?", react:["Sehr knapp. Du blinzelst wenigstens ab und zu. Das schätze ich."] } ]},
+      beleidigt:{ mimo:["Ich habe nachgedacht, womit ich sie gekränkt haben könnte. Vorgestern habe ich gesagt, der Teppich sei mein Lieblingsmitbewohner.", "In Hörweite. Das war taktlos.", "Ich werde ihr morgen extra lange Gesellschaft leisten. Wortlos. Das ist ihre Sprache."],
+        answers:[ { label:"Sehr einfühlsam", react:["Ich wachse an meinen Beziehungen. Wortwörtlich nicht, aber innerlich enorm."] } ]}
+    },
+    outro:["Zimmerdiplomatie ist ein Vollzeitjob. Gut, dass ich Vollzeit da bin."] },
+  { id:"story.geraeusch2", type:"story",
+    nodes:{
+      start:{ mimo:["Heute Nacht gab es ein Geräusch, das ich noch nie gehört habe.", "Es klang wie... wie wenn jemand sehr leise sehr recht hat. Schwer zu beschreiben."],
+        answers:[
+          { label:"Hattest du Angst?", next:"angst", react:["Angst ist ein großes Wort."] },
+          { label:"Was hast du gemacht?", next:"gemacht", react:["Das Protokoll verlangt Wahrheit."] }
+        ]},
+      angst:{ mimo:["Ich hatte... erhöhte Wachsamkeit. Mit leichtem Zittern. Rein muskulär.", "Dann habe ich an dich gedacht und beschlossen, dass in einem Zuhause mit dir nichts Schlimmes wohnt.", "Das Geräusch hat danach aufgehört. Ich werte das als Respekt."],
+        answers:[ { label:"Du bist sicher hier", react:["Ich weiß. Manchmal muss man es sich nur einmal laut denken lassen. Danke fürs laut Denken."] } ]},
+      gemacht:{ mimo:["Ich habe mich sehr flach gemacht. Strategisch flach. Ein flaches Ziel ist ein schweres Ziel.", "Nach vier Minuten war klar: Es war die Heizung. Sie dehnt sich aus. Wie meine Legende von dieser Nacht."],
+        answers:[ { label:"Held der Nacht", react:["Ich nehme den Titel an. Die Heizung und ich haben inzwischen ein Abkommen. Sie knackt, ich erschrecke würdevoll."] } ]}
+    },
+    outro:["Nachtberichte gibt es ab jetzt exklusiv für dich. Andere würden es nicht verstehen."] },
+  { id:"story.ordnung", type:"story",
+    nodes:{
+      start:{ mimo:["Ich habe heute aufgeräumt.", "Also: Ich habe alles angesehen und entschieden, dass es genau da bleiben darf, wo es ist. Aufräumen ist zu 90 Prozent Entscheidung."],
+        answers:[
+          { label:"Die restlichen 10 Prozent?", next:"rest", react:["Gute Nachfrage. Journalistisch wertvoll."] },
+          { label:"Effizient!", next:"effizient", react:["Danke. Ich habe ein System."] }
+        ]},
+      rest:{ mimo:["Die restlichen 10 Prozent sind das Kissen. Ich habe es umgedreht.", "Die kühle Seite liegt jetzt oben. Das Zimmer fühlt sich wie neu an. Renovierung abgeschlossen."],
+        answers:[ { label:"Beeindruckende Bilanz", react:["Mit minimalem Einsatz maximale Gemütlichkeit. Ich sollte Bücher schreiben. Kurze."] } ]},
+      effizient:{ mimo:["Das System heißt: 'Alles hat seinen Platz, und sein Platz ist, wo es liegt.'", "Es ist wartungsfrei, skaliert hervorragend und hat mich noch nie enttäuscht."],
+        answers:[ { label:"Patent anmelden", react:["Läuft bereits. Das Patentamt ist das Fenster. Es hat genickt. Also der Vorhang hat sich bewegt, aber die Botschaft war klar."] } ]}
+    },
+    outro:["Falls du je Ordnungstipps brauchst: Ich bin da. Liegend, aber da."] }
+);
+
+CONVERSATIONS.push(
+  { id:"q.kompliment", type:"quatsch",
+    nodes:{ start:{ mimo:["Kurze Durchsage: Du siehst heute aus wie jemand, der Dinge schafft.", "Das ist eine objektive Beobachtung. Ich beobachte beruflich."],
+      answers:[
+        { label:"Danke, Mimo", react:["Gern. Ich sage nur, was die Datenlage hergibt. Die Datenlage bist du. Sie ist gut."] },
+        { label:"Was willst du?", react:["Nichts! Empörend. ... Falls zufällig Snacks im Raum wären, würde ich sie natürlich nicht ablehnen. Aber das Kompliment stand für sich."] }
+      ]}}, outro:[] },
+  { id:"q.wolke", type:"quatsch",
+    nodes:{ start:{ mimo:["Am Fenster war vorhin eine Wolke, die aussah wie du.", "Sehr sympathisch. Etwas flauschiger als das Original, aber die Ähnlichkeit war da."],
+      answers:[
+        { label:"Flauschiger als ich?", react:["Nur minimal. Du holst auf. Ich beobachte da eine positive Entwicklung."] },
+        { label:"Hast du sie gegrüßt?", react:["Selbstverständlich. Man grüßt Wolken, die aussehen wie Menschen, die man mag. Das ist Basiswissen."] }
+      ]}}, outro:[] }
+);

@@ -1595,7 +1595,7 @@ function renderAll() {
   ensureWish();
   const w = state.wish;
   $("#wishCard").classList.toggle("done", w.done);
-  $("#wishText").textContent = w.done ? "Erfüllt. " + fmt("%N ist sehr zufrieden mit dir.", ctx()) : fmt(w.text, ctx());
+  $("#wishText").textContent = w.done ? fmt("Erfüllt. %N ist sehr zufrieden mit dir.", ctx()) : fmt(w.text, ctx());
   $("#wishReward").textContent = w.done ? "Erledigt" : "+30 Staub";
   $("#wishProgress").innerHTML = w.target > 1
     ? Array.from({ length: w.target }, (_, i) => `<span class="wp-dot ${i < w.progress ? "on" : ""}"></span>`).join("")
@@ -1615,7 +1615,7 @@ function renderAll() {
   $("#weeklyList").innerHTML = wq.list.map(item => {
     const def = WEEKLY_TYPES[item.type], done = item.progress >= def.target;
     return `<div class="quest-row ${done ? "done" : ""}">
-      <span class="q-icon">${done ? "\u2713" : def.icon}</span>${def.title}
+      <span class="q-icon">${done ? ICONS.check : qIcon(def)}</span>${def.title}
       <span class="q-progress">${Math.min(item.progress, def.target)}/${def.target}</span></div>`;
   }).join("");
 
@@ -1627,7 +1627,7 @@ function renderAll() {
   $("#questList").innerHTML = q.list.map(item => {
     const def = QUEST_TYPES[item.type], done = item.progress >= def.target;
     return `<div class="quest-row ${done ? "done" : ""}">
-      <span class="q-icon">${done ? "\u2713" : def.icon}</span>${def.title}
+      <span class="q-icon">${done ? ICONS.check : qIcon(def)}</span>${def.title}
       ${def.target > 1 ? `<span class="q-progress">${item.progress}/${def.target}</span>` : ""}</div>`;
   }).join("");
   $("#checkinBtn").classList.toggle("done", p.lastCheckInDay === todayKey());
@@ -1689,6 +1689,25 @@ function renderRoom(mood) {
 
   renderShop();
 }
+
+const ICONS = (() => {
+  const w = (p) => `<svg viewBox="0 0 24 24">${p}</svg>`;
+  return {
+    check:   w('<path d="M5 12.5 L10 17.5 L19 7"/>'),
+    flower:  w('<circle cx="12" cy="12" r="2.4"/><circle cx="12" cy="6.4" r="2.6"/><circle cx="17.2" cy="10.2" r="2.6"/><circle cx="15.2" cy="16.4" r="2.6"/><circle cx="8.8" cy="16.4" r="2.6"/><circle cx="6.8" cy="10.2" r="2.6"/>'),
+    bowl:    w('<path d="M4 13 h16 M6 13 a6 6 0 0 1 12 0 M9 17.5 h6"/>'),
+    star:    w('<path d="M12 3.5 l2.4 5.4 5.6 0.6 -4.2 3.9 1.2 5.6 -5 -3 -5 3 1.2 -5.6 -4.2 -3.9 5.6 -0.6 z"/>'),
+    bubble:  w('<path d="M4.5 6.5 a3 3 0 0 1 3-3 h9 a3 3 0 0 1 3 3 v6 a3 3 0 0 1 -3 3 H10 l-4 4 v-4 h-1.5 a3 3 0 0 1 -3-3 z"/>'),
+    bubble2: w('<circle cx="12" cy="12" r="8"/><path d="M8.5 8.5 a5 5 0 0 1 3.2 -1.6"/>'),
+    trophy:  w('<path d="M7 4 h10 v5 a5 5 0 0 1 -10 0 z M7 6 H4.5 a3 3 0 0 0 3 4 M17 6 h2.5 a3 3 0 0 1 -3 4 M12 14 v3 M8.5 20 h7 M10 17 h4 v3 h-4 z"/>'),
+    gift:    w('<path d="M4.5 11 h15 v8.5 a1.5 1.5 0 0 1 -1.5 1.5 H6 a1.5 1.5 0 0 1 -1.5 -1.5 z M3.5 7.5 h17 V11 h-17 z M12 7.5 V21 M12 7.5 C9.5 7.5 8 6.5 8 5 8 3.8 9.2 3.3 10.2 4 c1 0.7 1.8 3.5 1.8 3.5 z M12 7.5 c2.5 0 4 -1 4 -2.5 0 -1.2 -1.2 -1.7 -2.2 -1 -1 0.7 -1.8 3.5 -1.8 3.5 z"/>'),
+    sparkle: w('<path d="M12 3.5 l1.7 5.1 5.1 1.7 -5.1 1.7 -1.7 5.1 -1.7 -5.1 -5.1 -1.7 5.1 -1.7 z M18.5 15.5 l0.8 2.4 2.4 0.8 -2.4 0.8 -0.8 2.4 -0.8 -2.4 -2.4 -0.8 2.4 -0.8 z"/>'),
+    compass: w('<circle cx="12" cy="12" r="8.5"/><path d="M15.5 8.5 l-2.2 5 -5 2.2 2.2 -5 z"/>'),
+    breath:  w('<circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="3"/>'),
+    heart:   w('<path d="M12 19.5 C6 14.6 4.6 11.2 6.3 8.7 7.7 6.6 10.6 6.8 12 9 c1.4-2.2 4.3-2.4 5.7-0.3 1.7 2.5 0.3 5.9-5.7 10.8 z"/>')
+  };
+})();
+const qIcon = (def) => ICONS[def.ico] || def.icon || "";
 
 const DUST_ICO = '<svg viewBox="0 0 24 24" class="dust-ico"><path d="M12 2.8 l2.5 5.6 6.1 0.6 -4.6 4.1 1.3 6 -5.3-3.1 -5.3 3.1 1.3-6 -4.6-4.1 6.1-0.6 z"/></svg>';
 
