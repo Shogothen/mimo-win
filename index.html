@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=2">
+<link rel="stylesheet" href="style.css?v=6">
 </head>
 <body>
 
@@ -54,6 +54,7 @@
       <div class="chip-row">
         <span class="chip" id="levelChip">Level 1</span>
         <span class="chip chip-flame hidden" id="streakChip"></span>
+        <span class="chip chip-dust" id="dustChip"><svg viewBox="0 0 24 24" class="dust-ico"><path d="M12 2.8 l2.5 5.6 6.1 0.6 -4.6 4.1 1.3 6 -5.3-3.1 -5.3 3.1 1.3-6 -4.6-4.1 6.1-0.6 z"/></svg><b id="dustAmount">0</b></span>
       </div>
     </div>
     <div class="xp-ring"><svg viewBox="0 0 44 44"><circle class="ring-bg" cx="22" cy="22" r="18"/><circle id="xpRing" class="ring-fg" cx="22" cy="22" r="18"/></svg><span>XP</span></div>
@@ -90,6 +91,7 @@
     <div class="aura" id="moodAura"></div>
     <div class="bubble hidden" id="speechBubble"><span id="speechText"></span><i></i></div>
     <div id="petMount" class="pet-mount"></div>
+    <div id="awayStage" class="pet-away hidden"><span class="away-icon" id="awayStageIcon">&#129517;</span><p id="awayStageText"></p></div>
     <div class="wake-hint hidden" id="wakeHint">Tippen zum Aufwecken</div>
   </section>
 
@@ -110,9 +112,47 @@
       <em><svg viewBox="0 0 24 24"><path d="M12 20 C5 14.4 3.4 10.6 5.4 7.6 7 5.2 10.4 5.4 12 8 c1.6-2.6 5-2.8 6.6-0.4 2 3-0.4 6.8-6.6 12.4 z"/></svg></em><label>Bond</label></div>
   </section>
 
+  <button class="card gift-card" id="giftCard">
+    <span class="gift-box"><svg viewBox="0 0 24 24"><path d="M4 11 h16 v9 a2 2 0 0 1 -2 2 H6 a2 2 0 0 1 -2-2 z M3 7 h18 v4 H3 z M12 7 v15 M12 7 C9 7 7 5.8 7 4.2 7 2.8 8.4 2.2 9.6 3 10.8 3.8 12 7 12 7 z M12 7 c3 0 5-1.2 5-2.8 0-1.4-1.4-2-2.6-1.2 C13.2 3.8 12 7 12 7 z"/></svg></span>
+    <span class="gift-text"><strong>Tagesgeschenk wartet</strong><small id="giftSub">Etwas Glitzerndes für dich</small></span>
+    <span class="gift-arrow">&#8250;</span>
+  </button>
+
+  <section class="card wish-card" id="wishCard">
+    <div class="card-head"><span class="section-label">Tageswunsch</span><span class="chip chip-small" id="wishReward">+30 Staub</span></div>
+    <p class="wish-text" id="wishText"></p>
+    <div class="wish-progress" id="wishProgress"></div>
+  </section>
+
+  <section class="card" id="expedCard">
+    <div class="card-head"><span class="section-label">Expedition</span><span class="chip chip-small hidden" id="expedTimer"></span></div>
+    <div id="expedIdle">
+      <p class="wish-text" id="expedIdleText"></p>
+      <button class="btn-ghost exped-btn" id="expedOpen">Auf Expedition schicken</button>
+    </div>
+    <div id="expedActive" class="hidden">
+      <div class="exped-row"><span class="exped-icon" id="expedIcon"></span>
+        <div class="exped-info"><strong id="expedDest"></strong><small class="muted" id="expedAwayText"></small></div></div>
+      <div class="exped-bar"><div class="exped-fill" id="expedFill"></div></div>
+    </div>
+  </section>
+
+  <section class="card" id="ritualCard">
+    <div class="card-head"><span class="section-label">Momente mit Mimo</span></div>
+    <div class="ritual-grid">
+      <button class="ritual" id="ritualBreath"><span class="ritual-icon">○</span><strong>Eine Minute atmen</strong><small class="muted">Mimo atmet mit</small></button>
+      <button class="ritual" id="ritualGratitude"><span class="ritual-icon">♡</span><strong>Dankbarkeit</strong><small class="muted">Eine Sache reicht</small></button>
+    </div>
+  </section>
+
   <section class="card" id="questsCard">
     <div class="card-head"><span class="section-label">Tagesziele</span><span class="chip chip-small" id="questBonusChip">+20 XP Bonus</span></div>
     <div id="questList"></div>
+  </section>
+
+  <section class="card" id="weeklyCard">
+    <div class="card-head"><span class="section-label">Wochenziele</span><span class="chip chip-small" id="weeklyChip">+100 Staub</span></div>
+    <div id="weeklyList"></div>
   </section>
 
   <section class="action-grid">
@@ -210,6 +250,52 @@
         <rect x="-33" y="-13" width="66" height="26" rx="12" class="pillow-inner"/>
         <circle r="4" class="pillow-btn"/>
       </g>
+      <!-- Level-Deko 6/8/10 -->
+      <g class="hidden" id="decoUhr" transform="translate(212 78)">
+        <circle r="19" class="clock-face"/><circle r="19" fill="none" class="clock-rim"/>
+        <line x1="0" y1="0" x2="0" y2="-11" class="clock-hand"/>
+        <line x1="0" y1="0" x2="8" y2="4" class="clock-hand thin"/>
+        <circle r="2.2" class="clock-pin"/>
+      </g>
+      <g class="hidden" id="decoBuecher" transform="translate(126 306)">
+        <rect x="-24" y="-8" width="48" height="9" rx="2.5" class="book b1"/>
+        <rect x="-20" y="-17" width="40" height="9" rx="2.5" class="book b2"/>
+        <rect x="-16" y="-26" width="34" height="9" rx="2.5" class="book b3"/>
+      </g>
+      <g class="hidden" id="decoMobile" transform="translate(216 6)">
+        <line x1="0" y1="0" x2="0" y2="16" class="mobile-string"/>
+        <line x1="-26" y1="16" x2="26" y2="16" class="mobile-bar"/>
+        <line x1="-22" y1="16" x2="-22" y2="34" class="mobile-string"/>
+        <line x1="0" y1="16" x2="0" y2="44" class="mobile-string"/>
+        <line x1="22" y1="16" x2="22" y2="28" class="mobile-string"/>
+        <path d="M-22,34 l2.2,4.8 5.2,0.5 -3.9,3.5 1.1,5.1 -4.6-2.7 -4.6,2.7 1.1-5.1 -3.9-3.5 5.2-0.5 z" class="mobile-star s1"/>
+        <path d="M0,44 l2.2,4.8 5.2,0.5 -3.9,3.5 1.1,5.1 -4.6-2.7 -4.6,2.7 1.1-5.1 -3.9-3.5 5.2-0.5 z" class="mobile-star s2"/>
+        <path d="M22,28 l2.2,4.8 5.2,0.5 -3.9,3.5 1.1,5.1 -4.6-2.7 -4.6,2.7 1.1-5.1 -3.9-3.5 5.2-0.5 z" class="mobile-star s3"/>
+      </g>
+      <g class="hidden" id="decoLichterkette">
+        <path d="M0,14 Q105,34 210,16 Q315,2 420,20" fill="none" class="lk-string"/>
+        <circle cx="52" cy="22" r="4.5" class="lk-bulb"/><circle cx="118" cy="27" r="4.5" class="lk-bulb l2"/>
+        <circle cx="182" cy="20" r="4.5" class="lk-bulb l3"/><circle cx="248" cy="12" r="4.5" class="lk-bulb"/>
+        <circle cx="316" cy="10" r="4.5" class="lk-bulb l2"/><circle cx="382" cy="16" r="4.5" class="lk-bulb l3"/>
+      </g>
+      <!-- Shop-Deko -->
+      <g class="hidden" id="decoGirlande">
+        <path d="M20,30 Q110,64 200,34" fill="none" class="garl-string"/>
+        <path d="M52,41 l7,16 8,-14 z" class="garl-f1"/><path d="M92,50 l7,16 8,-14 z" class="garl-f2"/>
+        <path d="M132,50 l7,16 8,-14 z" class="garl-f3"/><path d="M170,42 l7,16 8,-14 z" class="garl-f1"/>
+      </g>
+      <g class="hidden" id="decoTeleskop" transform="translate(258 250)">
+        <rect x="-6" y="-52" width="46" height="13" rx="6.5" class="tele-tube" transform="rotate(-28 0 -46)"/>
+        <circle cx="34" cy="-64" r="5" class="tele-lens"/>
+        <path d="M0,-40 L-14,26 M0,-40 L14,26 M0,-40 L0,26" class="tele-legs" fill="none"/>
+      </g>
+      <g class="hidden" id="decoRadio" transform="translate(136 292)">
+        <rect x="-26" y="-18" width="52" height="34" rx="8" class="radio-body"/>
+        <circle cx="-11" cy="-1" r="8" class="radio-speaker"/>
+        <circle cx="12" cy="-6" r="3.4" class="radio-knob"/><circle cx="12" cy="5" r="3.4" class="radio-knob"/>
+        <path d="M18,-18 L28,-32" class="radio-antenna" fill="none"/>
+        <g class="radio-notes"><text x="30" y="-30" font-size="12">&#9834;</text><text x="42" y="-42" font-size="10">&#9834;</text></g>
+      </g>
       <rect class="room-vignette" x="0" y="0" width="420" height="380" rx="0"/>
     </svg>
     <div id="roomPetMount" class="room-pet"></div>
@@ -221,6 +307,10 @@
   <section class="card">
     <div class="card-head"><span class="section-label">Einrichtung</span></div>
     <div id="unlockList"></div>
+  </section>
+  <section class="card" id="shopCard">
+    <div class="card-head"><span class="section-label">Shop</span><span class="chip chip-dust chip-small"><svg viewBox="0 0 24 24" class="dust-ico"><path d="M12 2.8 l2.5 5.6 6.1 0.6 -4.6 4.1 1.3 6 -5.3-3.1 -5.3 3.1 1.3-6 -4.6-4.1 6.1-0.6 z"/></svg><b id="dustAmountShop">0</b></span></div>
+    <div id="shopList"></div>
   </section>
 </main>
 
@@ -262,6 +352,11 @@
     <div id="quirkList"></div>
   </section>
   <section class="card">
+    <div class="card-head"><span class="section-label">Fundstücke</span><span class="muted small" id="souvCount">0/20</span></div>
+    <div class="souv-grid" id="souvGrid"></div>
+    <p class="muted small souv-detail hidden" id="souvDetail"></p>
+  </section>
+  <section class="card">
     <div class="card-head"><span class="section-label">Erfolge</span><span class="muted small" id="achCount">0/9</span></div>
     <div class="ach-grid" id="achGrid"></div>
   </section>
@@ -292,6 +387,41 @@
   <h2 class="serif">Was gibt es heute?</h2>
   <p class="muted" id="feedSub"></p>
   <div class="feed-grid" id="feedGrid"></div>
+</div>
+
+<div class="sheet hidden" id="sheet-games">
+  <div class="sheet-grip"></div>
+  <h2 class="serif">Was wollt ihr spielen?</h2>
+  <p class="muted" id="gamesSub"></p>
+  <div class="sheet-options" id="gamesOptions"></div>
+</div>
+
+<div class="sheet sheet-chat hidden" id="sheet-chat">
+  <div class="sheet-grip"></div>
+  <div class="chat-head">
+    <span class="chat-avatar" id="chatAvatar"></span>
+    <div><strong id="chatName">Mimo</strong><small class="muted" id="chatStatus">tippt gleich los</small></div>
+    <button class="chat-close" id="chatClose">&#10005;</button>
+  </div>
+  <div class="chat-scroll" id="chatScroll"></div>
+  <div class="chat-answers" id="chatAnswers"></div>
+</div>
+
+<div class="sheet hidden" id="sheet-exped">
+  <div class="sheet-grip"></div>
+  <h2 class="serif">Wohin soll es gehen?</h2>
+  <p class="muted" id="expedSub"></p>
+  <div class="sheet-options" id="expedOptions"></div>
+  <div class="exped-log" id="expedLog"></div>
+</div>
+
+<div class="sheet hidden" id="sheet-gratitude">
+  <div class="sheet-grip"></div>
+  <h2 class="serif">Das Glas der guten Dinge</h2>
+  <p class="muted" id="gratPrompt"></p>
+  <input id="gratInput" type="text" maxlength="90" placeholder="Heute bin ich dankbar für …" autocomplete="off">
+  <button class="btn-primary grat-save" id="gratSave" disabled>Ins Glas legen</button>
+  <div class="grat-recent hidden" id="gratRecent"></div>
 </div>
 
 <div class="sheet hidden" id="sheet-talk">
@@ -338,9 +468,56 @@
 </div>
 
 <!-- ===== Toast ===== -->
+<div id="breathOverlay" class="hidden">
+  <div class="breath-stage">
+    <div class="breath-ring" id="breathRing"><div id="breathPetMount"></div></div>
+    <h2 class="serif" id="breathPhase">Bereit?</h2>
+    <p class="muted" id="breathCount"></p>
+    <button class="btn-ghost" id="breathSkip">Beenden</button>
+  </div>
+</div>
+
+<div id="returnOverlay" class="hidden">
+  <canvas id="returnConfetti"></canvas>
+  <div class="return-panel">
+    <h2 class="serif">Wieder da!</h2>
+    <div id="returnPetMount"></div>
+    <p id="returnStory"></p>
+    <div class="return-loot" id="returnLoot"></div>
+    <button class="btn-primary" id="returnClose">Willkommen zurück</button>
+  </div>
+</div>
+
+<div id="giftOverlay" class="hidden">
+  <canvas id="giftConfetti"></canvas>
+  <div class="gift-panel">
+    <div class="gift-stage" id="giftStage">
+      <button class="gift-big" id="giftBig"><svg viewBox="0 0 24 24"><path d="M4 11 h16 v9 a2 2 0 0 1 -2 2 H6 a2 2 0 0 1 -2-2 z M3 7 h18 v4 H3 z M12 7 v15 M12 7 C9 7 7 5.8 7 4.2 7 2.8 8.4 2.2 9.6 3 10.8 3.8 12 7 12 7 z M12 7 c3 0 5-1.2 5-2.8 0-1.4-1.4-2-2.6-1.2 C13.2 3.8 12 7 12 7 z"/></svg></button>
+      <p class="muted" id="giftHint">Tippen zum Öffnen</p>
+    </div>
+    <div class="gift-reveal hidden" id="giftReveal">
+      <span class="chip" id="giftRarity"></span>
+      <h2 class="serif" id="giftAmount">+0</h2>
+      <p class="muted small">Sternenstaub</p>
+      <p id="giftFlavor"></p>
+      <button class="btn-primary" id="giftClose">Einsammeln</button>
+    </div>
+  </div>
+</div>
+
+<div id="awayOverlay" class="hidden">
+  <div class="away-panel">
+    <h2 class="serif">Während du weg warst</h2>
+    <div id="awayPetMount"></div>
+    <p id="awayText"></p>
+    <span class="chip chip-dust away-dust"><svg viewBox="0 0 24 24" class="dust-ico"><path d="M12 2.8 l2.5 5.6 6.1 0.6 -4.6 4.1 1.3 6 -5.3-3.1 -5.3 3.1 1.3-6 -4.6-4.1 6.1-0.6 z"/></svg><b id="awayDust">+0</b></span>
+    <button class="btn-primary" id="awayClose">Einsammeln</button>
+  </div>
+</div>
+
 <div id="toast" class="hidden"><span class="toast-icon" id="toastIcon">&#10022;</span><div><strong id="toastTitle"></strong><p id="toastDetail"></p></div></div>
 
-<script src="data.js?v=2"></script>
-<script src="app.js?v=2"></script>
+<script src="data.js?v=6"></script>
+<script src="app.js?v=6"></script>
 </body>
 </html>
