@@ -404,8 +404,8 @@ function wakeUp() {
   save(); renderAll();
 }
 
-function feed(snackId) {
-  if (blockIfAway()) return;
+// Zustands- und Belohnungslogik, getrennt von der Visualisierung
+function feedApply(snackId) {
   applyDecay();
   const p = state.pet;
   p.sleeping = false;
@@ -414,14 +414,31 @@ function feed(snackId) {
   const tooFull = p.stats.saettigung >= 85;
   const isFav = snackId === p.favSnack;
   const discovery = isFav && !p.favDiscovered;
-
   if (tooFull && !discovery) {
-    // Zu satt: kein Effekt, keine Belohnung, charmante Absage
     p.lastInteraction = Date.now(); p.lastUpdate = Date.now();
-    flyToPet(snack.icon, () => showReaction(fmt(pick(TOO_FULL), ctx())));
-    save(); renderAll();
+    save();
+    return { refused: true, snack };
+  }
+  return { refused: false, snack, wasHungry, isFav, discovery };
+}
+
+function feed(snackId) {
+  if (blockIfAway()) return;
+  const r = feedApply(snackId);
+  const snack = r.snack;
+  if (r.refused) {
+    scrollToScene();
+    homePet?.play("wiggle", 600);
+    setTimeout(() => showReaction(fmt(pick(TOO_FULL), ctx())), 350);
+    renderAll();
     return;
   }
+  feedFinish(snackId, r, "ground");
+}
+
+function feedFinish(snackId, r, mode) {
+  const { wasHungry, isFav, discovery, snack } = r;
+  const p = state.pet;
 
   p.stats.saettigung += snack.eff.saett;
   p.stats.laune += snack.eff.laune + (isFav ? 8 : 0);
@@ -451,13 +468,13 @@ function feed(snackId) {
   let xp = 4 + (snack.eff.xp || 0);
   if (wasHungry) { xp *= 2; text = fmt(HUNGER_BONUS_TEXT, ctx()) + " " + text; }
 
-  dropSnackAndHop(snack.icon, () => {
-    petEat();
-    spawnCrumbs();
+  const onEaten = () => {
     showReaction(text);
     sceneFloat(`+${snack.eff.saett} Sättigung`, "#8ca659");
     setTimeout(() => sceneFloat(`+${xp} XP`, "#9e486b"), 350);
-  });
+  };
+  if (mode === "hand") handFeedSequence(isFav || discovery, onEaten);
+  else feedSequence(snack.icon, isFav || discovery, onEaten);
   if (Math.random() < 0.25) addDiary("interaction", { type: "fuettern" });
   wishBump("feedSnack", snackId);
   handleLevelUp(addXP(xp));
@@ -912,6 +929,7 @@ function showReturn() {
   }
   $("#returnLoot").innerHTML = loot;
   $("#returnOverlay").classList.remove("hidden");
+  setTimeout(() => homePet?.chain([["jump", 550], ["wiggle", 600]]), 300);
   if (r.souvenirNew && (r.souvenir.rar === "episch" || r.souvenir.rar === "legendaer")) {
     confettiRun = true; runConfetti($("#returnConfetti"));
   }
@@ -1185,6 +1203,41 @@ function playSound(kind) {
   } catch (e) {}
 }
 
+let purrNodes = null;
+function startPurrSound() {
+  try {
+    if (purrNodes) return;
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    const o = audioCtx.createOscillator(), g = audioCtx.createGain(), lfo = audioCtx.createOscillator(), lg = audioCtx.createGain();
+    o.type = "triangle"; o.frequency.value = 62;
+    lfo.frequency.value = 21; lg.gain.value = 0.035;
+    g.gain.value = 0.045;
+    lfo.connect(lg); lg.connect(g.gain);
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start(); lfo.start();
+    purrNodes = { o, g, lfo };
+  } catch (e) {}
+}
+function stopPurrSound() {
+  try {
+    if (!purrNodes) return;
+    const { o, g, lfo } = purrNodes;
+    purrNodes = null;
+    g.gain.setTargetAtTime(0.0001, audioCtx.currentTime, 0.08);
+    setTimeout(() => { try { o.stop(); lfo.stop(); } catch (e) {} }, 260);
+  } catch (e) {}
+}
+function munchSound() {
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.type = "square"; o.frequency.value = 150 + Math.random() * 60;
+    const t = audioCtx.currentTime;
+    g.gain.setValueAtTime(0.05, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.07);
+    o.connect(g); g.connect(audioCtx.destination); o.start(t); o.stop(t + 0.07);
+  } catch (e) {}
+}
+
 // ---------- Pet-Rendering (SVG) ----------
 const petInstances = [];
 
@@ -1298,6 +1351,11 @@ function createPet(mount, size, opts = {}) {
         <circle cx="104" cy="119" r="1.8" fill="#fff" opacity="0.95"/>
         <circle cx="168" cy="119" r="1.8" fill="#fff" opacity="0.95"/>
       </g>
+      <ellipse class="tongue hidden" cx="130" cy="152" rx="10" ry="7" fill="#e58a9a"/>
+      <g class="bulges hidden">
+        <circle cx="94" cy="146" r="13" fill="#f9a873"/>
+        <circle cx="166" cy="146" r="13" fill="#f9a873"/>
+      </g>
       <g class="mouths">
         <path class="m-smile" d="M 112 142 Q 130 158 148 142" stroke="#6e3a3e" stroke-width="5" fill="none" stroke-linecap="round"/>
         <path class="m-small hidden" d="M 118 144 Q 130 153 142 144" stroke="#6e3a3e" stroke-width="4.5" fill="none" stroke-linecap="round"/>
@@ -1367,6 +1425,26 @@ function createPet(mount, size, opts = {}) {
     animated: !opts.static,
     blinking: false,
     mood: "gluecklich", sleeping: false,
+    play(clip, ms = 600) {
+      svg.classList.add("clip-" + clip);
+      setTimeout(() => svg.classList.remove("clip-" + clip), ms);
+    },
+    chain(steps) { // [["jump",550],["wiggle",600]]
+      let t = 0;
+      for (const [clip, ms] of steps) { setTimeout(() => this.play(clip, ms), t); t += ms; }
+      return t;
+    },
+    setLean(deg) {
+      const hop = svg.querySelector(".hop");
+      if (hop) hop.style.transform = deg ? `rotate(${deg}deg)` : "";
+    },
+    setPurr(on) { svg.classList.toggle("purring", on); },
+    lookAt(nx, ny) { // normiert -1..1, verschiebt Augen (und Brauen) leicht
+      const dx = clamp(nx, -1, 1) * 4.5, dy = clamp(ny, -1, 1) * 3;
+      const eyes = svg.querySelector(".eyes"), brows = svg.querySelector(".brows");
+      if (eyes) eyes.style.transform = (nx || ny) ? `translate(${dx}px, ${dy}px)` : "";
+      if (brows) brows.style.transform = (nx || ny) ? `translate(${dx * 0.6}px, ${dy * 0.6}px)` : "";
+    },
     emoteType: null, emoteUntil: 0,
     emote(type, ms = 1600) {
       this.emoteType = type;
@@ -1387,6 +1465,8 @@ function createPet(mount, size, opts = {}) {
       let brow = null; // null | "sad" | "up"
       if (emote === "star") { eyes.star = 1; mouth.open = 1; brow = "up"; }
       else if (emote === "heart") { eyes.heart = 1; mouth.smile = 1; }
+      else if (emote === "excite") { eyes.big = 1; mouth.open = 1; brow = "up"; }
+      else if (emote === "bliss") { eyes.closed = 1; mouth.smile = 1; }
       else if (sleeping || this.blinking) { eyes.closed = 1; }
       else if (mood === "traurig") { eyes.teary = 1; brow = "sad"; }
       else if (mood === "muede" || mood === "vertraeumt") eyes.lid = 1;
@@ -1876,17 +1956,37 @@ function rubMove(x, y) {
   const d = Math.hypot(x - rub.x, y - rub.y);
   rub.x = x; rub.y = y;
   if (d <= 0 || d > 120) return; // Spruenge ignorieren
-  if (rub.mode === "pet") rubPetProgress(d);
-  else bathProgress(d);
+  if (rub.mode === "pet") {
+    // Mimo lehnt sich zur Hand, Augen selig zu, Schnurren
+    const mount = $("#petMount");
+    if (mount && homePet && !state.pet.sleeping && !expeditionActive()) {
+      const r = mount.getBoundingClientRect();
+      const dx = x - (r.left + r.width / 2);
+      homePet.setLean(clamp(dx / 9, -9, 9));
+      homePet.setPurr(true);
+      startPurrSound();
+      homePet.emote("bliss", 420);
+    }
+    rubPetProgress(d);
+  } else bathProgress(d);
+}
+
+function rubRelease() {
+  if (homePet) { homePet.setLean(0); homePet.setPurr(false); homePet.lookAt(0, 0); }
+  stopPurrSound();
 }
 
 function rubPetProgress(d) {
   if (expeditionActive() || state.pet.sleeping) return;
   rub.sum += d; rub.heartsAcc += d;
-  if (rub.heartsAcc >= 130) { rub.heartsAcc = 0; spawnHearts($("#petMount")); if (navigator.vibrate) navigator.vibrate(8); }
+  if (rub.heartsAcc >= 130) {
+    rub.heartsAcc = 0;
+    if (Math.random() < 0.6) spawnHearts($("#petMount")); else spawnNotes();
+    if (navigator.vibrate) navigator.vibrate(8);
+  }
   if (rub.sum >= 340) {
     rub.sum = 0;
-    homePet?.squish();
+    homePet?.chain([["jump", 550], ["wiggle", 600]]);
     applyDecay();
     const p = state.pet;
     p.stats.laune = clamp(p.stats.laune + 6, 0, 100);
@@ -1993,6 +2093,68 @@ function cancelBath() {
   renderAll();
 }
 
+// ---------- Idle-Leben: Mimo tut Dinge von allein ----------
+let idleBusyUntil = 0;
+const idleBusy = (ms) => { idleBusyUntil = Math.max(idleBusyUntil, Date.now() + ms); };
+
+function idleTick() {
+  if (document.hidden || !state.onboarded) return;
+  if (Date.now() < idleBusyUntil || rub.active || drag.el) return;
+  if (state.pet.sleeping || expeditionActive()) return;
+  if (!$("#screen-home") || $("#screen-home").classList.contains("hidden")) return;
+  const roll = Math.random();
+  if (roll < 0.22) { // umsehen
+    idleBusy(2600);
+    homePet?.lookAt(Math.random() < 0.5 ? -1 : 1, -0.2);
+    setTimeout(() => homePet?.lookAt(Math.random() < 0.5 ? -0.6 : 0.6, 0), 900);
+    setTimeout(() => homePet?.lookAt(0, 0), 2100);
+  } else if (roll < 0.34) { // kleiner Hopser
+    idleBusy(1400);
+    homePet?.play("jump", 550);
+  } else if (roll < 0.44) { // Koerper-Wackeln
+    idleBusy(1400);
+    homePet?.play("wiggle", 600);
+  } else if (roll < 0.62) { // Schmetterling!
+    spawnButterfly();
+  }
+}
+setInterval(idleTick, 9000);
+
+let butterflyEl = null;
+function spawnButterfly() {
+  const stage = $(".stage");
+  if (!stage || butterflyEl) return;
+  idleBusy(7000);
+  const b = document.createElement("button");
+  b.className = "butterfly";
+  b.innerHTML = '<span class="bw bw1"></span><span class="bw bw2"></span>';
+  const fromLeft = Math.random() < 0.5;
+  b.style.setProperty("--fromX", fromLeft ? "-8%" : "108%");
+  b.style.setProperty("--toX", fromLeft ? "108%" : "-8%");
+  b.style.top = (26 + Math.random() * 22) + "%";
+  stage.appendChild(b);
+  butterflyEl = b;
+  // Mimo verfolgt den Flug mit den Augen
+  const t0 = Date.now(), dur = 6400;
+  const follow = setInterval(() => {
+    const prog = (Date.now() - t0) / dur;
+    if (prog >= 1 || !butterflyEl) { clearInterval(follow); homePet?.lookAt(0, 0); return; }
+    const x = fromLeft ? prog * 2 - 1 : 1 - prog * 2;
+    homePet?.lookAt(clamp(x, -1, 1), -0.5);
+  }, 200);
+  b.addEventListener("pointerdown", () => {
+    if (!butterflyEl) return;
+    b.classList.add("dart");
+    homePet?.emote("excite", 1400);
+    homePet?.play("jump", 550);
+    applyDecay();
+    state.pet.stats.laune = clamp(state.pet.stats.laune + 3, 0, 100);
+    save();
+    setTimeout(() => { b.remove(); butterflyEl = null; homePet?.lookAt(0, 0); }, 600);
+  }, { once: true });
+  setTimeout(() => { if (butterflyEl === b) { b.remove(); butterflyEl = null; } }, dur + 300);
+}
+
 // ---------- Szenen-Feedback ----------
 function scrollToScene() {
   try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch (e) { window.scrollTo(0, 0); }
@@ -2010,43 +2172,195 @@ function sceneFloat(text, color) {
   setTimeout(() => el.remove(), 1500);
 }
 
-function flyToPet(icon, done) {
-  scrollToScene();
-  const stage = $(".stage");
-  if (!stage) { done && done(); return; }
-  const el = document.createElement("div");
-  el.className = "fly-snack";
-  el.textContent = icon;
-  stage.appendChild(el);
-  requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add("arrive")));
-  setTimeout(() => { el.remove(); done && done(); }, 620);
+// ---------- Drag-Fuettern: Snack mit dem Finger zum Mund ziehen ----------
+const drag = { snackId: null, el: null, active: false, nearMouth: false };
+
+function mouthAnchor() {
+  const m = $("#petMount").getBoundingClientRect();
+  return { x: m.left + m.width / 2, y: m.top + m.height * 0.56 };
 }
 
-function dropSnackAndHop(icon, done) {
+function spawnDragSnack(snackId) {
+  cancelDragSnack();
+  const snack = ALL_SNACKS.find(s => s.id === snackId);
+  const stage = $(".stage");
+  scrollToScene();
+  const el = document.createElement("div");
+  el.className = "drag-snack";
+  el.textContent = snack.icon;
+  stage.appendChild(el);
+  drag.snackId = snackId; drag.el = el; drag.active = false; drag.nearMouth = false;
+  homePet?.emote("excite", 1600);
+  homePet?.play("excite", 800);
+  el.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    drag.active = true;
+    el.setPointerCapture?.(e.pointerId);
+    dragTo(e.clientX, e.clientY);
+  });
+  el.addEventListener("pointermove", (e) => { if (drag.active) dragTo(e.clientX, e.clientY); });
+  el.addEventListener("pointerup", (e) => { if (drag.active) dragRelease(e.clientX, e.clientY); });
+  el.addEventListener("pointercancel", () => cancelDragSnack());
+}
+
+function dragTo(x, y) {
+  if (!drag.el) return;
+  const stage = $(".stage").getBoundingClientRect();
+  drag.el.style.left = (x - stage.left) + "px";
+  drag.el.style.top = (y - stage.top) + "px";
+  drag.el.classList.add("lifted");
+  const a = mouthAnchor();
+  const dx = x - a.x, dy = y - a.y;
+  const dist = Math.hypot(dx, dy);
+  // Mimo verfolgt den Snack mit Augen und Koerper
+  homePet?.lookAt(clamp(dx / 140, -1, 1), clamp(dy / 140, -1, 1));
+  homePet?.setLean(clamp(dx / 14, -10, 10));
+  const near = dist < 120;
+  if (near !== drag.nearMouth) {
+    drag.nearMouth = near;
+    if (near) homePet?.emote("excite", 4000); // Mund auf, grosse Augen
+  }
+}
+
+function dragRelease(x, y) {
+  if (!drag.el) return;
+  const a = mouthAnchor();
+  const dist = Math.hypot(x - a.x, y - a.y);
+  const snackId = drag.snackId;
+  const el = drag.el;
+  drag.el = null; drag.snackId = null; drag.active = false;
+  homePet?.setLean(0); homePet?.lookAt(0, 0);
+  if (dist < 90) {
+    // Direkt in den Mund: sofort mampfen
+    el.remove();
+    const r = feedApply(snackId);
+    if (r.refused) {
+      homePet?.play("wiggle", 600);
+      setTimeout(() => showReaction(fmt(pick(TOO_FULL), ctx())), 300);
+      renderAll();
+      return;
+    }
+    feedFinish(snackId, r, "hand");
+  } else {
+    // Fallen gelassen: Mimo holt ihn sich (Bodenpfad)
+    el.remove();
+    const r = feedApply(snackId);
+    if (r.refused) {
+      homePet?.play("wiggle", 600);
+      setTimeout(() => showReaction(fmt(pick(TOO_FULL), ctx())), 300);
+      renderAll();
+      return;
+    }
+    feedFinish(snackId, r, "ground");
+  }
+}
+
+function cancelDragSnack() {
+  if (drag.el) drag.el.remove();
+  drag.el = null; drag.snackId = null; drag.active = false;
+  homePet?.setLean(0); homePet?.lookAt(0, 0);
+}
+
+// Aus der Hand: sofort mampfen, dann schlecken und feiern
+function handFeedSequence(celebrate, done) {
+  if (!homePet) { done && done(); return; }
+  idleBusy(4200);
+  homePet.svg.classList.add("clip-munch");
+  let bites = 0;
+  const biteTimer = setInterval(() => {
+    spawnCrumbs();
+    munchSound();
+    if (navigator.vibrate) navigator.vibrate(6);
+    if (++bites >= 3) {
+      clearInterval(biteTimer);
+      homePet.svg.classList.remove("clip-munch");
+      homePet.play("lick", 500);
+      done && done();
+      setTimeout(() => {
+        if (celebrate) {
+          homePet.emote("star", 1900);
+          homePet.chain([["jump", 550], ["jump", 550], ["wiggle", 600]]);
+          spawnHearts($("#petMount"));
+        } else {
+          homePet.chain([["jump", 550], ["wiggle", 600]]);
+        }
+      }, 520);
+    }
+  }, 330);
+}
+
+// Fuetter-Choreografie: bemerken -> hinhuepfen -> mampfen -> schlecken -> feiern
+function feedSequence(icon, celebrate, done) {
+  idleBusy(5200);
   scrollToScene();
   const stage = $(".stage"), mount = $("#petMount");
-  if (!stage || !mount) { done && done(); return; }
+  if (!stage || !mount || !homePet) { done && done(); return; }
   const side = Math.random() < 0.5 ? -1 : 1;
-  const offset = side * (60 + Math.random() * 40); // px neben Mimo
+  const offset = side * (60 + Math.random() * 40);
   const el = document.createElement("div");
   el.className = "drop-snack";
   el.textContent = icon;
   el.style.left = `calc(50% + ${offset}px)`;
   stage.appendChild(el);
   requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add("land")));
-  // Mimo huepft zum Snack
+
+  // 1) Bemerken: grosse Augen, aufgeregtes Hopsen auf der Stelle
+  homePet.emote("excite", 1300);
+  homePet.play("excite", 800);
+
+  // 2) Hinhuepfen
   setTimeout(() => {
     mount.style.transition = "transform .5s cubic-bezier(.4,1.3,.5,1)";
     mount.style.transform = `translateX(${offset}px)`;
-    homePet?.squish();
-  }, 480);
-  // Essen + zurueck
-  setTimeout(() => { el.classList.add("eaten"); done && done(); }, 1050);
+    homePet.play("jump", 550);
+  }, 620);
+
+  // 3) Mampfen: Kau-Bob + Backen-Beulen + Kruemel im Takt
   setTimeout(() => {
-    el.remove();
-    mount.style.transform = "translateX(0)";
-    setTimeout(() => { mount.style.transition = ""; }, 550);
-  }, 1900);
+    el.classList.add("eaten");
+    homePet.svg.classList.add("clip-munch");
+    let bites = 0;
+    const biteTimer = setInterval(() => {
+      spawnCrumbs();
+      munchSound();
+      if (navigator.vibrate) navigator.vibrate(6);
+      if (++bites >= 3) {
+        clearInterval(biteTimer);
+        homePet.svg.classList.remove("clip-munch");
+        // 4) Zungen-Schlecker
+        homePet.play("lick", 500);
+        done && done();
+        // 5) Feiern und zurueck zur Mitte
+        setTimeout(() => {
+          if (celebrate) {
+            homePet.emote("star", 1900);
+            homePet.chain([["jump", 550], ["jump", 550], ["wiggle", 600]]);
+            spawnHearts($("#petMount"));
+          } else {
+            homePet.chain([["jump", 550], ["wiggle", 600]]);
+          }
+          mount.style.transform = "translateX(0)";
+          setTimeout(() => { mount.style.transition = ""; }, 550);
+        }, 520);
+      }
+    }, 330);
+  }, 1250);
+
+  setTimeout(() => el.remove(), 1600);
+}
+
+function spawnNotes() {
+  const stage = $(".stage");
+  if (!stage) return;
+  for (let i = 0; i < 2; i++) {
+    const n = document.createElement("span");
+    n.className = "note-float";
+    n.textContent = Math.random() < 0.5 ? "\u266A" : "\u266B";
+    n.style.left = (42 + Math.random() * 16) + "%";
+    n.style.top = (34 + Math.random() * 14) + "%";
+    stage.appendChild(n);
+    setTimeout(() => n.remove(), 1150);
+  }
 }
 
 function spawnCrumbs() {
@@ -2060,23 +2374,6 @@ function spawnCrumbs() {
     stage.appendChild(cr);
     setTimeout(() => cr.remove(), 900);
   }
-}
-
-function petEat() {
-  if (!homePet) return;
-  homePet.squish();
-  const svg = homePet.svg;
-  const open = svg.querySelector(".m-open");
-  const others = ["smile", "small", "flat", "sleep"].map(k => svg.querySelector(".m-" + k));
-  let i = 0;
-  const chew = setInterval(() => {
-    const show = i % 2 === 0;
-    open.classList.toggle("hidden", !show);
-    others.forEach(o => o.classList.add("hidden"));
-    if (!show) svg.querySelector(".m-smile").classList.remove("hidden");
-    if (++i >= 6) { clearInterval(chew); renderAll(); }
-  }, 160);
-  playSound("catch");
 }
 
 // ---------- UI: Toast + Level-Up ----------
@@ -2223,7 +2520,12 @@ function buildSheets() {
       <em>${s.icon}</em><strong>${s.title}</strong><small>${s.sub}</small>
       <span class="feed-fx">${fx.join(" \u00b7 ")}</span></button>`;
   }).join("");
-  $$("#feedGrid button").forEach(b => b.onclick = () => { closeSheets(); feed(b.dataset.snack); });
+  $$("#feedGrid button").forEach(b => b.onclick = () => {
+    closeSheets();
+    if (blockIfAway()) return;
+    spawnDragSnack(b.dataset.snack);
+    showToast({ icon: "\u{1F449}", title: "Zieh den Snack zu Mimo", detail: "Direkt zum Mund für die schnelle Mahlzeit." });
+  });
 
   $("#gamesSub").textContent = fmt("%N ist bereits in Position.", ctx());
   $("#gamesOptions").innerHTML = Object.keys(GAME_DEFS).map(m => {
@@ -2631,8 +2933,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const pm = (e) => rubMove(e.clientX, e.clientY);
   petArea.addEventListener("pointerdown", pd);
   stageEl.addEventListener("pointermove", pm);
-  window.addEventListener("pointerup", rubEnd);
-  stageEl.addEventListener("pointerleave", rubEnd);
+  window.addEventListener("pointerup", () => { rubEnd(); rubRelease(); });
+  stageEl.addEventListener("pointerleave", () => { rubEnd(); rubRelease(); });
 
   const bathStage = $("#bathStage");
   bathStage.addEventListener("pointerdown", (e) => { rub.mode = "wash"; rubStart(e.clientX, e.clientY); });

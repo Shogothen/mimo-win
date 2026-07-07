@@ -706,3 +706,48 @@ body.phase-night #dock { border-color:rgba(255,255,255,.14); }
 .crumb { position:absolute; top:68%; z-index:8; width:5px; height:5px; border-radius:2px; background:#b98a4f; pointer-events:none;
   animation: crumbFly .8s ease-out forwards; }
 @keyframes crumbFly { from { opacity:1; transform:translate(0,0);} to { opacity:0; transform:translate(var(--dx), 26px);} }
+
+/* ============ v11: Körpersprache-Clips ============ */
+.pet .hop { transition: transform .18s ease; transform-origin:130px 208px; transform-box:fill-box; }
+.pet .squishwrap { transform-origin:130px 208px; }
+.pet.clip-jump .hop { animation: petJump .55s cubic-bezier(.35,1.3,.5,1); }
+@keyframes petJump { 0%,100% { transform:translateY(0) scale(1,1);} 18% { transform:translateY(4px) scale(1.06,.88);}
+  48% { transform:translateY(-34px) scale(.94,1.08);} 78% { transform:translateY(2px) scale(1.05,.92);} }
+.pet.clip-jump .earL { animation: earFlopL .55s ease; } .pet.clip-jump .earR { animation: earFlopR .55s ease; }
+@keyframes earFlopL { 45% { transform:rotate(-16deg);} } @keyframes earFlopR { 45% { transform:rotate(16deg);} }
+.pet .earL, .pet .earR { transform-origin:center 84px; transform-box:view-box; }
+.pet.clip-wiggle .hop { animation: petWiggle .6s ease-in-out; }
+@keyframes petWiggle { 20% { transform:rotate(-7deg);} 45% { transform:rotate(6deg);} 70% { transform:rotate(-4deg);} }
+.pet.clip-excite .hop { animation: exciteHop .38s ease 2; }
+@keyframes exciteHop { 40% { transform:translateY(-13px) scale(.98,1.03);} }
+.pet.clip-munch .hop { animation: munchBob .3s ease-in-out infinite; }
+@keyframes munchBob { 50% { transform:translateY(3px) scale(1.02,.97);} }
+.pet.clip-munch .bulges { display:block !important; }
+.pet.clip-munch .bulges circle { animation: bulgePulse .3s ease-in-out infinite alternate; transform-origin:center; transform-box:fill-box; }
+@keyframes bulgePulse { from { transform:scale(.7); opacity:.85;} to { transform:scale(1.12); opacity:1;} }
+.pet.clip-lick .tongue { display:block !important; animation: lickFlash .5s ease; transform-origin:130px 146px; transform-box:view-box; }
+@keyframes lickFlash { 0% { transform:scaleY(.2);} 35% { transform:scaleY(1) translateY(4px);} 100% { transform:scaleY(.15) translateY(-2px);} }
+.pet.purring .squishwrap { animation: purrPulse .5s ease-in-out infinite; }
+@keyframes purrPulse { 50% { transform:scale(1.025,0.985);} }
+.note-float { position:absolute; z-index:8; font-size:15px; color:#7a6fb8; pointer-events:none; font-weight:700;
+  animation: noteUp 1.1s ease-out forwards; }
+@keyframes noteUp { from { opacity:0; transform:translateY(6px) rotate(-8deg);} 25% { opacity:1;} to { opacity:0; transform:translateY(-42px) rotate(10deg);} }
+
+/* ============ v12: Drag-Füttern, Schmetterling ============ */
+.drag-snack { position:absolute; left:50%; bottom:14%; z-index:12; font-size:40px; transform:translate(-50%,-50%);
+  cursor:grab; touch-action:none; filter:drop-shadow(0 4px 8px rgba(60,30,50,.3));
+  animation: dragSnackIn .4s cubic-bezier(.3,1.4,.5,1); }
+.drag-snack.lifted { font-size:44px; cursor:grabbing; animation:none; }
+@keyframes dragSnackIn { from { transform:translate(-50%,20px) scale(.4); opacity:0; } }
+.butterfly { position:absolute; z-index:11; width:34px; height:30px; background:none; cursor:pointer; touch-action:manipulation;
+  animation: bflyPath 6.4s linear forwards; }
+@keyframes bflyPath { from { left:var(--fromX); } to { left:var(--toX); } }
+.butterfly .bw { position:absolute; top:4px; width:13px; height:17px; border-radius:60% 60% 45% 45%;
+  background:linear-gradient(160deg,#f2a1c2,#c78ae0); box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.45); }
+.butterfly .bw1 { left:2px; transform-origin:right center; animation: flapL .22s ease-in-out infinite alternate; }
+.butterfly .bw2 { right:2px; transform-origin:left center; animation: flapR .22s ease-in-out infinite alternate; }
+@keyframes flapL { from { transform:rotateY(12deg) rotate(-8deg);} to { transform:rotateY(66deg) rotate(-2deg);} }
+@keyframes flapR { from { transform:rotateY(-12deg) rotate(8deg);} to { transform:rotateY(-66deg) rotate(2deg);} }
+.butterfly.dart { animation: bflyDart .55s ease-in forwards !important; }
+@keyframes bflyDart { to { transform:translateY(-140px) scale(.5); opacity:0; } }
+.pet .eyes, .pet .brows { transition: transform .16s ease; }
