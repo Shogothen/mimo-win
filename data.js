@@ -646,9 +646,9 @@ const TALK_MENU_HINTS = {
 // ============ v5: Expeditionen, Fundstuecke, Momente ============
 
 const EXPED_TIERS = [
-  { id:"kurz",  title:"Spaziergang",  mins:20,  desc:"Eine kleine Runde. Mimo bleibt in Rufweite.", dust:[10,20],  souvenirChance:0.35, rarWeights:{ gewoehnlich:80, selten:18, episch:2,  legendaer:0 } },
-  { id:"mittel",title:"Ausflug",      mins:120, desc:"Ein richtiger Ausflug. Mit Proviant. Theoretisch.", dust:[30,60],  souvenirChance:0.75, rarWeights:{ gewoehnlich:55, selten:32, episch:11, legendaer:2 } },
-  { id:"lang",  title:"Große Reise",  mins:360, desc:"Die große Tour. Mimo packt seinen unsichtbaren Koffer.", dust:[80,140], souvenirChance:1.0,  rarWeights:{ gewoehnlich:30, selten:40, episch:22, legendaer:8 } }
+  { id:"kurz",  title:"Spaziergang",  mins:20,  desc:"Eine kleine Runde. Mimo bleibt in Rufweite.", dust:[8,15],   souvenirChance:0.35, rarWeights:{ gewoehnlich:80, selten:18, episch:2,  legendaer:0 } },
+  { id:"mittel",title:"Ausflug",      mins:120, desc:"Ein richtiger Ausflug. Mit Proviant. Theoretisch.", dust:[25,45],  souvenirChance:0.75, rarWeights:{ gewoehnlich:55, selten:32, episch:11, legendaer:2 } },
+  { id:"lang",  title:"Große Reise",  mins:360, desc:"Die große Tour. Mimo packt seinen unsichtbaren Koffer.", dust:[60,100], souvenirChance:1.0,  rarWeights:{ gewoehnlich:30, selten:40, episch:22, legendaer:8 } }
 ];
 
 const EXPED_DESTS = [
@@ -997,3 +997,37 @@ ACHIEVEMENTS.push(
   { id:"combo.5",      title:"Combo-König",    detail:"5er-Combo in einem Mini-Game",             icon:"\u26A1" },
   { id:"gespraech.15", title:"Vertraut",       detail:"15 Gespräche geführt",                     icon:"\u{1F4AC}" }
 );
+
+// ============ v7: Balancing & Szenen-Feedback ============
+
+const AFFECTION_FULL = [
+  "%N schnurrt. Einfach so. Ohne Gegenleistung. Das nennt man Zuneigung, nicht Arbeit.",
+  "%N genießt es sichtlich. Die Belohnungsdrüse macht allerdings gerade Pause.",
+  "%N lehnt sich an. Manche Momente sind einfach nur für euch zwei.",
+  "%N nimmt die Streicheleinheit dankend an. Rein privat, nicht geschäftlich."
+];
+const TOO_FULL = [
+  "%N schaut auf den Snack, dann auf seinen Bauch. Beide sind sich einig: später.",
+  "%N ist pappsatt. Er würdigt das Angebot mit einem höflichen Nicken und einem kleinen Rülpser.",
+  "%N legt den Snack symbolisch zur Seite. 'Für die Nacht', sagt er. Die Nacht beginnt in zehn Minuten."
+];
+const NOT_TIRED = [
+  "%N ist hellwach. Er legt sich trotzdem kurz hin. Aus Prinzip. Es zählt nicht als Schlaf.",
+  "%N blinzelt dich an. Müde sieht anders aus. Er bleibt aber liegen. Für die Gemütlichkeit."
+];
+const GAME_FUN_ONLY = "Heute nur noch für die Ehre: Die Tages-Belohnungen sind verspielt. Rekorde zählen natürlich trotzdem.";
+const HUNGER_BONUS_TEXT = "%N hatte wirklich Hunger. Doppelte Dankbarkeit, doppelte XP.";
+const QUATSCH_FULL = [
+  "%N quatscht gern weiter. Ehrenamtlich. Die Tages-XP fürs Plaudern sind aufgebraucht.",
+  "%N redet einfach gern mit dir. Auch ohne Punkte. Vor allem ohne Punkte."
+];
+
+// Snack-Rebalancing: Basis schwaecher, Premium mit Boni (xp/bond als neue Effekte)
+SNACKS.find(s => s.id === "karotte").eff = { saett: 12, laune: 2, energie: 4 };
+SNACKS.find(s => s.id === "kuchen").eff  = { saett: 10, laune: 7, energie: 0 };
+SNACKS.find(s => s.id === "fisch").eff   = { saett: 16, laune: 4, energie: 2 };
+SNACKS.find(s => s.id === "suppe").eff   = { saett: 22, laune: 3, energie: 3 };
+PREMIUM_SNACKS.find(s => s.id === "erdbeere").eff = { saett: 14, laune: 10, energie: 5, xp: 5 };
+PREMIUM_SNACKS.find(s => s.id === "donut").eff    = { saett: 18, laune: 14, energie: 2, xp: 6 };
+PREMIUM_SNACKS.find(s => s.id === "sushi").eff    = { saett: 24, laune: 8,  energie: 5, xp: 8, bond: 2 };
+PREMIUM_SNACKS.find(s => s.id === "ramen").eff    = { saett: 30, laune: 12, energie: 8, xp: 10, bond: 3 };

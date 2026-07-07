@@ -67,7 +67,8 @@ function defaultState() {
     expedition: null, expeditionsDone: 0, souvenirs: [],
     gratitude: [], lastGratitudeDay: null, lastBreathDay: null, breathsDone: 0,
     streakFreezes: 0,
-    bondTierSeen: 0, destVisits: {}, weekly: null, weeklyDone: 0
+    bondTierSeen: 0, destVisits: {}, weekly: null, weeklyDone: 0,
+    care: { streichel: [], quatschDay: null, quatschCount: 0, gamesDay: null, gamesCount: 0 }
   };
 }
 
@@ -189,8 +190,8 @@ function applyDecay() {
   const hrs = (Date.now() - p.lastUpdate) / 36e5;
   if (hrs < 0.05) return;
   s.energie += p.sleeping ? hrs * 6 : -hrs * 1.5;
-  s.saettigung -= hrs * 2.5;
-  s.laune -= hrs * 1.2;
+  s.saettigung -= hrs * 3.2;
+  s.laune -= hrs * (s.saettigung < 30 ? 2.6 : 1.2); // Hunger macht schlechte Laune
   s.energie = Math.max(s.energie, 10);
   s.saettigung = Math.max(s.saettigung, 10);
   s.laune = Math.max(s.laune, 15);
@@ -321,7 +322,7 @@ function favoriteInteraction() {
 
 // ---------- Engine: Interaktionen ----------
 const EFFECTS = {
-  streicheln: { laune: 8, bond: 2, trait: "lieb", xp: 5 },
+  streicheln: { laune: 8, bond: 2, trait: "lieb", xp: 3 },
   reden:      { laune: 6, bond: 3, trait: "anhaenglich", xp: 6 },
   schlafen:   { energie: 25, trait: "vertraeumt", xp: 3 }
 };
@@ -331,24 +332,47 @@ function recordInteraction(type) {
   m[type] = (m[type] || 0) + 1;
 }
 
+// Streichel-Budget: 3 belohnte Einheiten pro Stunde (rollierend)
+function affectionRewarded() {
+  const now = Date.now();
+  state.care.streichel = (state.care.streichel || []).filter(t => now - t < 36e5);
+  if (state.care.streichel.length >= 3) return false;
+  state.care.streichel.push(now);
+  return true;
+}
+
 function interact(type) {
   if (blockIfAway()) return;
   applyDecay();
   const p = state.pet;
+  const wasTired = p.stats.energie < 50;
   p.sleeping = type === "schlafen";
   const e = EFFECTS[type];
-  p.stats.energie += e.energie || 0; p.stats.laune += e.laune || 0; p.stats.bond += e.bond || 0;
+  let rewarded = true, reactionOverride = null, xp = e.xp;
+
+  if (type === "streicheln") {
+    rewarded = affectionRewarded();
+    if (!rewarded) reactionOverride = fmt(pick(AFFECTION_FULL), ctx());
+  }
+  if (type === "schlafen" && !wasTired) {
+    rewarded = false;
+    reactionOverride = fmt(pick(NOT_TIRED), ctx());
+  }
+
+  p.stats.energie += e.energie || 0; p.stats.laune += e.laune || 0;
+  if (rewarded) p.stats.bond += e.bond || 0;
   if (e.trait) bump(e.trait, 1.5);
   clampStats();
   p.lastInteraction = Date.now(); p.lastUpdate = Date.now();
   recordInteraction(type);
-  showReaction(genericReaction(type));
+  showReaction(reactionOverride || genericReaction(type));
   if (Math.random() < 0.25) addDiary("interaction", { type });
-  earnDust(2);
   if (type === "streicheln") wishBump("streicheln");
-  handleLevelUp(addXP(e.xp));
+  if (rewarded) {
+    sceneFloat(`+${xp} XP`, "#9e486b");
+    handleLevelUp(addXP(xp));
+  }
   if (type === "streicheln") questProgress("streicheln");
-  if (type === "reden") questProgress("reden");
   const h = new Date().getHours();
   if (h >= 0 && h < 4) unlockAchievement("nachteule");
   checkUnlocks(); save(); renderAll();
@@ -366,12 +390,23 @@ function feed(snackId) {
   const p = state.pet;
   p.sleeping = false;
   const snack = ALL_SNACKS.find(s => s.id === snackId);
+  const wasHungry = p.stats.saettigung < 30;
+  const tooFull = p.stats.saettigung >= 85;
   const isFav = snackId === p.favSnack;
   const discovery = isFav && !p.favDiscovered;
+
+  if (tooFull && !discovery) {
+    // Zu satt: kein Effekt, keine Belohnung, charmante Absage
+    p.lastInteraction = Date.now(); p.lastUpdate = Date.now();
+    flyToPet(snack.icon, () => showReaction(fmt(pick(TOO_FULL), ctx())));
+    save(); renderAll();
+    return;
+  }
+
   p.stats.saettigung += snack.eff.saett;
   p.stats.laune += snack.eff.laune + (isFav ? 8 : 0);
   p.stats.energie += snack.eff.energie;
-  if (isFav) p.stats.bond += 2;
+  p.stats.bond += (snack.eff.bond || 0) + (isFav ? 2 : 0);
   clampStats();
   p.lastInteraction = Date.now(); p.lastUpdate = Date.now();
   recordInteraction("fuettern");
@@ -384,16 +419,24 @@ function feed(snackId) {
     playSound("success");
   } else if (isFav) {
     text = fmt(pick(FEED_REACTIONS.favorite), ctx({ S: snack.title }));
-  } else if (computeMood() === "hungrig") {
+  } else if (wasHungry) {
     text = fmt(pick(FEED_REACTIONS[snackId].concat(FEED_REACTIONS.hungry)), ctx());
   } else {
     text = fmt(pick(FEED_REACTIONS[snackId]), ctx());
   }
-  showReaction(text);
+
+  let xp = 4 + (snack.eff.xp || 0);
+  if (wasHungry) { xp *= 2; text = fmt(HUNGER_BONUS_TEXT, ctx()) + " " + text; }
+
+  flyToPet(snack.icon, () => {
+    petEat();
+    showReaction(text);
+    sceneFloat(`+${snack.eff.saett} Sättigung`, "#8ca659");
+    setTimeout(() => sceneFloat(`+${xp} XP`, "#9e486b"), 350);
+  });
   if (Math.random() < 0.25) addDiary("interaction", { type: "fuettern" });
-  earnDust(2);
   wishBump("feedSnack", snackId);
-  handleLevelUp(addXP(5));
+  handleLevelUp(addXP(xp));
   questProgress("fuettern");
   checkUnlocks(); save(); renderAll();
 }
@@ -447,7 +490,8 @@ function doCheckIn(answerId) {
   showReaction(fmt(text, ctx()));
   addDiary("checkin", { answer: answerId });
   playSound("success");
-  earnDust(Math.min(15 + p.streak * 2, 35));
+  earnDust(Math.min(10 + p.streak * 2, 25));
+  sceneFloat("+15 XP", "#9e486b");
   weeklyProgress("checkins");
   handleLevelUp(addXP(15));
   questProgress("checkin");
@@ -466,6 +510,10 @@ function finishMiniGame(score, mode = "sterne") {
   if (isBest) state.best[mode] = score;
   if (mode === "sterne") p.bestScore = state.best.sterne; // Legacy-Feld mitziehen
 
+  if (state.care.gamesDay !== todayKey()) { state.care.gamesDay = todayKey(); state.care.gamesCount = 0; }
+  const gameRewarded = state.care.gamesCount < 3;
+  if (gameRewarded) state.care.gamesCount++;
+
   const pool = mode === "blasen" ? GAME2_REACTIONS : GAME_REACTIONS;
   let text;
   if (isBest && score > 0) text = pool.newBest;
@@ -473,12 +521,15 @@ function finishMiniGame(score, mode = "sterne") {
   else if (score <= 5) text = pool.low;
   else if (score <= 12) text = pool.mid;
   else text = pool.high;
+  if (!gameRewarded) text += " " + GAME_FUN_ONLY;
   showReaction(fmt(text, ctx({ S: score })));
   if (Math.random() < 0.34 || score >= 15) addDiary("game", { S: score, high: score >= 15 });
-  earnDust(Math.min(score, 30));
+  if (gameRewarded) {
+    earnDust(Math.min(score, 15));
+    handleLevelUp(addXP(Math.min(4 + Math.floor(score / 2), 18)));
+  }
   weeklyProgress("spiele");
   wishBump("spielen");
-  handleLevelUp(addXP(Math.min(8 + Math.floor(score / 2), 25)));
   questProgress("spielen");
   if (mode === "blasen") questProgress("blasen");
   if (score >= 10) questProgress("minigame");
@@ -659,26 +710,35 @@ function finishConvo() {
       applyDecay();
       const p = state.pet;
       p.sleeping = false;
+      // Quatsch-Tagesbudget: 3 belohnte Plaudereien pro Tag
+      if (state.care.quatschDay !== todayKey()) { state.care.quatschDay = todayKey(); state.care.quatschCount = 0; }
+      let rewarded = true;
+      if (quatsch) {
+        rewarded = state.care.quatschCount < 3;
+        if (rewarded) state.care.quatschCount++;
+      }
       p.stats.laune = clamp(p.stats.laune + 6, 0, 100);
-      p.stats.bond = clamp(p.stats.bond + (quatsch ? 2 : 4) + chat.bondExtra, 0, 100);
+      p.stats.bond = clamp(p.stats.bond + (rewarded ? (quatsch ? 2 : 4) : 0) + chat.bondExtra, 0, 100);
       bump("anhaenglich", 1.5);
       p.lastInteraction = Date.now(); p.lastUpdate = Date.now();
       recordInteraction("reden");
       state.convoSeen[conv.id] = todayKey();
       state.convosDone++;
       weeklyProgress("gespraeche");
-      const dust = quatsch ? 2 : 4;
-      earnDust(dust);
+      const dust = rewarded ? (conv.type === "fact" || conv.type === "deep" ? 5 : 0) : 0;
+      if (dust) earnDust(dust);
       wishBump("reden");
       const diaryChance = { fact: 1, deep: 1, context: 0.6, story: 0.5, quatsch: 0.2 }[conv.type] || 0.3;
       if (Math.random() < diaryChance)
         state.diary.unshift({ date: Date.now(), mood: computeMood(), text: fmt(CONVO_DIARY[conv.type], ctx()) });
       const rw = document.createElement("div");
       rw.className = "msg-reward";
-      rw.innerHTML = `<span class="chip chip-small">+${quatsch ? 4 : 8} XP</span><span class="chip chip-dust chip-small">+${dust} Staub</span><span class="chip chip-small" style="color:#e56b6b;background:#e56b6b22">Bond +${(quatsch ? 2 : 4) + chat.bondExtra}</span>`;
+      rw.innerHTML = rewarded
+        ? `<span class="chip chip-small">+${quatsch ? 4 : 8} XP</span>${dust ? `<span class="chip chip-dust chip-small">+${dust} Staub</span>` : ""}<span class="chip chip-small" style="color:#e56b6b;background:#e56b6b22">Bond +${(quatsch ? 2 : 4) + chat.bondExtra}</span>`
+        : `<span class="chip chip-small">${fmt(pick(QUATSCH_FULL), ctx())}</span>`;
       $("#chatScroll").appendChild(rw);
       chatScrollDown();
-      handleLevelUp(addXP(quatsch ? 4 : 8));
+      if (rewarded) handleLevelUp(addXP(quatsch ? 4 : 8));
       questProgress("reden");
       checkUnlocks(); save();
     }
@@ -758,7 +818,7 @@ function checkExpeditionReturn() {
   state.pet.stats.laune = clamp(state.pet.stats.laune + 10, 0, 100);
   state.pet.stats.bond = clamp(state.pet.stats.bond + 3, 0, 100);
   state.pet.lastInteraction = Date.now(); state.pet.lastUpdate = Date.now();
-  handleLevelUp(addXP(tier.id === "lang" ? 20 : tier.id === "mittel" ? 12 : 6));
+  handleLevelUp(addXP(tier.id === "lang" ? 50 : tier.id === "mittel" ? 25 : 10));
   state.diary.unshift({ date: Date.now(), mood: "gluecklich", text: fmt(EXPED_TEXTS.diary, ctx({ S: dest.title })) });
   let storyPool = [...dest.stories];
   const ms = EXPED_MASTER_STORIES[dest.id] || {};
@@ -1610,6 +1670,52 @@ setInterval(() => {
   if (Date.now() >= state.expedition.end) { checkExpeditionReturn(); renderAll(); showReturn(); }
 }, 1000);
 
+// ---------- Szenen-Feedback ----------
+function scrollToScene() {
+  try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch (e) { window.scrollTo(0, 0); }
+}
+
+function sceneFloat(text, color) {
+  const stage = $(".stage");
+  if (!stage) return;
+  const el = document.createElement("div");
+  el.className = "scene-float";
+  el.textContent = text;
+  el.style.color = color || "#9e486b";
+  el.style.left = (38 + Math.random() * 24) + "%";
+  stage.appendChild(el);
+  setTimeout(() => el.remove(), 1500);
+}
+
+function flyToPet(icon, done) {
+  scrollToScene();
+  const stage = $(".stage");
+  if (!stage) { done && done(); return; }
+  const el = document.createElement("div");
+  el.className = "fly-snack";
+  el.textContent = icon;
+  stage.appendChild(el);
+  requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add("arrive")));
+  setTimeout(() => { el.remove(); done && done(); }, 620);
+}
+
+function petEat() {
+  if (!homePet) return;
+  homePet.squish();
+  const svg = homePet.svg;
+  const open = svg.querySelector(".m-open");
+  const others = ["smile", "small", "flat", "sleep"].map(k => svg.querySelector(".m-" + k));
+  let i = 0;
+  const chew = setInterval(() => {
+    const show = i % 2 === 0;
+    open.classList.toggle("hidden", !show);
+    others.forEach(o => o.classList.add("hidden"));
+    if (!show) svg.querySelector(".m-smile").classList.remove("hidden");
+    if (++i >= 6) { clearInterval(chew); renderAll(); }
+  }, 160);
+  playSound("catch");
+}
+
 // ---------- UI: Toast + Level-Up ----------
 let toastTimer = null;
 function showToast(def) {
@@ -1739,14 +1845,20 @@ function buildSheets() {
     `<button data-answer="${a.id}"><em>${a.icon}</em>${a.label}</button>`).join("");
   $$("#checkinOptions button").forEach(b => b.onclick = () => { closeSheets(); doCheckIn(b.dataset.answer); });
 
-  $("#feedSub").textContent = state.pet.favDiscovered
+  const sattHint = state.pet.stats.saettigung >= 85 ? " \u2013 Achtung: Mimo ist gerade pappsatt." : "";
+  $("#feedSub").textContent = (state.pet.favDiscovered
     ? `Lieblingssnack: ${SNACKS.find(s => s.id === state.pet.favSnack).title}`
-    : fmt("%N hat einen geheimen Lieblingssnack.", ctx());
+    : fmt("%N hat einen geheimen Lieblingssnack.", ctx())) + sattHint;
   const feedSnacks = SNACKS.concat(PREMIUM_SNACKS.filter(s => state.ownedSnacks.includes(s.id)));
   $("#feedGrid").innerHTML = feedSnacks.map(s => {
     const fav = state.pet.favDiscovered && s.id === state.pet.favSnack;
+    const fx = [`+${s.eff.saett} Satt`];
+    if (s.eff.laune >= 7) fx.push(`+${s.eff.laune} Laune`);
+    if (s.eff.xp) fx.push(`+${s.eff.xp} XP`);
+    if (s.eff.bond) fx.push(`+${s.eff.bond} Bond`);
     return `<button data-snack="${s.id}">${fav ? '<span class="fav">\u2665</span>' : ""}
-      <em>${s.icon}</em><strong>${s.title}</strong><small>${s.sub}</small></button>`;
+      <em>${s.icon}</em><strong>${s.title}</strong><small>${s.sub}</small>
+      <span class="feed-fx">${fx.join(" \u00b7 ")}</span></button>`;
   }).join("");
   $$("#feedGrid button").forEach(b => b.onclick = () => { closeSheets(); feed(b.dataset.snack); });
 
@@ -2120,8 +2232,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   $$(".action").forEach(btn => btn.addEventListener("click", () => {
     const a = btn.dataset.action;
-    if (a === "streicheln") { homePet?.squish(); spawnHearts($("#petMount")); interact(a); }
-    else if (a === "schlafen") { homePet?.squish(); interact(a); }
+    if (a === "streicheln") { scrollToScene(); homePet?.squish(); spawnHearts($("#petMount")); interact(a); }
+    else if (a === "schlafen") { scrollToScene(); homePet?.squish(); interact(a); }
     else if (a === "feed") { buildSheets(); openSheet("sheet-feed"); }
     else if (a === "talk") { buildSheets(); openSheet("sheet-talk"); }
     else if (a === "checkin") { buildSheets(); openSheet("sheet-checkin"); }

@@ -3,6 +3,7 @@
 Virtuelles Haustier als Web-App. Vanilla JS/HTML/CSS, keine Dependencies, Speicherung in localStorage.
 Portiert vom nativen SwiftUI-Projekt (Repo "mimo") mit allen Systemen: Stimmung, Persönlichkeit,
 Erinnerungen, Macken, Quests, Erfolge, Garderobe, zwei Mini-Games, Tagesphasen-Himmel.
+v7 Balancing: Anti-Spam-Budgets, Hunger mit Konsequenz, Premium-Snacks mit XP/Bond-Boni, Belohnungen sichtbar in der Szene, fliegende Snacks mit Kau-Animation.
 v6 Tiefe: steigende XP-Kurve bis Level 20+, Beziehungsstufen, Ziel-Meisterschaft mit Reise-Log, Wochenziele, Combo-System.
 v5 Welt: Expeditionen mit echter Abwesenheit, Sammelalbum (20 Fundstücke), Atemübung, Dankbarkeits-Glas, Streak-Schutz.
 v4 Gespräche: echtes Chat-System, Mimo lernt dich kennen und erinnert sich, Kontext- und Bond-Gespräche.
