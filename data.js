@@ -1453,3 +1453,84 @@ const PING_CARE = [
         { l:"An meine To-dos", r:"Verstehe. Dann übernehme ich jetzt eine davon: an dich denken. Erledigt. Eine weniger." },
         { l:"An nichts", r:"An nichts denken ist eine Kunst. Ich übe seit Monaten. Respekt." } ]}
 ];
+
+// ============ v15: Achtsamkeit mit Tiefe ============
+
+const BREATH_PATTERNS = [
+  { id:"ruhe",  title:"Beruhigen",     plan:[["in",4000],["hold",2000],["out",6000]], cycles:5, desc:"Länger aus als ein. Der Klassiker gegen enge Tage." },
+  { id:"fokus", title:"Fokus-Box",     plan:[["in",4000],["hold",4000],["out",4000],["hold",4000]], cycles:4, desc:"Vier gleiche Seiten. Sortiert den Kopf." },
+  { id:"stille",title:"Tiefe Stille",  plan:[["in",4000],["hold",2000],["out",8000]], cycles:5, desc:"Sehr langes Ausatmen. Für ganz unten ankommen.", minTier:1 }
+];
+
+const THREE_THINGS = {
+  intro: "Wir erden uns. Ich sage dir was, du findest es. Nur innerlich, ganz ohne Eile.",
+  steps: [
+    { text:"Finde drei Dinge, die du gerade sehen kannst. Irgendwelche drei. Nimm dir Zeit.", secs:16 },
+    { text:"Jetzt zwei Geräusche. Auch leise zählen. Auch das Summen von nichts.", secs:12 },
+    { text:"Und eine Sache, die du gerade fühlst. Den Boden. Den Stuhl. Deinen Atem.", secs:10 }
+  ],
+  done: ["Da bist du wieder. Hier, im Jetzt. Ich habe dich die ganze Zeit gesehen.",
+         "Angekommen. Drei, zwei, eins: du. Genau hier ist ein guter Ort."]
+};
+
+const CLOUD_TEXTS = {
+  prompt: "Was beschwert dich gerade? Schreib es auf. Ich lese es nicht. Niemand liest es. Der Wind nimmt es mit.",
+  placeholder: "Ein Gedanke, der gehen darf \u2026",
+  release: ["Und weg. Schau ihm ruhig nach. Er wird kleiner, versprochen.",
+            "Der Wind hat ihn. Manche Gedanken sind nur zu Besuch.",
+            "Fort. Falls er wiederkommt, machen wir einfach eine neue Wolke. Der Himmel hat Platz."],
+  diary: "Heute hat %U einen schweren Gedanken zu einer Wolke gemacht. Ich habe nicht gefragt, was drinstand. Manches gehört dem Wind."
+};
+
+const EVENING_RITUAL = {
+  minHour: 18,
+  lockedHint: "Öffnet heute Abend",
+  intro: "Der Tag ist fast rum. Lass ihn uns zusammen zuklappen. Drei Fragen, dann ist Feierabend. Auch im Kopf.",
+  q1: { text:"Wie war er wirklich, dein Tag?", answers:["Gut", "Gemischt", "Schwer"] },
+  q1react: { "Gut":"Gut. Das nehme ich zu Protokoll. Mit Ausrufezeichen.",
+             "Gemischt":"Gemischt ist ehrlich. Die meisten Tage sind aus mehreren Sorten Wetter.",
+             "Schwer":"Dann war es ein Tag zum Durchhalten. Und du hast durchgehalten. Das zählt doppelt." },
+  q2: { text:"Was war heute gut? Eine Kleinigkeit reicht völlig.", placeholder:"Etwas Gutes von heute \u2026" },
+  q3: { text:"Und was darfst du jetzt loslassen bis morgen?", answers:["Die offenen To-dos", "Ein Gespräch", "Den Druck", "Alles davon"] },
+  q3react: { "Die offenen To-dos":"Die To-dos schlafen jetzt auch. Sie sind morgen ausgeruhter als heute Nacht um drei.",
+             "Ein Gespräch":"Gespräche klingen nach. Aber jetzt ist Sendepause. Anordnung vom Wesen.",
+             "Den Druck":"Der Druck macht Feierabend. Ich habe ihn persönlich zur Tür gebracht.",
+             "Alles davon":"Alles davon. Großzügig. Der Nachtdienst übernimmt jetzt. Der Nachtdienst bin ich." },
+  outro: "Tag zugeklappt. Was gut war, heben wir auf. Der Rest bleibt draußen. Schlaf gut, wenn es so weit ist.",
+  diary: "Abendritual mit %U. Der Tag war %V. Das Gute daran: \u201E%S\u201C. Wir haben den Rest dem Wind gegeben. So machen wir das jetzt."
+};
+
+const CALM_TIERS = [
+  { min:0,   name:"Ankommen",     text:"Der Anfang. Jede Minute zählt." },
+  { min:60,  name:"Regelmäßig",   text:"%N merkt es: Ihr habt eine Übung daraus gemacht. Neues Atem-Muster freigeschaltet: Tiefe Stille." },
+  { min:180, name:"Verwurzelt",   text:"Verwurzelt. Im Room liegt jetzt ein kleiner Zen-Stein. Er tut nichts. Genau das ist seine Aufgabe." },
+  { min:400, name:"Stille",       text:"Die höchste Stufe. %N möchte mit dir über Stille sprechen. Wenn du bereit bist." }
+];
+const CALM_BUFF_TEXT = "Geerdet";
+const CALM_DONE_LINES = [
+  "%N atmet jetzt merklich langsamer. Du auch, wetten?",
+  "Notiert im Ruhe-Konto. Der Tag ist ab jetzt +10% weicher.",
+  "%N sagt: Das war das Wichtigste, was du heute für dich getan hast. Er sagt es leise."
+];
+
+CONVERSATIONS.push({ id:"deep.stille", type:"deep", minBond:0, minCalmTier:3,
+  nodes:{ start:{ mimo:["Ich wollte mit dir über Stille reden. Nicht viel. Das wäre unpassend.",
+      "Früher dachte ich, Stille ist, wenn nichts da ist. Leere. Pause. Warten auf das Nächste.",
+      "Aber wenn wir üben, du und ich, dann ist die Stille... voll. Voll von genau dem, was da ist. Dein Atem. Mein Fell. Das Zimmer. Es reicht. Es hat immer gereicht, wir haben nur nie hingehört."],
+    answers:[
+      { label:"Es reicht. Ja.", react:["Mehr wollte ich nicht hören.", "Hier. Ich habe etwas für dich aufgehoben. Einen Stein, ganz rund, ganz still. Er hat mir beigebracht, was ich dir gerade gesagt habe. Jetzt gehört er uns."], bond:6 },
+      { label:"Seit wann bist du so weise?", react:["Seit ungefähr Stufe drei. Es kam schleichend.", "Hier. Ein Geschenk. Ein Stein, ganz rund, ganz still. Nicht wertvoll. Nur richtig. Das ist besser als wertvoll."], bond:6 }
+    ]}},
+  outro:["So. Genug geredet. Das war vermutlich ironisch. Die Stille und ich arbeiten noch an unserem Timing."] });
+
+SOUVENIRS.push({ id:"ruhestein", title:"Der ruhige Stein", rar:"legendaer", icon:"\u{1FAA8}", flavor:"Ganz rund, ganz still. Er tut nichts, und er tut es perfekt. Geschenk von %N, Stufe: Stille." });
+
+ACHIEVEMENTS.push(
+  { id:"calm.tier2",  title:"Regelmäßig",    detail:"Ruhe-Stufe 2 erreicht",          icon:"\u25CE" },
+  { id:"calm.tier4",  title:"Stille",        detail:"Höchste Ruhe-Stufe erreicht",    icon:"\u2299" },
+  { id:"wolken.10",   title:"Wolkenmacher",  detail:"10 Gedanken ziehen lassen",      icon:"\u2601" },
+  { id:"abend.7",     title:"Zuklapper",     detail:"7 Abendrituale",                 icon:"\u{1F319}" },
+  { id:"erden.10",    title:"Geerdet",       detail:"10x Drei Dinge geübt",           icon:"\u{1F331}" }
+);
+
+QUEST_TYPES.achtsam = { title:"Einen Moment für dich nehmen", target:1, ico:"breath" };

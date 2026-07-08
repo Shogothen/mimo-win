@@ -71,7 +71,8 @@ function defaultState() {
     bondTierSeen: 0, destVisits: {}, weekly: null, weeklyDone: 0,
     care: { streichel: [], quatschDay: null, quatschCount: 0, gamesDay: null, gamesCount: 0, bathDay: null },
     moments: [], lastGreetDay: null,
-    bathsDone: 0
+    bathsDone: 0,
+    calm: { points: 0, tierSeen: 0, lastDay: null, streak: 0, wolken: 0, erden: 0, abende: 0, lastGroundDay: null, lastCloudDay: null, lastEveningDay: null }
   };
 }
 
@@ -98,6 +99,7 @@ if (state.best.sterne === 0 && state.pet.bestScore > 0) state.best.sterne = stat
 if (state.pet.stats.hygiene === undefined) state.pet.stats.hygiene = 75;
 if (state.care.bathDay === undefined) state.care.bathDay = null;
 if (state.bathsDone === undefined) state.bathsDone = 0;
+if (!state.calm) state.calm = { points: 0, tierSeen: 0, lastDay: null, streak: 0, wolken: 0, erden: 0, abende: 0, lastGroundDay: null, lastCloudDay: null, lastEveningDay: null };
 // Neue XP-Kurve: bestehendes Level bleibt mindestens erhalten
 state.pet.stats.level = Math.max(state.pet.stats.level, (function () {
   let lvl = 1, sum = 0;
@@ -201,7 +203,7 @@ function applyDecay() {
   s.energie += p.sleeping ? hrs * 6 : -hrs * 1.5;
   s.saettigung -= hrs * 3.2;
   s.hygiene = (s.hygiene ?? 85) - hrs * 1.1;
-  s.laune -= hrs * ((s.saettigung < 30 ? 1.4 : 0) + (s.hygiene < 35 ? 1.0 : 0) + 1.2);
+  s.laune -= hrs * ((s.saettigung < 30 ? 1.4 : 0) + (s.hygiene < 35 ? 1.0 : 0) + 1.2) * (calmToday() ? 0.75 : 1);
   s.energie = Math.max(s.energie, 10);
   s.saettigung = Math.max(s.saettigung, 10);
   s.laune = Math.max(s.laune, 15);
@@ -234,6 +236,7 @@ function levelFromXP(xp) {
 }
 function addXP(amount) {
   const s = state.pet.stats;
+  if (calmToday()) amount = Math.round(amount * 1.1); // Geerdet: +10% XP
   s.xp += amount;
   const newLevel = levelFromXP(s.xp);
   if (newLevel > s.level) { s.level = newLevel; return newLevel; }
@@ -803,6 +806,42 @@ function finishArcChapter(ch) {
   checkUnlocks(); save();
 }
 
+// ---------- Engine: Innere Ruhe (Achtsamkeit) ----------
+function calmToday() { return state.calm?.lastDay === todayKey(); }
+
+function calmTier() {
+  const pts = state.calm?.points || 0;
+  let t = 0;
+  for (let i = 0; i < CALM_TIERS.length; i++) if (pts >= CALM_TIERS[i].min) t = i;
+  return t;
+}
+
+function calmDone(kind) {
+  const cm = state.calm;
+  applyDecay();
+  const firstToday = !calmToday();
+  if (firstToday) {
+    cm.streak = cm.lastDay === yesterdayKey() ? cm.streak + 1 : 1;
+    cm.lastDay = todayKey();
+  }
+  cm.points += firstToday ? 12 : 6;
+  state.pet.stats.laune = clamp(state.pet.stats.laune + 8, 0, 100);
+  state.pet.stats.bond = clamp(state.pet.stats.bond + 1, 0, 100);
+  questProgress("achtsam");
+  weeklyProgress("momente");
+  const before = state.calm.tierSeen || 0;
+  const t = calmTier();
+  if (t > before) {
+    cm.tierSeen = t;
+    if (t >= 1) unlockAchievement("calm.tier2");
+    if (t >= 3) unlockAchievement("calm.tier4");
+    setTimeout(() => showCelebration("Innere Ruhe: " + CALM_TIERS[t].name, fmt(CALM_TIERS[t].text, ctx())), 600);
+    playSound("level");
+  }
+  if (homePet) homePet.svg.classList.add("calm");
+  checkUnlocks(); save();
+}
+
 // ---------- Engine: Momente ----------
 function captureMoment(type, detail) {
   if (!MOMENT_TYPES[type]) return;
@@ -856,6 +895,7 @@ function availableConversations() {
     menu.push(buildMemoryConvo(pick(mems)));
   const deeps = CONVERSATIONS.filter(x => x.type === "deep").sort((a, b) => a.minBond - b.minBond);
   for (const conv of deeps) {
+    if (conv.minCalmTier && calmTier() < conv.minCalmTier) continue;
     if (state.pet.stats.bond >= conv.minBond && !state.convoSeen[conv.id]) { menu.push(conv); break; }
   }
   // Kennenlernen: max eins pro Tag, das naechste unbeantwortete
@@ -1114,6 +1154,10 @@ function finishConvo() {
       if (dust) earnDust(dust);
       wishBump("reden");
       if (conv.type === "arc" && conv._arc) finishArcChapter(conv._arc);
+      if (conv.id === "deep.stille" && !state.souvenirs.includes("ruhestein")) {
+        state.souvenirs.push("ruhestein");
+        showToast({ icon: "\u{1FAA8}", title: "Der ruhige Stein", detail: "Ein legendäres Andenken liegt jetzt im Album." });
+      }
       const diaryChance = { fact: 1, deep: 1, context: 0.6, story: 0.5, quatsch: 0.2, erinnerung: 0, arc: 0 }[conv.type] || 0.3;
       if (Math.random() < diaryChance)
         state.diary.unshift({ date: Date.now(), mood: computeMood(), text: fmt(CONVO_DIARY[conv.type], ctx()) });
@@ -1246,13 +1290,17 @@ function showReturn() {
 }
 
 // ---------- Engine: Momente (Atmen, Dankbarkeit) ----------
-const breath = { timer: null, cycle: 0, phase: 0 };
-const BREATH_PLAN = [["in", 4000], ["hold", 2000], ["out", 4000]];
+const breath = { timer: null, cycle: 0, phase: 0, pattern: null };
 
-function startBreath() {
+function startBreath(patternId = "ruhe") {
   $("#breathOverlay").classList.remove("hidden");
   const mount = $("#breathPetMount"); mount.innerHTML = "";
   createPet(mount, 120, { static: true }).update("vertraeumt", false, "none");
+  breath.pattern = BREATH_PATTERNS.find(p => p.id === patternId) || BREATH_PATTERNS[0];
+  const pats = BREATH_PATTERNS.filter(p => !p.minTier || calmTier() >= p.minTier);
+  $("#breathPatterns").innerHTML = pats.length > 1 ? pats.map(p =>
+    `<button class="${p.id === breath.pattern.id ? "active" : ""}" data-pat="${p.id}">${p.title}</button>`).join("") : "";
+  $$("#breathPatterns button").forEach(b => b.onclick = () => { clearTimeout(breath.timer); startBreath(b.dataset.pat); });
   breath.cycle = 0; breath.phase = -1;
   $("#breathPhase").textContent = fmt(BREATH_TEXTS.intro, ctx());
   $("#breathCount").textContent = "";
@@ -1261,13 +1309,14 @@ function startBreath() {
 }
 
 function breathStep() {
+  const plan = breath.pattern.plan;
   breath.phase++;
-  if (breath.phase >= BREATH_PLAN.length) { breath.phase = 0; breath.cycle++; }
-  if (breath.cycle >= 6) { finishBreath(); return; }
-  const [ph, ms] = BREATH_PLAN[breath.phase];
+  if (breath.phase >= plan.length) { breath.phase = 0; breath.cycle++; }
+  if (breath.cycle >= breath.pattern.cycles) { finishBreath(); return; }
+  const [ph, ms] = plan[breath.phase];
   $("#breathRing").className = "breath-ring " + ph;
   $("#breathPhase").textContent = BREATH_TEXTS.phases[ph];
-  $("#breathCount").textContent = `Runde ${breath.cycle + 1} von 6`;
+  $("#breathCount").textContent = `Runde ${breath.cycle + 1} von ${breath.pattern.cycles}`;
   breath.timer = setTimeout(breathStep, ms);
 }
 
@@ -1280,10 +1329,10 @@ function finishBreath(skipped) {
   state.pet.stats.bond = clamp(state.pet.stats.bond + 1, 0, 100);
   if (state.lastBreathDay !== todayKey()) { earnDust(5); state.lastBreathDay = todayKey(); }
   state.breathsDone++;
-  weeklyProgress("momente");
-  showReaction(fmt(pick(BREATH_TEXTS.done), ctx()));
+  showReaction(fmt(pick(BREATH_TEXTS.done.concat(CALM_DONE_LINES)), ctx()));
   questProgress("atmen");
-  checkUnlocks(); save(); renderAll();
+  calmDone("atmen");
+  renderAll();
 }
 
 function saveGratitude(text) {
@@ -1293,12 +1342,128 @@ function saveGratitude(text) {
   state.pet.stats.bond = clamp(state.pet.stats.bond + 2, 0, 100);
   state.pet.stats.laune = clamp(state.pet.stats.laune + 5, 0, 100);
   if (state.lastGratitudeDay !== todayKey()) { earnDust(8); state.lastGratitudeDay = todayKey(); }
-  weeklyProgress("momente");
   showReaction(fmt(pick(GRATITUDE_TEXTS.reactions), ctx()));
   if (Math.random() < 0.5) state.diary.unshift({ date: Date.now(), mood: "anhaenglich", text: fmt(GRATITUDE_TEXTS.diary, ctx()) });
   questProgress("dankbar");
+  calmDone("dankbar");
   playSound("success");
-  checkUnlocks(); save(); renderAll();
+  renderAll();
+}
+
+// ---------- Engine: Drei Dinge (Grounding) ----------
+const ground = { timer: null, step: -1 };
+
+function startGround() {
+  $("#groundOverlay").classList.remove("hidden");
+  const mount = $("#groundPetMount"); mount.innerHTML = "";
+  createPet(mount, 110, { static: true }).update("vertraeumt", false, "none");
+  ground.step = -1;
+  $("#groundText").textContent = fmt(THREE_THINGS.intro, ctx());
+  $("#groundBar").style.width = "0%";
+  clearTimeout(ground.timer);
+  ground.timer = setTimeout(groundStep, 2600);
+}
+
+function groundStep() {
+  ground.step++;
+  if (ground.step >= THREE_THINGS.steps.length) { finishGround(false); return; }
+  const st = THREE_THINGS.steps[ground.step];
+  $("#groundText").textContent = st.text;
+  $("#groundBar").style.transition = "none";
+  $("#groundBar").style.width = "0%";
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    $("#groundBar").style.transition = `width ${st.secs}s linear`;
+    $("#groundBar").style.width = "100%";
+  }));
+  ground.timer = setTimeout(groundStep, st.secs * 1000);
+}
+
+function finishGround(skipped) {
+  clearTimeout(ground.timer);
+  $("#groundOverlay").classList.add("hidden");
+  if (skipped && ground.step < 2) { renderAll(); return; }
+  state.calm.erden++;
+  if (state.calm.lastGroundDay !== todayKey()) { earnDust(5); state.calm.lastGroundDay = todayKey(); }
+  if (state.calm.erden >= 10) unlockAchievement("erden.10");
+  showReaction(fmt(pick(THREE_THINGS.done), ctx()));
+  calmDone("erden");
+  renderAll();
+}
+
+// ---------- Engine: Gedanken-Wolke ----------
+function releaseCloud(text) {
+  closeSheets();
+  scrollToScene();
+  const stage = $(".stage");
+  const el = document.createElement("div");
+  el.className = "thought-cloud";
+  el.innerHTML = `<span class="tc-puff"></span><span class="tc-text"></span>`;
+  el.querySelector(".tc-text").textContent = text;
+  stage.appendChild(el);
+  requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add("drift")));
+  homePet?.lookAt(0.4, -0.8);
+  setTimeout(() => { homePet?.lookAt(0, 0); }, 3800);
+  setTimeout(() => el.remove(), 6200);
+  state.calm.wolken++;
+  if (state.calm.wolken >= 10) unlockAchievement("wolken.10");
+  if (state.calm.lastCloudDay !== todayKey()) { earnDust(5); state.calm.lastCloudDay = todayKey(); }
+  if (Math.random() < 0.4) state.diary.unshift({ date: Date.now(), mood: "vertraeumt", text: fmt(CLOUD_TEXTS.diary, ctx()) });
+  setTimeout(() => showReaction(fmt(pick(CLOUD_TEXTS.release), ctx())), 2600);
+  calmDone("wolke");
+  renderAll();
+}
+
+// ---------- Engine: Tagesabschluss ----------
+const evening = { step: 0, q1: null, q2: "" };
+
+function eveningAvailable() {
+  return new Date().getHours() >= EVENING_RITUAL.minHour && state.calm.lastEveningDay !== todayKey();
+}
+
+function startEvening() {
+  evening.step = 1; evening.q1 = null; evening.q2 = "";
+  renderEvening();
+  openSheet("sheet-evening");
+}
+
+function renderEvening() {
+  const box = $("#eveningBody");
+  if (evening.step === 1) {
+    box.innerHTML = `<p class="muted">${fmt(EVENING_RITUAL.intro, ctx())}</p><h3>${EVENING_RITUAL.q1.text}</h3>
+      <div class="sheet-options">${EVENING_RITUAL.q1.answers.map(a => `<button data-a="${a}"><span>${a}</span></button>`).join("")}</div>`;
+    $$("#eveningBody button").forEach(b => b.onclick = () => {
+      evening.q1 = b.dataset.a; evening.step = 2; renderEvening();
+    });
+  } else if (evening.step === 2) {
+    box.innerHTML = `<p class="muted">${EVENING_RITUAL.q1react[evening.q1]}</p><h3>${EVENING_RITUAL.q2.text}</h3>
+      <input id="eveningInput" type="text" maxlength="90" placeholder="${EVENING_RITUAL.q2.placeholder}" autocomplete="off">
+      <button class="btn-primary grat-save" id="eveningNext" disabled>Weiter</button>`;
+    $("#eveningInput").addEventListener("input", () => { $("#eveningNext").disabled = !$("#eveningInput").value.trim(); });
+    $("#eveningNext").onclick = () => {
+      evening.q2 = $("#eveningInput").value.trim();
+      evening.step = 3; renderEvening();
+    };
+  } else if (evening.step === 3) {
+    box.innerHTML = `<h3>${EVENING_RITUAL.q3.text}</h3>
+      <div class="sheet-options">${EVENING_RITUAL.q3.answers.map(a => `<button data-a="${a}"><span>${a}</span></button>`).join("")}</div>`;
+    $$("#eveningBody button").forEach(b => b.onclick = () => finishEvening(b.dataset.a));
+  }
+}
+
+function finishEvening(q3) {
+  closeSheets();
+  state.calm.abende++;
+  state.calm.lastEveningDay = todayKey();
+  if (state.calm.abende >= 7) unlockAchievement("abend.7");
+  state.diary.unshift({ date: Date.now(), mood: "vertraeumt",
+    text: fmt(EVENING_RITUAL.diary, ctx({ V: evening.q1?.toLowerCase(), S: evening.q2 })) });
+  state.gratitude.unshift({ d: Date.now(), text: evening.q2 });
+  state.gratitude = state.gratitude.slice(0, 40);
+  earnDust(8);
+  showReaction(EVENING_RITUAL.q3react[q3] + " " + fmt(EVENING_RITUAL.outro, ctx()));
+  calmDone("abend");
+  handleLevelUp(addXP(10));
+  renderAll();
 }
 
 // ---------- Engine: Wochenziele ----------
@@ -2064,9 +2229,10 @@ function renderAll() {
   // Schwamm bei Bedarf
   $("#spongeBtn").classList.toggle("hidden", !bathNeeded() || !!state.expedition);
 
-  // Rituale
-  $("#ritualBreath").classList.toggle("done", state.lastBreathDay === todayKey());
-  $("#ritualGratitude").classList.toggle("done", state.lastGratitudeDay === todayKey());
+  // Geerdet-Status
+  $("#calmChip").classList.toggle("hidden", !calmToday());
+  $("#momentsSub").textContent = calmToday() ? "Heute schon bei dir gewesen" : "Fünf Wege zu dir";
+  if (homePet) homePet.svg.classList.toggle("calm", calmToday());
 
   // Reden-Badge bei Neuigkeiten
   const talkOrb = $('.action[data-action="talk"] .orb');
@@ -2139,6 +2305,7 @@ function renderRoom(mood) {
   $("#decoBuecher").classList.toggle("hidden", lvl < 8);
   $("#decoMobile").classList.toggle("hidden", lvl < 10);
   $("#decoLichterkette").classList.toggle("hidden", !state.ownedDeco.includes("lichterkette"));
+  $("#decoZen").classList.toggle("hidden", calmTier() < 2);
   $("#decoGirlande").classList.toggle("hidden", !state.ownedDeco.includes("girlande"));
   $("#decoTeleskop").classList.toggle("hidden", !state.ownedDeco.includes("teleskop"));
   $("#decoRadio").classList.toggle("hidden", !state.ownedDeco.includes("radio"));
@@ -2958,6 +3125,34 @@ function buildSheets() {
       <span class="chip chip-small" style="${m >= 3 ? "color:#c98a12;background:#c98a1222" : ""}">${m ? MASTERY_NAMES[m] : "Neu"}</span></div>`;
   }).join("");
 
+  // Momente-Hub
+  const tier = calmTier();
+  $("#momentsCalm").textContent = `Innere Ruhe: ${CALM_TIERS[tier].name} \u00b7 ${state.calm.points} Punkte` +
+    (tier < CALM_TIERS.length - 1 ? ` \u00b7 nächste Stufe ab ${CALM_TIERS[tier + 1].min}` : "");
+  const evOk = eveningAvailable();
+  const exercises = [
+    { id:"atmen",  icon:"\u25CE", title:"Atemreise", sub: calmTier() >= 1 ? "3 Muster wählbar" : "Beruhigen & Fokus", done: state.lastBreathDay === todayKey() },
+    { id:"erden",  icon:"\u{1F331}", title:"Drei Dinge", sub:"In einer Minute geerdet", done: state.calm.lastGroundDay === todayKey() },
+    { id:"wolke",  icon:"\u2601", title:"Gedanken-Wolke", sub:"Etwas dem Wind geben", done: state.calm.lastCloudDay === todayKey() },
+    { id:"dankbar",icon:"\u2661", title:"Dankbarkeit", sub:`Im Glas: ${state.gratitude.length}`, done: state.lastGratitudeDay === todayKey() },
+    { id:"abend",  icon:"\u{1F319}", title:"Tagesabschluss", sub: new Date().getHours() < EVENING_RITUAL.minHour ? EVENING_RITUAL.lockedHint : "Drei Fragen, dann Feierabend",
+      done: state.calm.lastEveningDay === todayKey(), locked: !evOk && state.calm.lastEveningDay !== todayKey() }
+  ];
+  $("#momentsList").innerHTML = exercises.map(e =>
+    `<button data-ex="${e.id}" ${e.locked ? "disabled style='opacity:.45'" : ""}>
+      <em>${e.icon}</em><span>${e.title}${e.done ? " \u2713" : ""}<span class="talk-option-hint">${e.sub}</span></span></button>`).join("");
+  $$("#momentsList button").forEach(b => b.onclick = () => {
+    closeSheets();
+    const ex = b.dataset.ex;
+    if (ex === "atmen") startBreath("ruhe");
+    else if (ex === "erden") startGround();
+    else if (ex === "wolke") { buildSheets(); $("#cloudInput").value = ""; $("#cloudRelease").disabled = true; openSheet("sheet-cloud"); }
+    else if (ex === "dankbar") { buildSheets(); $("#gratInput").value = ""; $("#gratSave").disabled = true; openSheet("sheet-gratitude"); }
+    else if (ex === "abend") startEvening();
+  });
+  $("#cloudPrompt").textContent = fmt(CLOUD_TEXTS.prompt, ctx());
+  $("#cloudInput").placeholder = CLOUD_TEXTS.placeholder;
+
   $("#gratPrompt").textContent = fmt(GRATITUDE_TEXTS.prompt, ctx());
   const recent = state.gratitude.slice(0, 3);
   $("#gratRecent").classList.toggle("hidden", recent.length === 0);
@@ -3388,13 +3583,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   $("#chatClose").addEventListener("click", () => { closeSheets(); renderAll(); });
   $("#expedOpen").addEventListener("click", () => { buildSheets(); openSheet("sheet-exped"); });
-  $("#ritualBreath").addEventListener("click", startBreath);
+  $("#momentsRow").addEventListener("click", () => { buildSheets(); openSheet("sheet-momente"); });
   $("#breathSkip").addEventListener("click", () => finishBreath(true));
-  $("#ritualGratitude").addEventListener("click", () => {
-    buildSheets();
-    $("#gratInput").value = "";
-    $("#gratSave").disabled = true;
-    openSheet("sheet-gratitude");
+  $("#groundSkip").addEventListener("click", () => finishGround(true));
+  $("#cloudInput").addEventListener("input", () => { $("#cloudRelease").disabled = !$("#cloudInput").value.trim(); });
+  $("#cloudRelease").addEventListener("click", () => {
+    const t = $("#cloudInput").value.trim();
+    if (t) releaseCloud(t);
   });
   $("#gratInput").addEventListener("input", () => { $("#gratSave").disabled = !$("#gratInput").value.trim(); });
   $("#gratSave").addEventListener("click", () => {

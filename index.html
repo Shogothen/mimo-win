@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=14">
+<link rel="stylesheet" href="style.css?v=15">
 </head>
 <body>
 
@@ -104,15 +104,15 @@
 
   <section class="card rings-card">
     <div class="stat-ring" data-stat="energie"><svg viewBox="0 0 52 52"><circle class="ring-bg" cx="26" cy="26" r="21"/><circle class="ring-fg" cx="26" cy="26" r="21"/></svg>
-      <em><svg viewBox="0 0 24 24"><path d="M13 3 L6 13.5 h4.5 L10 21 l7-10.5 h-4.5 z"/></svg></em><label>Energie</label></div>
+      <em><svg viewBox="0 0 24 24"><path d="M13.5 3.5 L7 13 h4 L10.5 20.5 L17 11 h-4 z" stroke-linejoin="round"/></svg></em><label>Energie</label></div>
     <div class="stat-ring" data-stat="laune"><svg viewBox="0 0 52 52"><circle class="ring-bg" cx="26" cy="26" r="21"/><circle class="ring-fg" cx="26" cy="26" r="21"/></svg>
-      <em><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="9" cy="10.2" r="0.6" fill="var(--ink-soft)"/><circle cx="15" cy="10.2" r="0.6" fill="var(--ink-soft)"/><path d="M8.8 14 q3.2 2.8 6.4 0"/></svg></em><label>Laune</label></div>
+      <em><svg viewBox="0 0 24 24"><path d="M8.6 7.5 v2.4 M15.4 7.5 v2.4 M6.5 13.5 q5.5 5.4 11 0"/></svg></em><label>Laune</label></div>
     <div class="stat-ring" data-stat="saettigung"><svg viewBox="0 0 52 52"><circle class="ring-bg" cx="26" cy="26" r="21"/><circle class="ring-fg" cx="26" cy="26" r="21"/></svg>
-      <em><svg viewBox="0 0 24 24"><path d="M4 13 h16 M6 13 a6 6 0 0 1 12 0 M9 17.5 h6"/></svg></em><label>Sättigung</label></div>
+      <em><svg viewBox="0 0 24 24"><path d="M5 11 h14 M5 11 a7 7 0 0 0 14 0 M9.5 20 h5" stroke-linejoin="round"/></svg></em><label>Sättigung</label></div>
     <div class="stat-ring" data-stat="hygiene"><svg viewBox="0 0 52 52"><circle class="ring-bg" cx="26" cy="26" r="21"/><circle class="ring-fg" cx="26" cy="26" r="21"/></svg>
-      <em><svg viewBox="0 0 24 24"><path d="M12 3.5 C12 3.5 6 10.5 6 14.5 a6 6 0 0 0 12 0 C18 10.5 12 3.5 12 3.5 z"/></svg></em><label>Pflege</label></div>
+      <em><svg viewBox="0 0 24 24"><path d="M12 4.5 C9 9 7.5 11.8 7.5 14.4 a4.5 4.5 0 0 0 9 0 C16.5 11.8 15 9 12 4.5 z" stroke-linejoin="round"/></svg></em><label>Pflege</label></div>
     <div class="stat-ring" data-stat="bond"><svg viewBox="0 0 52 52"><circle class="ring-bg" cx="26" cy="26" r="21"/><circle class="ring-fg" cx="26" cy="26" r="21"/></svg>
-      <em><svg viewBox="0 0 24 24"><path d="M12 19.5 C6 14.6 4.6 11.2 6.3 8.7 7.7 6.6 10.6 6.8 12 9 c1.4-2.2 4.3-2.4 5.7-0.3 1.7 2.5 0.3 5.9-5.7 10.8 z"/></svg></em><label>Bond</label></div>
+      <em><svg viewBox="0 0 24 24"><path d="M12 18.6 C7.4 14.8 6 12.2 7.3 10.2 8.5 8.4 11 8.6 12 10.4 c1-1.8 3.5-2 4.7-0.2 1.3 2 -0.1 4.6 -4.7 8.4 z" stroke-linejoin="round"/></svg></em><label>Bond</label></div>
   </section>
 
   <button class="live-ticker hidden" id="liveTicker">
@@ -134,15 +134,11 @@
         <span class="wish-progress" id="wishProgress"></span></span>
       <span class="chip chip-small" id="wishReward">+30 Staub</span>
     </div>
-    <button class="today-row" id="ritualBreath">
-      <span class="tr-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7.5" fill="none" stroke-width="2"/><circle cx="12" cy="12" r="3" fill="none" stroke-width="2"/></svg></span>
-      <span class="tr-text"><strong>Eine Minute atmen</strong><small>Mimo atmet mit</small></span>
-      <span class="tr-done hidden">&#10003;</span>
-    </button>
-    <button class="today-row" id="ritualGratitude">
-      <span class="tr-icon"><svg viewBox="0 0 24 24"><path d="M12 20 C5 14.4 3.4 10.6 5.4 7.6 7 5.2 10.4 5.4 12 8 c1.6-2.6 5-2.8 6.6-0.4 2 3-0.4 6.8-6.6 12.4 z" fill="none" stroke-width="2"/></svg></span>
-      <span class="tr-text"><strong>Dankbarkeit</strong><small>Eine Sache reicht</small></span>
-      <span class="tr-done hidden">&#10003;</span>
+    <button class="today-row" id="momentsRow">
+      <span class="tr-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7.5" fill="none" stroke-width="1.8"/><circle cx="12" cy="12" r="2.6" fill="none" stroke-width="1.8"/></svg></span>
+      <span class="tr-text"><strong>Momente mit Mimo</strong><small id="momentsSub">Fünf Wege zu dir</small></span>
+      <span class="chip chip-small hidden" id="calmChip">Geerdet</span>
+      <span class="tr-go">&#8250;</span>
     </button>
   </section>
 
@@ -299,6 +295,12 @@
         <circle cx="182" cy="20" r="4.5" class="lk-bulb l3"/><circle cx="248" cy="12" r="4.5" class="lk-bulb"/>
         <circle cx="316" cy="10" r="4.5" class="lk-bulb l2"/><circle cx="382" cy="16" r="4.5" class="lk-bulb l3"/>
       </g>
+      <g class="hidden" id="decoZen" transform="translate(342 318)">
+        <ellipse cx="0" cy="6" rx="16" ry="5" fill="rgba(90,70,90,.15)"/>
+        <ellipse cx="0" cy="0" rx="14" ry="8" fill="#a8a0b0"/>
+        <ellipse cx="-2" cy="-8" rx="9" ry="5.5" fill="#c0b8c8"/>
+        <ellipse cx="-4" cy="-10.5" rx="2" ry="1.2" fill="#ddd6e4"/>
+      </g>
       <!-- Shop-Deko -->
       <g class="hidden" id="decoGirlande">
         <path d="M20,30 Q110,64 200,34" fill="none" class="garl-string"/>
@@ -438,6 +440,27 @@
   <div class="exped-log" id="expedLog"></div>
 </div>
 
+<div class="sheet hidden" id="sheet-momente">
+  <div class="sheet-grip"></div>
+  <h2 class="serif">Momente mit Mimo</h2>
+  <p class="muted" id="momentsCalm"></p>
+  <div class="sheet-options" id="momentsList"></div>
+</div>
+
+<div class="sheet hidden" id="sheet-cloud">
+  <div class="sheet-grip"></div>
+  <h2 class="serif">Gedanken-Wolke</h2>
+  <p class="muted" id="cloudPrompt"></p>
+  <input id="cloudInput" type="text" maxlength="80" autocomplete="off">
+  <button class="btn-primary grat-save" id="cloudRelease" disabled>Dem Wind geben</button>
+</div>
+
+<div class="sheet hidden" id="sheet-evening">
+  <div class="sheet-grip"></div>
+  <h2 class="serif">Tagesabschluss</h2>
+  <div id="eveningBody"></div>
+</div>
+
 <div class="sheet hidden" id="sheet-gratitude">
   <div class="sheet-grip"></div>
   <h2 class="serif">Das Glas der guten Dinge</h2>
@@ -501,11 +524,21 @@
   </div>
 </div>
 
+<div id="groundOverlay" class="hidden">
+  <div class="breath-stage">
+    <div id="groundPetMount" class="ground-pet"></div>
+    <h2 class="serif" id="groundText" style="font-size:19px; max-width:300px; margin:0 auto 18px; line-height:1.4;"></h2>
+    <div class="bath-bar" style="max-width:220px; margin:0 auto 22px;"><div id="groundBar" style="height:100%; width:0%; border-radius:99px; background:linear-gradient(90deg,#8ca659,#b5cc7e);"></div></div>
+    <button class="btn-ghost" id="groundSkip">Beenden</button>
+  </div>
+</div>
+
 <div id="breathOverlay" class="hidden">
   <div class="breath-stage">
     <div class="breath-ring" id="breathRing"><div id="breathPetMount"></div></div>
     <h2 class="serif" id="breathPhase">Bereit?</h2>
     <p class="muted" id="breathCount"></p>
+    <div class="breath-patterns" id="breathPatterns"></div>
     <button class="btn-ghost" id="breathSkip">Beenden</button>
   </div>
 </div>
@@ -550,7 +583,7 @@
 
 <div id="toast" class="hidden"><span class="toast-icon" id="toastIcon">&#10022;</span><div><strong id="toastTitle"></strong><p id="toastDetail"></p></div></div>
 
-<script src="data.js?v=14"></script>
-<script src="app.js?v=14"></script>
+<script src="data.js?v=15"></script>
+<script src="app.js?v=15"></script>
 </body>
 </html>
