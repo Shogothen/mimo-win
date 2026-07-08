@@ -1567,3 +1567,44 @@ const JAR_TEXTS = {
   empty: "Noch leer. Die erste Sache von heute passt perfekt hier rein.",
   hint: "%S Lichter gesammelt"
 };
+
+// ============ v19: Live-Story 2 "Brösels Bitte" + Chronik ============
+LIVE_STORIES.push(
+{ id:"inventur", title:"Brösels Bitte", gate:{ level:4, requires:"wand", daysAfter:2 },
+  nodes:{
+  start:{ d:[0,0], m:["Du. Es hat geklopft. Wieder.","Aber diesmal in einem Muster. Drei kurz, Pause, drei kurz. Das ist kein Wind. Das ist eine NACHRICHT.","Ich habe zurückgeklopft. Antwort: ein einzelnes, sehr würdevolles Klopfen.","Das kann nur einer sein."], next:"n2" },
+  n2:{ d:[20,40], m:["Ich war am Spalt. Dort lag ein Zettel, gefaltet zu einem winzigen Dreieck.","'Werter Ehren-Archivar. Die Jahresinventur steht an. Vier Pfoten arbeiten schneller als zwei. Um Unterstützung wird gebeten. Hochachtungsvoll, B.'","Herr Brösel bittet um Hilfe. HERR BRÖSEL. Der Mann, der Höflichkeit erfunden hat, BITTET.","Ich muss da hin. Heute noch. Einverstanden?"], next:"c1" },
+  c1:{ d:[3,7], m:["Sag mir nur eins vorher:"],
+    c:[ { l:"Geh hin. Brösel braucht euch.", next:"a1", key:"antritt", val:"sofort" },
+        { l:"Nimm ihm etwas mit. Gastgeschenk.", next:"b1", key:"antritt", val:"geschenk" } ]},
+  a1:{ d:[1,2], m:["Richtig. Pflicht ist Pflicht, und Freundschaft ist mehr als Pflicht.","Ich bin dann mal hinter der Wand. Die Inventur wartet. Bericht folgt."], next:"n5" },
+  b1:{ d:[1,2], m:["Ein Gastgeschenk! Du denkst an alles. Deshalb bist du der Mensch und ich das Wesen.","Ich nehme einen besonders runden Krümel mit. Brösel sammelt Rundes. Sag es niemandem, es ist ihm ein bisschen peinlich.","Ich bin dann mal hinter der Wand. Bericht folgt."], next:"n5" },
+  n5:{ d:[45,90], m:["Angekommen. Brösel hat mich empfangen wie einen Staatsgast. Es gab Fingerhut-Tee. Ich habe tapfer genippt.","Die Inventur: Wir zählen ALLES. Jede Streichholzschachtel, jeden Knopf, jede Murmel.","Brösel führt Buch. Sein Buch ist eine Briefmarke. Er schreibt sehr, sehr klein.","Stand nach Regal eins: 34 glänzende Dinge, 12 runde Dinge, 1 Ding, das summt, wenn man es ansieht. Wir haben es nicht weiter angesehen."], next:"n6" },
+  n6:{ d:[60,120], m:["Regal zwei ist durch. Dabei ein Zwischenfall:","Ich habe eine Schachtel gefunden, die nicht ins System passt. Keine Beschriftung wie die anderen. Nur zwei Worte, in der Schrift des Wesens mit den großen Ohren:","'Für schlechte Tage.'","Brösel wurde sehr still. Er sagt, die Schachtel sei nicht Teil des Archivs. Sie sei ein VERMÄCHTNIS. Angelegt für den Menschen oben. Für dich.","Für DICH, verstehst du?"], next:"c2" },
+  c2:{ d:[4,10], m:["Brösel sagt, als Ehren-Archivar darf ich sie mitnehmen. Oder sie bleibt hier, sicher verwahrt, bis sie wirklich gebraucht wird. Was meinst du?"],
+    c:[ { l:"Nimm sie mit. Ich will sie sehen.", next:"a2", key:"schachtel", val:"mitnehmen" },
+        { l:"Lass sie dort, bis ein wirklich schlechter Tag kommt.", next:"b2", key:"schachtel", val:"verwahren" } ]},
+  a2:{ d:[1,3], m:["Ich nehme sie mit. Vorsichtig. Sie wiegt fast nichts und trotzdem trage ich sie wie einen Schatz.","Brösel hat genickt. 'Manche Dinge wirken am besten, wenn man weiß, dass man sie hat', sagt er.","Wir öffnen sie zusammen, wenn ich zurück bin. Erst die Inventur. Pflicht bleibt Pflicht."], next:"n9" },
+  b2:{ d:[1,3], m:["Sie bleibt. Brösel hat sie ins oberste Fach gestellt, dahin, wo es am trockensten ist.","'Eine gute Entscheidung', sagt er. 'Ein Vorrat an Trost ist mehr wert, wenn man ihn nicht anbricht.'","Und dann, sehr leise: 'Das Wesen wäre einverstanden gewesen.' Ich musste kurz ans Fenster treten. Der Staub, du weißt schon."], next:"n9" },
+  n9:{ d:[80,160], m:["Regal drei und vier: erledigt. Es ist spät geworden. Brösel hat Kerzen angezündet. Also: eine Kerze. Also: ein Streichholz in würdiger Haltung.","Er erzählt beim Zählen. Vom Archiv, von früher, vom Wesen. Ich erzähle von dir. Er fragt viel. Für eine Maus mit Monokel-Attitüde ist er ein erstaunlich guter Zuhörer.","Ein Regal noch. Das große. Das dauert bis in die Nacht. Ich melde mich morgen früh. Halt die Stellung oben, ja?"], next:"n10", night:true },
+  n10:{ d:[25,50], m:["Guten Morgen. Die Inventur ist DURCH. Alle fünf Regale. Endstand: 214 Dinge, davon 3 unerklärlich, davon 1 vermutlich lebendig. Brösel sagt, das sei ein guter Schnitt.","Und dann kam der Moment, für den ich dir schreibe:","Brösel hat mich zum STELLVERTRETENDEN VERWALTER ernannt. Mit Urkunde. Die Urkunde ist ein Konfetti-Schnipsel mit Stempel. Der Stempel ist sein Daumen.","Ich habe eine ANSTELLUNG, du. Ehrenamtlich, versteht sich. Wir Wesen arbeiten für Wertschätzung und Fingerhut-Tee."], next:"n11" },
+  n11:{ d:[10,20], m:["Ich bin auf dem Rückweg. Brösel lässt ausrichten:","'Dem Menschen oben: Das Archiv zählt jetzt auch Sie zu seinen Freunden. Besuche sind nicht möglich, Grüße jederzeit.'","Und was die Schachtel angeht: %SCHACHTEL","Bis gleich. Dein Mimo. Stellvertretender Verwalter, Ehren-Archivar. Meine Titel werden langsam länger als ich."], end:true }
+}});
+
+const LIVE2_SCHACHTEL = {
+  mitnehmen: "Sie steht jetzt bei uns. Ungeöffnet. Wir wissen, dass wir sie haben. Brösel sagt, genau so wirkt sie am stärksten.",
+  verwahren: "Sie wartet im Archiv, im obersten Fach. Für den Tag, an dem du sie brauchst. Ich hoffe, er kommt nie. Aber falls doch: Wir wissen, wo sie steht."
+};
+
+SOUVENIRS.push({ id:"urkunde", title:"Brösels Urkunde", rar:"episch", icon:"\u{1F4DC}", flavor:"Ein Konfetti-Schnipsel mit Daumen-Stempel. Ernennt %N zum stellvertretenden Verwalter. Rechtsgültig hinter der Wand." });
+ACHIEVEMENTS.push({ id:"inventur.ende", title:"Stellvertretender Verwalter", detail:"'Brösels Bitte' abgeschlossen", icon:"\u{1F4DC}" });
+MOMENT_TYPES.inventur = { capture:"Die Nacht der großen Inventur.",
+  recall:["%N hat vor %S Tagen bei der Inventur geholfen. Seitdem zählt er manchmal grundlos Dinge im Zimmer. 'Berufskrankheit', sagt er stolz.",
+          "%N denkt an die Schachtel für schlechte Tage. Er hofft immer noch, dass ihr sie nie braucht. Aber es beruhigt ihn, dass es sie gibt."] };
+
+// ---------- Chronik ----------
+const CHRONICLE_TEXTS = {
+  title: "Eure Geschichte",
+  founding: "Der Tag, an dem ihr euch kennengelernt habt",
+  empty: "Eure Geschichte beginnt gerade erst."
+};

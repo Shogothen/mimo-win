@@ -153,6 +153,7 @@ function checkBondTier() {
   const t = bondTier();
   if (t > (state.bondTierSeen || 0)) {
     state.bondTierSeen = t;
+    addChronicle("\u2661", "Bond-Stufe \u201E" + BOND_TIERS[t].name + "\u201C erreicht");
     pendingBondTier = t;
     if (t === 4) captureMoment("seelen");
     state.diary.unshift({ date: Date.now(), mood: "anhaenglich", text: fmt(BOND_TIER_DIARY, ctx({ S: BOND_TIERS[t].name })) });
@@ -249,6 +250,7 @@ function addXP(amount) {
 
 let pendingEvo = null;
 function handleLevelUp(level) {
+  if (level && level % 5 === 0) addChronicle("\u2B50", `Level ${level} erreicht`);
   if (!level) return;
   const msg = fmt(LEVEL_UP[level] || LEVEL_UP.default, ctx({ L: level }));
   addDiary("levelUp", { L: level });
@@ -458,6 +460,7 @@ function feedFinish(snackId, r, mode) {
   let text;
   if (discovery) {
     p.favDiscovered = true;
+    addChronicle("\u2764", `Lieblingssnack entdeckt`);
     text = fmt(FEED_REACTIONS.discovery, ctx({ S: snack.title }));
     addDiary("snack", { S: snack.title });
     captureMoment("favsnack", snack.title);
@@ -623,6 +626,13 @@ function wishBump(kind, snackId) {
   }
 }
 
+// ---------- Engine: Chronik ----------
+function addChronicle(icon, title) {
+  if (!state.chronicle) state.chronicle = [];
+  state.chronicle.unshift({ at: Date.now(), icon, title });
+  state.chronicle = state.chronicle.slice(0, 60);
+}
+
 // ---------- Engine: Live-Stories (Echtzeit) ----------
 const randMin = (a, b) => (a + Math.random() * (b - a)) * 60000;
 
@@ -638,16 +648,26 @@ function clampNight(ts) {
 function liveStoryDef() { return state.live ? LIVE_STORIES.find(s => s.id === state.live.storyId) : null; }
 
 function maybeStartLiveStory() {
-  if (state.live) return;
-  if (state.liveDone?.includes("wand")) return;
-  const story = LIVE_STORIES[0];
-  if (state.pet.stats.level < (story.gate.level || 1)) return;
-  state.live = {
-    storyId: story.id, history: [], choices: {}, unread: 0,
-    waitingChoice: null, nextNodeId: "start",
-    availableAt: Date.now() + randMin(2, 6), done: false, startedAt: Date.now()
-  };
-  save();
+  if (state.live && !state.live.done) return;
+  state.liveDone = state.liveDone || [];
+  state.liveFinishedAt = state.liveFinishedAt || {};
+  for (const story of LIVE_STORIES) {
+    if (state.liveDone.includes(story.id)) continue;
+    const g = story.gate || {};
+    if (state.pet.stats.level < (g.level || 1)) continue;
+    if (g.requires && !state.liveDone.includes(g.requires)) continue;
+    if (g.daysAfter && g.requires) {
+      const doneAt = state.liveFinishedAt[g.requires] || 0;
+      if (!doneAt || Date.now() - doneAt < g.daysAfter * 864e5) continue;
+    }
+    state.live = {
+      storyId: story.id, history: [], choices: {}, unread: 0,
+      waitingChoice: null, nextNodeId: "start",
+      availableAt: Date.now() + randMin(2, 6), done: false, startedAt: Date.now()
+    };
+    save();
+    return;
+  }
 }
 
 function processLive() {
@@ -692,13 +712,24 @@ function finishLiveStory(story) {
   lv.nextNodeId = null;
   state.liveDone = state.liveDone || [];
   state.liveDone.push(story.id);
+  state.liveFinishedAt = state.liveFinishedAt || {};
+  state.liveFinishedAt[story.id] = Date.now();
   earnDust(120);
   handleLevelUp(addXP(60));
   state.pet.stats.bond = clamp(state.pet.stats.bond + 5, 0, 100);
-  if (!state.souvenirs.includes("archivkarte")) state.souvenirs.push("archivkarte");
-  unlockAchievement("wand.ende");
-  captureMoment("archiv");
-  showToast({ icon: "\u{1F5DD}", title: "Ehren-Archivar", detail: fmt(LIVE_TEXTS.reward, ctx({ S: 120 })) });
+  if (story.id === "wand") {
+    if (!state.souvenirs.includes("archivkarte")) state.souvenirs.push("archivkarte");
+    unlockAchievement("wand.ende");
+    captureMoment("archiv");
+    addChronicle("\u{1F5DD}", "Ehren-Archivar: 'Das Geräusch hinter der Wand' bestanden");
+    showToast({ icon: "\u{1F5DD}", title: "Ehren-Archivar", detail: fmt(LIVE_TEXTS.reward, ctx({ S: 120 })) });
+  } else if (story.id === "inventur") {
+    if (!state.souvenirs.includes("urkunde")) state.souvenirs.push("urkunde");
+    unlockAchievement("inventur.ende");
+    captureMoment("inventur");
+    addChronicle("\u{1F4DC}", "Stellvertretender Verwalter: Brösels Inventur gemeistert");
+    showToast({ icon: "\u{1F4DC}", title: "Stellvertretender Verwalter", detail: fmt(LIVE_TEXTS.reward, ctx({ S: 120 })) });
+  }
   playSound("level");
   checkUnlocks(); save();
 }
@@ -805,6 +836,7 @@ function finishArcChapter(ch) {
   state.pet.stats.bond = clamp(state.pet.stats.bond + 3, 0, 100);
   state.diary.unshift({ date: Date.now(), mood: "dramatisch", text: fmt(CONVO_DIARY.arc, ctx()) });
   if (ch.id === ARC_CHAPTERS.length) {
+    addChronicle("\u2709", "Die Brief-Ermittlung abgeschlossen: Akte geschlossen");
     if (!state.souvenirs.includes("derbrief")) state.souvenirs.push("derbrief");
     captureMoment("brief");
     unlockAchievement("brief.ende");
@@ -843,6 +875,7 @@ function calmDone(kind) {
     cm.tierSeen = t;
     if (t >= 1) unlockAchievement("calm.tier2");
     if (t >= 3) unlockAchievement("calm.tier4");
+    addChronicle("\u25CE", "Innere Ruhe: Stufe \u201E" + CALM_TIERS[t].name + "\u201C erreicht");
     setTimeout(() => showCelebration("Innere Ruhe: " + CALM_TIERS[t].name, fmt(CALM_TIERS[t].text, ctx())), 600);
     playSound("level");
   }
@@ -960,7 +993,11 @@ function openLiveChat() {
     if (h.user) addMsg("msg-user", h.user);
     else {
       const node = story.nodes[h.id];
-      for (const line of node.m) addMsg("msg-mimo", fmt(line, ctx()));
+      for (const line of node.m) {
+        let out = line;
+        if (out.includes("%SCHACHTEL")) out = out.replace("%SCHACHTEL", LIVE2_SCHACHTEL[lv.choices.schachtel] || LIVE2_SCHACHTEL.verwahren);
+        addMsg("msg-mimo", fmt(out, ctx()));
+      }
     }
   }
   renderLiveAnswers();
@@ -2458,7 +2495,17 @@ function renderDiary() {
 const PERS_COLORS = { frech: "#d97b40", lieb: "#e56b6b", chaotisch: "#efa93b", vertraeumt: "#7a8fcc", anhaenglich: "#9e486b" };
 const PERS_LABELS = { frech: "Frech", lieb: "Lieb", chaotisch: "Chaotisch", vertraeumt: "Verträumt", anhaenglich: "Anhänglich" };
 
+function renderChronicle() {
+  const box = $("#chronicleList");
+  if (!box) return;
+  const entries = (state.chronicle || []).slice();
+  entries.push({ at: state.createdAt || Date.now(), icon: "\u2728", title: fmt(CHRONICLE_TEXTS.founding, ctx()) });
+  box.innerHTML = entries.map(e =>
+    `<li><span class="ch-icon">${e.icon}</span><span class="ch-body"><strong>${e.title}</strong><small>${new Date(e.at).toLocaleDateString("de-DE", { day: "numeric", month: "long", year: "numeric" })}</small></span></li>`).join("");
+}
+
 function renderProfile(mood) {
+  renderChronicle();
   const p = state.pet;
   profilePet?.update(mood, p.sleeping, p.hat);
   $("#profileName").textContent = p.name;
@@ -2784,14 +2831,17 @@ let petPos = 0; // px-Versatz von der Mitte
 
 function petBounds() {
   const stage = $(".stage");
-  return stage ? Math.max(60, stage.getBoundingClientRect().width / 2 - 95) : 100;
+  if (!stage) return 100;
+  // Sichtbare Breite (Stage ragt 20px je Seite ueber den Viewport) minus halbe Mimo-Breite
+  const visible = Math.min(stage.getBoundingClientRect().width - 40, window.innerWidth || 9999);
+  return Math.max(60, visible / 2 - 105);
 }
 
 function applyPetPos(animate = true) {
   const mount = $("#petMount");
   if (!mount) return;
   mount.style.transition = animate ? "transform .45s cubic-bezier(.4,1.25,.5,1)" : "none";
-  mount.style.transform = `translateX(${petPos}px)`;
+  mount.style.transform = `translateX(calc(-50% + ${Math.round(petPos)}px))`;
 }
 
 function walkTo(x, done) {

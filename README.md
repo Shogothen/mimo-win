@@ -3,6 +3,7 @@
 Virtuelles Haustier als Web-App. Vanilla JS/HTML/CSS, keine Dependencies, Speicherung in localStorage.
 Portiert vom nativen SwiftUI-Projekt (Repo "mimo") mit allen Systemen: Stimmung, Persönlichkeit,
 Erinnerungen, Macken, Quests, Erfolge, Garderobe, zwei Mini-Games, Tagesphasen-Himmel.
+v19 Tiefe: Lauf-Bug behoben (Mimo lief wegen zerstörter Zentrierung aus dem Bild), Live-Story 2 'Brösels Bitte' (Inventur im Archiv, Schachtel für schlechte Tage, Stellvertretender-Verwalter-Finale) mit generischen Story-Gates, Chronik im Profil: automatische Zeitleiste aller Meilensteine.
 v18 Geräte-Fixes: Stat-Icons standen 90° gedreht (Ring-Rotation vererbte sich auf die Glyphen), Regen auf die Szene begrenzt, Pings-Ungelesen-Zähler auf Lese-Flags umgestellt (falsche Benachrichtigung behoben, inkl. Migration), Sprachpolitur.
 v17 Momente-Fixes: Drei-Dinge-Overlay als echtes Fullscreen (war im Seitenfluss versteckt), Atemreise voll geführt (Intro mit Muster-Wahl und Beginnen-Button, Sekunden-Countdown, Anleitung pro Phase, Runden-Punkte, Mimo atmet im Ring mit), Dankbarkeits-Glas mit sichtbaren Einträgen.
 v16 Lebendige Szene: Mimo läuft frei herum (Hüpf-Schritte, Füttern am Ort), tägliches Wetter (Sonne/Wolken/Regen/Nebel mit Visuals und Kommentaren), anstupsbare Wolken, nachts Sterne pflücken (+Staub, 3/Nacht).

@@ -846,3 +846,14 @@ body[data-weather="nebel"] .stage { filter:saturate(.8); }
 .jar-text { flex:1; font-size:13.5px; color:var(--ink); }
 .jar-date { flex:none; font-size:11px; color:var(--ink-soft); }
 .jar-empty { font-size:13px; color:var(--ink-soft); font-style:italic; border:none !important; }
+
+/* ============ v19: Chronik ============ */
+.chronicle { list-style:none; padding:2px 0 0; margin:0; position:relative; }
+.chronicle::before { content:""; position:absolute; left:15px; top:8px; bottom:8px; width:2px; border-radius:2px;
+  background:linear-gradient(180deg, rgba(158,72,107,.35), rgba(158,72,107,.08)); }
+.chronicle li { display:flex; gap:12px; align-items:flex-start; padding:9px 0; position:relative; }
+.ch-icon { flex:none; width:32px; height:32px; border-radius:99px; display:grid; place-items:center; font-size:15px;
+  background:#fff; box-shadow:0 2px 8px rgba(80,40,70,.14); z-index:1; }
+.ch-body { display:flex; flex-direction:column; gap:1px; padding-top:2px; }
+.ch-body strong { font-size:13.5px; color:var(--ink); font-weight:700; }
+.ch-body small { font-size:11px; color:var(--ink-soft); }
