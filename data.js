@@ -177,7 +177,7 @@ const TALK_REACTIONS = {
 
 const CHECKIN_REACTIONS = {
   super: "%N findet, du solltest diesen Tag einrahmen.",
-  okay: "%N akzeptiert okay. Nicht begeistert, aber akzeptiert.",
+  okay: "%N nimmt es zur Kenntnis. Nicht begeistert, aber würdevoll.",
   stressig: "%N hat beschlossen, heute dein emotionaler Bodyguard zu sein.",
   muede: "%N gähnt solidarisch.",
   keineahnung: "%N nickt, als hätte er exakt verstanden, was das bedeutet.",
@@ -204,7 +204,7 @@ const DAILY = {
     "%N beobachtet den Nachmittag mit professionellem Interesse. Der Nachmittag benimmt sich.",
     "%N hat heute schon dreimal die Position gewechselt. Er nennt es Raumpflege.",
     "%N denkt über Snacks nach. Rein akademisch. Der Magen ist da anderer Meinung.",
-    "%N hat eine Staubfluse verfolgt und gestellt. Die Verhandlungen laufen.",
+    "%N hat eine Staubfluse quer durchs Zimmer gejagt und in die Ecke getrieben. Jetzt wird verhandelt.",
     "%N hält den Tag für machbar. Zitat: 'machbar'. Er zitiert sich gern selbst.",
     "Das Licht steht heute gut. %N hat sich exakt in den hellsten Fleck gesetzt. Instinkt.",
     "%N übt gerade Geduld. Mit allem. Es läuft mittelgut."
@@ -286,7 +286,7 @@ const DIARY_TEXTS = {
   checkin: {
     super: ["%U hatte einen super Tag. Ich nehme einen kleinen Teil des Verdienstes. Sagen wir 80 Prozent.",
             "Heute war ein guter Tag für %U. Ich habe angemessen mitgefeiert. Innerlich. Mit Stil."],
-    okay: ["%U sagt, der Tag war okay. Ich habe zustimmend geblinzelt. Diplomatie ist eine meiner Stärken.",
+    okay: ["%U sagt, der Tag war in Ordnung. Ich habe zustimmend geblinzelt. Diplomatie ist eine meiner Stärken.",
            "Ein Okay-Tag für %U. Ich habe beschlossen, das als soliden Durchschnitt zu werten."],
     stressig: ["%U sagt, der Tag war stressig. Ich habe mich offiziell zum kleinen Krisenmanager ernannt.",
                "Stressiger Tag bei %U. Ich habe extra weich geschaut. Das ist mein Beitrag."],
@@ -1443,7 +1443,7 @@ const PING_THOUGHTS = [
 const PING_CARE = [
   { q:"Kurze Frage zwischendurch: Wie läuft dein Tag gerade, so ehrlich?",
     a:[ { l:"Läuft gut", r:"Sehr schön. Weitermachen. Ich notiere ein Plus in der Tagesakte." },
-        { l:"Geht so", r:"Geht so ist okay. Geht so ist ehrlich. Der Tag ist noch nicht vorbei, und ich bin noch da." },
+        { l:"Geht so", r:"'Geht so' ist völlig in Ordnung. Es ist vor allem ehrlich. Und der Tag ist noch nicht vorbei – ich bin ja auch noch da." },
         { l:"Eher zäh", r:"Dann offiziell von mir: Du musst heute nichts mehr beweisen. Der Rest des Tages ist Auslaufen. Anordnung vom Wesen." } ]},
   { q:"Kontrollfrage des Tages: Hast du heute schon etwas gegessen, das dich gefreut hat?",
     a:[ { l:"Ja, tatsächlich", r:"Ausgezeichnet. Essen, das freut, zählt doppelt. Das ist Wesens-Wissenschaft." },
@@ -1565,5 +1565,5 @@ const BREATH_START = "Beginnen";
 const JAR_TEXTS = {
   title: "Dein Glas",
   empty: "Noch leer. Die erste Sache von heute passt perfekt hier rein.",
-  hint: "%S Licht(er) gesammelt"
+  hint: "%S Lichter gesammelt"
 };

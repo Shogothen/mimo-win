@@ -99,6 +99,10 @@ if (state.best.sterne === 0 && state.pet.bestScore > 0) state.best.sterne = stat
 if (state.pet.stats.hygiene === undefined) state.pet.stats.hygiene = 75;
 if (state.care.bathDay === undefined) state.care.bathDay = null;
 if (state.bathsDone === undefined) state.bathsDone = 0;
+if (state.pings) {
+  (state.pings.items || []).forEach(i => { if (i.read === undefined) i.read = true; });
+  delete state.pings.unread;
+}
 if (!state.calm) state.calm = { points: 0, tierSeen: 0, lastDay: null, streak: 0, wolken: 0, erden: 0, abende: 0, lastGroundDay: null, lastCloudDay: null, lastEveningDay: null };
 // Neue XP-Kurve: bestehendes Level bleibt mindestens erhalten
 state.pet.stats.level = Math.max(state.pet.stats.level, (function () {
@@ -724,7 +728,7 @@ function processPings() {
       } else {
         item = { kind: "note", text: fmt(pick(PING_THOUGHTS), ctx()), at: Date.now() };
       }
-      if (item) { pg.items.push(item); pg.items = pg.items.slice(-20); pg.unread = (pg.unread || 0) + 1; changed = true; }
+      if (item) { item.read = false; pg.items.push(item); pg.items = pg.items.slice(-20); changed = true; }
     }
     pg.nextAt = clampNight(Date.now() + randMin(150, 320));
     save();
@@ -743,8 +747,12 @@ function pingAnswer(itemIdx, ansIdx) {
   save();
 }
 
+function pingsUnreadCount() {
+  return (state.pings?.items || []).filter(i => !i.read).length;
+}
+
 function inboxUnread() {
-  return (state.live && !state.live.done ? state.live.unread : 0) + (state.pings?.unread || 0) +
+  return (state.live && !state.live.done ? state.live.unread : 0) + pingsUnreadCount() +
     (state.live && state.live.waitingChoice ? 1 : 0);
 }
 
@@ -1035,7 +1043,8 @@ function openPingsChat() {
   end.textContent = "Schließen";
   end.onclick = () => { closeSheets(); renderAll(); };
   $("#chatAnswers").appendChild(end);
-  state.pings.unread = 0; save();
+  state.pings.items.forEach(i => { i.read = true; });
+  save();
   openSheet("sheet-chat");
   chatScrollDown();
 }
@@ -2198,7 +2207,7 @@ function renderAll() {
   {
     const lv = state.live;
     const hasLive = lv && (lv.history.length || !lv.done);
-    const pingsUnread = state.pings?.unread || 0;
+    const pingsUnread = pingsUnreadCount();
     const show = (hasLive && !lv.done) || pingsUnread > 0;
     $("#liveTicker").classList.toggle("hidden", !show);
     if (show) {
@@ -3326,7 +3335,7 @@ function buildSheets() {
 
   $("#gratPrompt").textContent = fmt(GRATITUDE_TEXTS.prompt, ctx());
   const jar = state.gratitude || [];
-  $("#gratJarTitle").textContent = JAR_TEXTS.title + (jar.length ? " \u00b7 " + fmt(JAR_TEXTS.hint, ctx({ S: jar.length })) : "");
+  $("#gratJarTitle").textContent = JAR_TEXTS.title + (jar.length ? ` \u00b7 ${jar.length === 1 ? "1 Licht" : jar.length + " Lichter"} gesammelt` : "");
   $("#gratJar").innerHTML = jar.length
     ? jar.slice(0, 10).map(e => `<li><span class="jar-dot"></span><span class="jar-text">${(e.text || "").replace(/[<>&]/g, "")}</span><span class="jar-date">${new Date(e.d).toLocaleDateString("de-DE", { weekday: "short" })}</span></li>`).join("")
     : `<li class="jar-empty">${JAR_TEXTS.empty}</li>`;
@@ -3347,7 +3356,8 @@ function buildSheets() {
     liveRows += `<button data-live="1"><em>\u2709</em><span>${liveStoryDef().title}<span class="talk-option-hint">Nochmal lesen</span></span></button>`;
   }
   if (state.pings?.items?.length) {
-    liveRows += `<button data-pings="1"><em>\u{1F4EC}</em><span>Nachrichten von ${state.pet.name}${state.pings.unread ? ` (${state.pings.unread} neu)` : ""}</span>${state.pings.unread ? '<span class="talk-new"></span>' : ""}</button>`;
+    const pu = pingsUnreadCount();
+    liveRows += `<button data-pings="1"><em>\u{1F4EC}</em><span>Nachrichten von ${state.pet.name}${pu ? ` (${pu} neu)` : ""}</span>${pu ? '<span class="talk-new"></span>' : ""}</button>`;
   }
   $("#talkOptions").innerHTML = liveRows + menu.map((cv, i) =>
     `<button data-idx="${i}"><em>${ICONS[cv.type]}</em><span>${TALK_MENU_HINTS[cv.type]}

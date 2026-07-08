@@ -154,7 +154,7 @@ body.phase-night .ring-bg { stroke:rgba(255,255,255,.18); }
 body.phase-night .xp-ring .ring-fg { stroke:var(--accent-soft); }
 
 /* --- Bühne mit Szenerie --- */
-.stage { position:relative; height:332px; margin:4px -20px 0; }
+.stage { position:relative; height:332px; margin:4px -20px 0; overflow:hidden; }
 .scene { position:absolute; inset:0; width:100%; height:100%; }
 .scene .hill { transition: fill 1.4s ease; }
 .scene .hill-3 { fill:var(--hill-3); }
@@ -204,7 +204,7 @@ body.phase-night .aura { opacity:.4; }
 
 .rings-card { display:flex; justify-content:space-between; padding:16px 10px 12px; }
 .stat-ring { position:relative; text-align:center; flex:1; }
-.stat-ring svg:first-child { width:52px; height:52px; transform:rotate(-90deg); }
+.stat-ring > svg:first-child { width:52px; height:52px; transform:rotate(-90deg); }
 .stat-ring .ring-bg { stroke:rgba(150,70,110,.14); stroke-width:6; }
 .stat-ring .ring-fg { stroke-width:6; }
 .stat-ring[data-stat="energie"] .ring-fg { stroke:var(--energy); }
@@ -212,7 +212,7 @@ body.phase-night .aura { opacity:.4; }
 .stat-ring[data-stat="saettigung"] .ring-fg { stroke:var(--food); }
 .stat-ring[data-stat="bond"] .ring-fg { stroke:var(--accent); }
 .stat-ring em { position:absolute; left:0; right:0; top:0; height:52px; display:grid; place-items:center; font-style:normal; pointer-events:none; }
-.stat-ring em svg { width:15px; height:15px; fill:none; stroke:var(--ink-soft); stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; opacity:.85; }
+.stat-ring em svg { width:15px; height:15px; fill:none; stroke:var(--ink-soft); stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; opacity:.85; transform:none; }
 .stat-ring label { display:block; font-size:11px; font-weight:600; color:var(--ink-soft); margin-top:4px; }
 
 .quest-row { display:flex; align-items:center; gap:10px; padding:6px 0; font-size:14.5px; }
