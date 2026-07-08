@@ -1554,3 +1554,16 @@ const STAR_TEXTS = {
 };
 const CLOUD_POKE = ["Die Wolke plustert sich. %N ist zufrieden mit dir.","Angestupst. Die Wolke nimmt es sportlich."];
 ACHIEVEMENTS.push({ id:"sterne.30", title:"Sternenpflücker", detail:"30 Sterne vom Nachthimmel gepflückt", icon:"\u2B50" });
+
+// ============ v17: Gefuehrte Atemreise + Glas-Ansicht ============
+const BREATH_GUIDE = {
+  in:   ["Durch die Nase, tief in den Bauch", "Sanft einströmen lassen", "Frische Luft holen"],
+  hold: ["Halten. Ganz weich, nicht pressen", "Kurz die Fülle spüren", "Oben kurz verweilen"],
+  out:  ["Langsam durch den Mund", "Alles gehen lassen", "Länger aus als ein. Genau so"]
+};
+const BREATH_START = "Beginnen";
+const JAR_TEXTS = {
+  title: "Dein Glas",
+  empty: "Noch leer. Die erste Sache von heute passt perfekt hier rein.",
+  hint: "%S Licht(er) gesammelt"
+};

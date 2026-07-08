@@ -827,3 +827,22 @@ body[data-weather="nebel"] .stage { filter:saturate(.8); }
   transition: left .6s ease-in, top .6s ease-in, font-size .6s ease; }
 @keyframes starTwinkle { 50% { opacity:.55; transform:scale(.85);} }
 .pickstar.falling { font-size:11px; animation:none; pointer-events:none; }
+
+/* ============ v17: Overlay-Fixes, geführtes Atmen, Glas ============ */
+#groundOverlay { position:fixed; inset:0; z-index:88; display:grid; place-items:center; text-align:center;
+  background:linear-gradient(180deg,#dce8cf,#b9d4a8); animation:fadeIn .3s ease; }
+#breathRing { position:relative; display:grid; place-items:center; }
+#breathPetMount { pointer-events:none; }
+#breathNum { position:absolute; bottom:-34px; left:50%; transform:translateX(-50%); font-size:22px; font-weight:800;
+  color:var(--ink); opacity:.75; font-variant-numeric:tabular-nums; }
+.breath-guide { font-size:13.5px; color:var(--ink-soft); margin:42px 0 4px; min-height:18px; font-style:italic; }
+.breath-dots { display:flex; gap:7px; justify-content:center; margin:10px 0 2px; min-height:9px; }
+.breath-dots .bdot { width:8px; height:8px; border-radius:99px; background:rgba(255,255,255,.5); transition:background .3s; }
+.breath-dots .bdot.on { background:rgba(255,255,255,.95); }
+.jar-title { font-size:13px; letter-spacing:.4px; text-transform:uppercase; color:var(--ink-soft); margin:22px 0 8px; }
+.jar-list { list-style:none; padding:0; margin:0 0 6px; max-height:200px; overflow-y:auto; }
+.jar-list li { display:flex; align-items:center; gap:9px; padding:9px 4px; border-bottom:1px solid rgba(90,60,80,.08); }
+.jar-dot { flex:none; width:9px; height:9px; border-radius:99px; background:radial-gradient(circle at 35% 30%, #ffe9a8, #f4d06f); box-shadow:0 0 8px rgba(244,208,111,.7); }
+.jar-text { flex:1; font-size:13.5px; color:var(--ink); }
+.jar-date { flex:none; font-size:11px; color:var(--ink-soft); }
+.jar-empty { font-size:13px; color:var(--ink-soft); font-style:italic; border:none !important; }

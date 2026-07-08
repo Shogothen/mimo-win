@@ -1292,20 +1292,36 @@ function showReturn() {
 // ---------- Engine: Momente (Atmen, Dankbarkeit) ----------
 const breath = { timer: null, cycle: 0, phase: 0, pattern: null };
 
+let breathRan = false;
 function startBreath(patternId = "ruhe") {
   $("#breathOverlay").classList.remove("hidden");
   const mount = $("#breathPetMount"); mount.innerHTML = "";
   createPet(mount, 120, { static: true }).update("vertraeumt", false, "none");
   breath.pattern = BREATH_PATTERNS.find(p => p.id === patternId) || BREATH_PATTERNS[0];
+  breathRan = false;
+  clearTimeout(breath.timer); clearInterval(breath.numTimer);
   const pats = BREATH_PATTERNS.filter(p => !p.minTier || calmTier() >= p.minTier);
-  $("#breathPatterns").innerHTML = pats.length > 1 ? pats.map(p =>
-    `<button class="${p.id === breath.pattern.id ? "active" : ""}" data-pat="${p.id}">${p.title}</button>`).join("") : "";
-  $$("#breathPatterns button").forEach(b => b.onclick = () => { clearTimeout(breath.timer); startBreath(b.dataset.pat); });
+  $("#breathPatterns").innerHTML = pats.map(p =>
+    `<button class="${p.id === breath.pattern.id ? "active" : ""}" data-pat="${p.id}">${p.title}</button>`).join("");
+  $$("#breathPatterns button").forEach(b => b.onclick = () => startBreath(b.dataset.pat));
+  // Intro-Zustand: erklaeren, dann bewusst starten
+  $("#breathPhase").textContent = breath.pattern.title;
+  $("#breathCount").textContent = breath.pattern.desc + ` \u00b7 ${breath.pattern.cycles} Runden`;
+  $("#breathNum").textContent = "";
+  $("#breathGuide").textContent = fmt(BREATH_TEXTS.intro, ctx());
+  $("#breathDots").innerHTML = "";
+  $("#breathStart").classList.remove("hidden");
+  $("#breathPatterns").classList.remove("hidden");
+  $("#breathRing").className = "breath-ring";
+}
+
+function runBreath() {
+  breathRan = true;
+  $("#breathStart").classList.add("hidden");
+  $("#breathPatterns").classList.add("hidden");
   breath.cycle = 0; breath.phase = -1;
-  $("#breathPhase").textContent = fmt(BREATH_TEXTS.intro, ctx());
-  $("#breathCount").textContent = "";
-  clearTimeout(breath.timer);
-  breath.timer = setTimeout(breathStep, 2400);
+  $("#breathDots").innerHTML = Array.from({ length: breath.pattern.cycles }, () => '<span class="bdot"></span>').join("");
+  breathStep();
 }
 
 function breathStep() {
@@ -1316,14 +1332,23 @@ function breathStep() {
   const [ph, ms] = plan[breath.phase];
   $("#breathRing").className = "breath-ring " + ph;
   $("#breathPhase").textContent = BREATH_TEXTS.phases[ph];
+  $("#breathGuide").textContent = pick(BREATH_GUIDE[ph]);
   $("#breathCount").textContent = `Runde ${breath.cycle + 1} von ${breath.pattern.cycles}`;
+  $$("#breathDots .bdot").forEach((el, i) => el.classList.toggle("on", i <= breath.cycle));
+  clearInterval(breath.numTimer);
+  let secs = Math.round(ms / 1000);
+  $("#breathNum").textContent = secs;
+  breath.numTimer = setInterval(() => {
+    secs--;
+    if (secs > 0) $("#breathNum").textContent = secs;
+  }, 1000);
   breath.timer = setTimeout(breathStep, ms);
 }
 
 function finishBreath(skipped) {
-  clearTimeout(breath.timer);
+  clearTimeout(breath.timer); clearInterval(breath.numTimer);
   $("#breathOverlay").classList.add("hidden");
-  if (skipped && breath.cycle < 3) { renderAll(); return; } // zu frueh abgebrochen: keine Belohnung
+  if (!breathRan || (skipped && breath.cycle < 3)) { renderAll(); return; } // zu frueh abgebrochen: keine Belohnung
   applyDecay();
   state.pet.stats.laune = clamp(state.pet.stats.laune + 8, 0, 100);
   state.pet.stats.bond = clamp(state.pet.stats.bond + 1, 0, 100);
@@ -3300,6 +3325,11 @@ function buildSheets() {
   $("#cloudInput").placeholder = CLOUD_TEXTS.placeholder;
 
   $("#gratPrompt").textContent = fmt(GRATITUDE_TEXTS.prompt, ctx());
+  const jar = state.gratitude || [];
+  $("#gratJarTitle").textContent = JAR_TEXTS.title + (jar.length ? " \u00b7 " + fmt(JAR_TEXTS.hint, ctx({ S: jar.length })) : "");
+  $("#gratJar").innerHTML = jar.length
+    ? jar.slice(0, 10).map(e => `<li><span class="jar-dot"></span><span class="jar-text">${(e.text || "").replace(/[<>&]/g, "")}</span><span class="jar-date">${new Date(e.d).toLocaleDateString("de-DE", { weekday: "short" })}</span></li>`).join("")
+    : `<li class="jar-empty">${JAR_TEXTS.empty}</li>`;
   const recent = state.gratitude.slice(0, 3);
   $("#gratRecent").classList.toggle("hidden", recent.length === 0);
   $("#gratRecent").innerHTML = recent.map(g =>
@@ -3732,6 +3762,7 @@ document.addEventListener("DOMContentLoaded", () => {
   $("#expedOpen").addEventListener("click", () => { buildSheets(); openSheet("sheet-exped"); });
   $("#momentsRow").addEventListener("click", () => { buildSheets(); openSheet("sheet-momente"); });
   $("#breathSkip").addEventListener("click", () => finishBreath(true));
+  $("#breathStart").addEventListener("click", runBreath);
   $("#groundSkip").addEventListener("click", () => finishGround(true));
   $("#cloudInput").addEventListener("input", () => { $("#cloudRelease").disabled = !$("#cloudInput").value.trim(); });
   $("#cloudRelease").addEventListener("click", () => {

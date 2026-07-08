@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=16">
+<link rel="stylesheet" href="style.css?v=17">
 </head>
 <body>
 
@@ -467,6 +467,8 @@
   <p class="muted" id="gratPrompt"></p>
   <input id="gratInput" type="text" maxlength="90" placeholder="Heute bin ich dankbar für …" autocomplete="off">
   <button class="btn-primary grat-save" id="gratSave" disabled>Ins Glas legen</button>
+  <h3 class="jar-title" id="gratJarTitle"></h3>
+  <ul class="jar-list" id="gratJar"></ul>
   <div class="grat-recent hidden" id="gratRecent"></div>
 </div>
 
@@ -535,10 +537,13 @@
 
 <div id="breathOverlay" class="hidden">
   <div class="breath-stage">
-    <div class="breath-ring" id="breathRing"><div id="breathPetMount"></div></div>
+    <div class="breath-ring" id="breathRing"><div id="breathPetMount"></div><span id="breathNum"></span></div>
     <h2 class="serif" id="breathPhase">Bereit?</h2>
     <p class="muted" id="breathCount"></p>
+    <p class="breath-guide" id="breathGuide"></p>
+    <div class="breath-dots" id="breathDots"></div>
     <div class="breath-patterns" id="breathPatterns"></div>
+    <button class="btn-primary" id="breathStart">Beginnen</button>
     <button class="btn-ghost" id="breathSkip">Beenden</button>
   </div>
 </div>
@@ -583,7 +588,7 @@
 
 <div id="toast" class="hidden"><span class="toast-icon" id="toastIcon">&#10022;</span><div><strong id="toastTitle"></strong><p id="toastDetail"></p></div></div>
 
-<script src="data.js?v=16"></script>
-<script src="app.js?v=16"></script>
+<script src="data.js?v=17"></script>
+<script src="app.js?v=17"></script>
 </body>
 </html>
