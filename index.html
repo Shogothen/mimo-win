@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=13">
+<link rel="stylesheet" href="style.css?v=14">
 </head>
 <body>
 
@@ -114,6 +114,12 @@
     <div class="stat-ring" data-stat="bond"><svg viewBox="0 0 52 52"><circle class="ring-bg" cx="26" cy="26" r="21"/><circle class="ring-fg" cx="26" cy="26" r="21"/></svg>
       <em><svg viewBox="0 0 24 24"><path d="M12 19.5 C6 14.6 4.6 11.2 6.3 8.7 7.7 6.6 10.6 6.8 12 9 c1.4-2.2 4.3-2.4 5.7-0.3 1.7 2.5 0.3 5.9-5.7 10.8 z"/></svg></em><label>Bond</label></div>
   </section>
+
+  <button class="live-ticker hidden" id="liveTicker">
+    <span class="lt-dot"></span>
+    <span class="lt-text" id="liveTickerText"></span>
+    <span class="lt-time" id="liveTickerTime"></span>
+  </button>
 
   <section class="card" id="todayCard">
     <div class="card-head"><span class="section-label">Heute mit Mimo</span></div>
@@ -544,7 +550,7 @@
 
 <div id="toast" class="hidden"><span class="toast-icon" id="toastIcon">&#10022;</span><div><strong id="toastTitle"></strong><p id="toastDetail"></p></div></div>
 
-<script src="data.js?v=13"></script>
-<script src="app.js?v=13"></script>
+<script src="data.js?v=14"></script>
+<script src="app.js?v=14"></script>
 </body>
 </html>

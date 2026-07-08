@@ -1368,3 +1368,88 @@ const TAP_TEXTS = {
   nose: ["Boop.", "Das war ein offizieller Nasen-Boop. Er wurde protokolliert und sehr geschätzt."],
   belly: ["Hihi. NICHT den Bauch. Doch. Nein. Vielleicht.", "Bauch-Attacke! Ich ergebe mich. Kichernd."]
 };
+
+// ============ v14: Live-Stories (Echtzeit-Erzaehlung im Chat) ============
+// Node: { d:[minMin,maxMin] Wartezeit VOR dieser Nachricht, m:[Zeilen], c:[{l:Label, next, key, val}] ODER next, end, }
+
+const LIVE_STORIES = [
+{ id:"wand", title:"Das Geräusch hinter der Wand", gate:{ level:2 },
+  teaser:"Mimo hat etwas gehört. Er wird dir schreiben.",
+  nodes:{
+  start:{ d:[0,0], m:["Du. Ich muss dir was schreiben, sofort.","Hinter der Wand ist ein Geräusch. Ein Klopfen. Regelmäßig. Tock. Tock. Tock.","Es kommt von hinter dem Regal. Ich sitze davor und tue gelassen. Ich bin es nicht."], next:"n2" },
+  n2:{ d:[35,60], m:["Update: Es klopft noch immer. Ich habe mitgezählt. 112 Mal. Dann habe ich mich verzählt, weil ich kurz an Snacks gedacht habe.","Hinter dem Regal ist ein Spalt. Ich habe ihn nie erwähnt, weil er mir unheimlich ist. Das bleibt unter uns.","Ich glaube... ich glaube, ich muss da rein."], next:"c1" },
+  c1:{ d:[8,15], m:["Sag mir, wie ich es angehen soll. Das hier ist eine Zwei-Wesen-Entscheidung."],
+    c:[ { l:"Geh sofort rein. Mutig.", next:"a1", key:"plan", val:"mutig" },
+        { l:"Erst vorbereiten. Proviant, Plan, Rückzugsroute.", next:"b1", key:"plan", val:"plan" } ]},
+  a1:{ d:[1,2], m:["Sofort. Verstanden. Keine Zeit für Zweifel, nur für Legenden.","Ich lasse dir eine Spur aus imaginären Krümeln. Falls ich in einer Stunde nichts geschrieben habe... schreibe ich in anderthalb. Ich bin manchmal langsam.","Ich gehe jetzt rein."], next:"n5" },
+  b1:{ d:[1,2], m:["Vorbereitung. Vernünftig. Deshalb frage ich dich.","Proviant: ein halber imaginärer Keks. Plan: reingehen, gucken, rausgehen. Rückzugsroute: dieselbe, nur rückwärts und schneller.","Ich habe außerdem dem Kissen Bescheid gesagt. Falls jemand fragt.","So. Jetzt gibt es keine Ausreden mehr. Ich gehe rein."], next:"n5" },
+  n5:{ d:[55,110], m:["Ich bin drin.","Du. Es ist GRÖSSER hier, als die Wand erlaubt. Das ist architektonisch unmöglich und trotzdem wahr.","Ein Gang. Staubig, aber... benutzt? Alte Pfotenspuren. Kleine. Und an der Wand, mit Kralle gezeichnet: Pfeile.","Jemand hat hier Wegweiser hinterlassen.","Das Klopfen ist lauter. Es kommt von tiefer drinnen."], next:"c2" },
+  c2:{ d:[4,9], m:["Die Pfeile zeigen nach links. Das Klopfen kommt von rechts. Links oder rechts? Entscheide du, ich vertraue dir mehr als meiner Ortskenntnis."],
+    c:[ { l:"Folge den Pfeilen", next:"a2", key:"route", val:"pfeile" },
+        { l:"Folge dem Klopfen", next:"b2", key:"route", val:"klopfen" } ]},
+  a2:{ d:[45,95], m:["Ich bin den Pfeilen gefolgt. Sie waren gut gemeint.","Der Gang wurde enger, dann weiter, dann kam eine Kammer. Und in der Kammer: eine Streichholzschachtel. Aufgestellt wie ein Bett. Daneben ein Knopf als Hocker.","Hier hat jemand gewohnt. Ordentlich. Gemütlich. Mit Geschmack.","Und dann habe ich hinter mir eine Stimme gehört.","'Sie stehen auf meinem Flur', sagte die Stimme."], next:"n9" },
+  b2:{ d:[45,95], m:["Ich bin dem Klopfen gefolgt. Es wurde lauter, dann leiser, dann war es ÜBER mir, was keinen Sinn ergibt.","Ich bin falsch abgebogen. Zweimal. Der Gang sieht überall gleich aus, wenn man leicht panisch ist.","Und dann stand da plötzlich jemand hinter mir und sagte:","'Sie sind falsch. Das hört man am Schritt.'"], next:"n9" },
+  n9:{ d:[2,4], m:["Es ist eine Maus.","Eine Maus mit der Haltung eines Bibliotheksdirektors. Grau, gepflegt, und sie sieht mich an, als wäre ICH das Erstaunliche hier.","'Brösel', sagt sie. 'Herr Brösel. Verwalter.'","Verwalter WOVON, frage ich. Er zieht eine Augenbraue hoch. Mäuse haben keine Augenbrauen. Er schafft es trotzdem."], next:"c3" },
+  c3:{ d:[3,8], m:["Er wartet darauf, dass ich mich vorstelle. Wie stelle ich mich vor?"],
+    c:[ { l:"Höflich. Mimo, erfreut.", next:"a3", key:"broesel", val:"hoeflich" },
+        { l:"Beeindruckend. Mimo, Ermittler.", next:"b3", key:"broesel", val:"ermittler" },
+        { l:"Ehrlich. Mimo, leicht verlaufen.", next:"d3", key:"broesel", val:"ehrlich" } ]},
+  a3:{ d:[1,2], m:["'Mimo', sage ich. 'Erfreut.' Und verneige mich leicht. Der Vogel hat mir das beigebracht. Indirekt.","Herr Brösel nickt anerkennend. 'Manieren', sagt er. 'Selten geworden hinter dieser Wand.'","Ich glaube, wir werden Freunde. Auf die förmliche Art."], next:"n11" },
+  b3:{ d:[1,2], m:["'Mimo', sage ich. 'Ermittler.' Und lasse es wirken.","Herr Brösel mustert mich lange. 'Ermittler', wiederholt er. 'Dann ermitteln Sie vermutlich das Klopfen.'","Er weiß was. Ich sehe es an seinen Barthaaren."], next:"n11" },
+  d3:{ d:[1,2], m:["'Mimo', sage ich. 'Leicht verlaufen.'","Herr Brösel seufzt auf eine Art, die klingt wie: endlich sagt es mal einer.","'Alle verlaufen sich hier', sagt er. 'Die Ehrlichen geben es zu.' Ich glaube, ich habe gerade einen Test bestanden."], next:"n11" },
+  n11:{ d:[30,60], m:["Herr Brösel hat mir Tee angeboten. Aus einem Fingerhut. Ich habe aus Höflichkeit genippt. Es war heißes Wasser mit Würde.","Und dann hat er erzählt:","Das Klopfen kommt 'aus dem Archiv'. Ganz hinten. Niemand geht mehr dorthin, sagt er. Seit... und dann hat er gezögert...","...seit 'das Wesen mit den großen Ohren' nicht mehr kommt.","Du. DAS WESEN MIT DEN GROSSEN OHREN. Der Brief. Das ist es. Das ist die Spur."], next:"n12" },
+  n12:{ d:[80,160], m:["Wir sind unterwegs zum Archiv. Herr Brösel geht voran und erzählt. Ich fasse zusammen:","Das Wesen mit den großen Ohren kam jahrelang. Brachte Fundstücke. Sortierte sie. Erzählte vom 'Menschen oben', immer nur Gutes.","Dann kam es eines Tages nicht mehr. 'So ist der Lauf der Dinge', sagt Herr Brösel. Genau dieselben Worte wie im Brief. Ich habe eine Gänsehaut unterm Fell.","Der Gang macht noch eine Biegung, sagt er. Dahinter liegt das Archiv. Und das Klopfen ist jetzt sehr nah."], next:"n13" },
+  n13:{ d:[70,140], m:["Wir stehen vor der Tür. Sie ist aus einem Dominostein. Sie klemmt.","Das Klopfen ist DIREKT dahinter. Tock. Tock. Tock. Herr Brösel ist blass um die Barthaare. Er sagt, er wartet hier. Verwalter verwalten, sie öffnen nicht.","Es ist spät geworden. Aber ich bin so nah dran.","Ich mache die Tür jetzt auf.","Wenn ich mich bis morgen früh nicht melde... Quatsch. Ich melde mich. Versprochen. Ich verspreche es dir.","Bis gleich. Oder bis morgen. Drück mir die Ärmchen."], next:"n14", night:true },
+  n14:{ d:[25,50], m:["Guten Morgen. Ich lebe. Sortiere ich vorweg, weil du es verdient hast.","Also. Die Tür ging auf. Dahinter: das Archiv.","Regale aus Streichholzschachteln, bis unter die Decke. Beschriftet. 'Glänzendes.' 'Rundes.' 'Dinge, die der Mensch verloren hat.' 'Dinge, die der Mensch nie vermisst hat, die aber schön sind.'","Das Lebenswerk des Wesens mit den großen Ohren. Ein Museum für die Wohnung. Für DICH, ohne dass du es je wusstest.","Und das Klopfen?"], next:"n15" },
+  n15:{ d:[3,6], m:["Am Fenster-Spalt des Archivs, wo ein Hauch Zugluft reinkommt, hängt an einem alten Faden: ein winziger Schlüssel.","Der Wind bewegt ihn. Er schlägt gegen die Wand. Tock. Tock. Tock.","Seit Jahren klopft hier ein Schlüssel im Wind. Als würde jemand anklopfen und darauf warten, dass endlich aufgemacht wird.","Herr Brösel sagt, es ist der Schlüssel des Archivs. Das Wesen hat ihn dagelassen. 'Für den Nächsten', hat es gesagt."], next:"c4" },
+  c4:{ d:[4,10], m:["Was mache ich, du? Das entscheiden wir zusammen."],
+    c:[ { l:"Nimm den Schlüssel. Er ist für dich bestimmt.", next:"a4", key:"schluessel", val:"nehmen" },
+        { l:"Lass ihn dort. Das Archiv gehört der Wand.", next:"b4", key:"schluessel", val:"lassen" } ]},
+  a4:{ d:[1,3], m:["Ich habe ihn abgenommen. Vorsichtig. Der Faden war ganz mürbe.","In dem Moment, in dem das Klopfen aufhörte, war es sehr still. Herr Brösel hat den Hut gezogen. Er trägt keinen Hut. Er hat es trotzdem getan.","'Damit sind Sie der Archivar', hat er gesagt. 'Ehrenhalber. Es gibt Pflichten: ab und zu vorbeikommen. Und den Menschen oben glücklich halten.'","Die zweite Pflicht erfülle ich längst. Sagte ich ihm. Er hat gelächelt. Mäuse lächeln mit den Ohren."], next:"n17" },
+  b4:{ d:[1,3], m:["Ich habe ihn hängen lassen. Aber ich habe den Faden neu geknotet, fest, und den Spalt mit einem Fussel abgedichtet, dass der Wind ihn sanfter wiegt statt schlägt.","Jetzt klopft es nicht mehr. Jetzt pendelt es. Wie ein sehr kleines, sehr geduldiges Uhrwerk.","Herr Brösel hat lange nichts gesagt. Dann: 'Das Wesen hätte es genauso gemacht.'","Ich musste kurz woanders hingucken. Der Staub. Es war der Staub."], next:"n17" },
+  n17:{ d:[55,110], m:["Rückweg. Herr Brösel hat mich bis zum Spalt gebracht.","Zum Abschied hat er mir eine Karte gegeben. Eine echte, winzige, handgezeichnete Karte der Gänge. 'Ehren-Archivare finden immer her', sagte er.","Ich habe ihm versprochen, wiederzukommen. Und ihm von dir erzählt. Er sagte: 'Ich weiß. Das Wesen hat auch immer von seinem Menschen erzählt. Ihr seid alle gleich.'","Wir sind alle gleich. Das ist das Schönste, was je jemand über mich gesagt hat."], next:"n18" },
+  n18:{ d:[15,30], m:["Ich bin zu Hause. Verstaubt, erschöpft, drei Zentimeter gewachsen. Innerlich.","Was für zwei Tage. Ein Klopfen, ein Tunnel, Herr Brösel, das Archiv, der Schlüssel. Und du warst bei jedem Schritt dabei. In meiner Tasche. Bildlich.","Danke, dass du mitgegangen bist. Ohne dich hätte ich mich an der ersten Abzweigung für immer verlaufen. Das ist keine Übertreibung, du kennst mich.","Die Belohnungen liegen bereit. Und Herr Brösel lässt grüßen. Wörtlich: 'Richten Sie dem Menschen aus, das Archiv steht offen.'","Ende der Übertragung. Dein Mimo. Ehren-Archivar."], end:true }
+}}];
+
+const LIVE_TEXTS = {
+  nextAt: "%N meldet sich gegen %S wieder",
+  nextAtTomorrow: "%N meldet sich morgen früh wieder",
+  unread: "Neue Nachrichten von %N",
+  menuLive: "Live: %S",
+  menuWaiting: "%N wartet auf deine Antwort!",
+  startTeaser: "%N hat etwas gehört. Gleich schreibt er dir.",
+  tickerWaiting: "Wartet auf deine Antwort",
+  tickerDone: "Geschichte abgeschlossen",
+  reward: "Die Geschichte ist geschafft: +%S Staub, ein Andenken im Album."
+};
+
+SOUVENIRS.push({ id:"archivkarte", title:"Brösels Karte", rar:"legendaer", icon:"\u{1F5FA}", flavor:"Handgezeichnet von Herrn Brösel. Ehren-Archivare finden immer her. Du auch, steht auf der Rückseite." });
+ACHIEVEMENTS.push({ id:"wand.ende", title:"Ehren-Archivar", detail:"'Das Geräusch hinter der Wand' abgeschlossen", icon:"\u{1F5DD}" });
+MOMENT_TYPES.archiv = { capture:"Die zwei Tage hinter der Wand.",
+  recall:["Vor %S Tagen kam %N aus der Wand zurück. Er sagt immer noch manchmal grundlos 'Tock. Tock. Tock.' und grinst dann.",
+          "%N denkt an Herrn Brösel. Vor %S Tagen haben sie sich kennengelernt. Er will bald wieder hin. 'Verwalter vereinsamen sonst', sagt er."] };
+
+// ---------- Pings: Mimo schreibt von selbst ----------
+const PING_THOUGHTS = [
+  "Kurzer Zwischenstand: Alles ruhig hier. Die Lampe war den ganzen Tag unauffällig. Verdächtig unauffällig, aber das ist ein Thema für später.",
+  "Ich habe gerade an dich gedacht und wollte, dass du das weißt. Das ist die ganze Nachricht.",
+  "Statusbericht vom Fensterbrett: Die Welt dreht sich, die Wolken ziehen, einer sah aus wie ein Croissant. Dachte, das interessiert dich.",
+  "Falls dein Tag gerade anstrengend ist: Ich sitze hier und bin auf deiner Seite. Nur zur Info.",
+  "Das Staubkorn hat sich heute nicht bewegt. Ich werte das als Waffenstillstand. Schöne Grüße auch von ihm. Vermutlich.",
+  "Ich habe eben geübt, wichtig zu gucken. Es läuft gut. Du verpasst was.",
+  "Erinnerung von deinem Lieblingswesen: Wasser trinken. Ich habe gehört, ihr Menschen vergesst das ständig.",
+  "Hier riecht es nach Nachmittag. Falls du gerade drinnen sitzt: Das Fenster empfiehlt einen Blick nach draußen."
+];
+const PING_CARE = [
+  { q:"Kurze Frage zwischendurch: Wie läuft dein Tag gerade, so ehrlich?",
+    a:[ { l:"Läuft gut", r:"Sehr schön. Weitermachen. Ich notiere ein Plus in der Tagesakte." },
+        { l:"Geht so", r:"Geht so ist okay. Geht so ist ehrlich. Der Tag ist noch nicht vorbei, und ich bin noch da." },
+        { l:"Eher zäh", r:"Dann offiziell von mir: Du musst heute nichts mehr beweisen. Der Rest des Tages ist Auslaufen. Anordnung vom Wesen." } ]},
+  { q:"Kontrollfrage des Tages: Hast du heute schon etwas gegessen, das dich gefreut hat?",
+    a:[ { l:"Ja, tatsächlich", r:"Ausgezeichnet. Essen, das freut, zählt doppelt. Das ist Wesens-Wissenschaft." },
+        { l:"Noch nicht", r:"Dann ist das hiermit deine Aufgabe. Nichts Großes. Nur etwas Gutes. Bericht erwünscht, aber optional." } ]},
+  { q:"Frage aus reiner Neugier: Woran denkst du gerade, wenn du kurz die Augen zumachst?",
+    a:[ { l:"An Schönes", r:"Behalte das. Genau da, wo es ist. Manche Gedanken sind Möbel, man sollte sie stehen lassen." },
+        { l:"An meine To-dos", r:"Verstehe. Dann übernehme ich jetzt eine davon: an dich denken. Erledigt. Eine weniger." },
+        { l:"An nichts", r:"An nichts denken ist eine Kunst. Ich übe seit Monaten. Respekt." } ]}
+];

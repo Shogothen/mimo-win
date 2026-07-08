@@ -616,6 +616,135 @@ function wishBump(kind, snackId) {
   }
 }
 
+// ---------- Engine: Live-Stories (Echtzeit) ----------
+const randMin = (a, b) => (a + Math.random() * (b - a)) * 60000;
+
+// Nachtklammer: 23:30 - 07:30 wird auf den Morgen geschoben
+function clampNight(ts) {
+  const d = new Date(ts);
+  const h = d.getHours() + d.getMinutes() / 60;
+  if (h >= 23.5) { d.setDate(d.getDate() + 1); d.setHours(7, 30 + Math.floor(Math.random() * 45), 0, 0); return d.getTime(); }
+  if (h < 7.5) { d.setHours(7, 30 + Math.floor(Math.random() * 45), 0, 0); return d.getTime(); }
+  return ts;
+}
+
+function liveStoryDef() { return state.live ? LIVE_STORIES.find(s => s.id === state.live.storyId) : null; }
+
+function maybeStartLiveStory() {
+  if (state.live) return;
+  if (state.liveDone?.includes("wand")) return;
+  const story = LIVE_STORIES[0];
+  if (state.pet.stats.level < (story.gate.level || 1)) return;
+  state.live = {
+    storyId: story.id, history: [], choices: {}, unread: 0,
+    waitingChoice: null, nextNodeId: "start",
+    availableAt: Date.now() + randMin(2, 6), done: false, startedAt: Date.now()
+  };
+  save();
+}
+
+function processLive() {
+  const lv = state.live, story = liveStoryDef();
+  if (!lv || lv.done || !story) return false;
+  let changed = false;
+  let guard = 0;
+  while (lv.nextNodeId && Date.now() >= lv.availableAt && guard++ < 60) {
+    const node = story.nodes[lv.nextNodeId];
+    lv.history.push({ id: lv.nextNodeId, at: lv.availableAt });
+    lv.unread++;
+    changed = true;
+    if (node.c) { lv.waitingChoice = lv.nextNodeId; lv.nextNodeId = null; break; }
+    if (node.end) { finishLiveStory(story); break; }
+    const nx = story.nodes[node.next];
+    lv.availableAt = clampNight(lv.availableAt + randMin(nx.d[0], nx.d[1]));
+    lv.nextNodeId = node.next;
+  }
+  if (changed) save();
+  return changed;
+}
+
+function chooseLive(idx) {
+  const lv = state.live, story = liveStoryDef();
+  if (!lv || !lv.waitingChoice) return;
+  const node = story.nodes[lv.waitingChoice];
+  const ans = node.c[idx];
+  if (!ans) return;
+  if (ans.key) lv.choices[ans.key] = ans.val;
+  lv.history.push({ user: ans.l, at: Date.now() });
+  lv.waitingChoice = null;
+  lv.nextNodeId = ans.next;
+  const nx = story.nodes[ans.next];
+  lv.availableAt = clampNight(Date.now() + randMin(nx.d[0], nx.d[1]));
+  save();
+  processLive();
+}
+
+function finishLiveStory(story) {
+  const lv = state.live;
+  lv.done = true;
+  lv.nextNodeId = null;
+  state.liveDone = state.liveDone || [];
+  state.liveDone.push(story.id);
+  earnDust(120);
+  handleLevelUp(addXP(60));
+  state.pet.stats.bond = clamp(state.pet.stats.bond + 5, 0, 100);
+  if (!state.souvenirs.includes("archivkarte")) state.souvenirs.push("archivkarte");
+  unlockAchievement("wand.ende");
+  captureMoment("archiv");
+  showToast({ icon: "\u{1F5DD}", title: "Ehren-Archivar", detail: fmt(LIVE_TEXTS.reward, ctx({ S: 120 })) });
+  playSound("level");
+  checkUnlocks(); save();
+}
+
+// ---------- Engine: Pings (Mimo schreibt von selbst) ----------
+function ensurePings() {
+  if (!state.pings) state.pings = { nextAt: clampNight(Date.now() + randMin(90, 200)), items: [] };
+}
+
+function processPings() {
+  ensurePings();
+  const pg = state.pings;
+  let changed = false;
+  if (Date.now() >= pg.nextAt) {
+    const todayCount = pg.items.filter(i => todayKey(new Date(i.at)) === todayKey()).length;
+    if (todayCount < 3) {
+      const roll = Math.random();
+      let item;
+      if (roll < 0.35) {
+        const care = pick(PING_CARE);
+        item = { kind: "care", text: care.q, answers: care.a.map(a => a.l), reactions: care.a.map(a => a.r), at: Date.now(), answered: false };
+      } else if (roll < 0.55 && Object.keys(state.talkFacts).length) {
+        const key = pick(Object.keys(state.talkFacts).filter(k => FACT_DAILY[k]));
+        item = key ? { kind: "note", text: fmt(pick(FACT_DAILY[key]), ctx({ V: state.talkFacts[key] })), at: Date.now() } : null;
+      } else if (roll < 0.7 && recallableMoments().length) {
+        item = { kind: "note", text: momentRecallLine(pick(recallableMoments())), at: Date.now() };
+      } else {
+        item = { kind: "note", text: fmt(pick(PING_THOUGHTS), ctx()), at: Date.now() };
+      }
+      if (item) { pg.items.push(item); pg.items = pg.items.slice(-20); pg.unread = (pg.unread || 0) + 1; changed = true; }
+    }
+    pg.nextAt = clampNight(Date.now() + randMin(150, 320));
+    save();
+  }
+  return changed;
+}
+
+function pingAnswer(itemIdx, ansIdx) {
+  const item = state.pings.items[itemIdx];
+  if (!item || item.kind !== "care" || item.answered) return;
+  item.answered = true;
+  item.reply = item.answers[ansIdx];
+  item.reaction = item.reactions[ansIdx];
+  applyDecay();
+  state.pet.stats.bond = clamp(state.pet.stats.bond + 1, 0, 100);
+  save();
+}
+
+function inboxUnread() {
+  return (state.live && !state.live.done ? state.live.unread : 0) + (state.pings?.unread || 0) +
+    (state.live && state.live.waitingChoice ? 1 : 0);
+}
+
 // ---------- Engine: Story-Arc ----------
 function arcState() {
   if (!state.arc) state.arc = { chapter: 0, doneAt: 0, choices: {} };
@@ -747,13 +876,133 @@ function availableConversations() {
 }
 
 function talkHasNews() {
-  return availableConversations().some(c => c.type !== "quatsch");
+  return inboxUnread() > 0 || availableConversations().some(c => c.type !== "quatsch");
 }
 
-const chat = { conv: null, busy: false, bondExtra: 0, finished: false };
+const chat = { conv: null, busy: false, bondExtra: 0, finished: false, mode: "convo" };
+
+function fmtClock(ts) {
+  const d = new Date(ts);
+  const hm = d.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
+  if (todayKey(d) === todayKey()) return hm;
+  if (todayKey(d) === yesterdayKey()) return "gestern " + hm;
+  return d.toLocaleDateString("de-DE", { weekday: "short" }) + " " + hm;
+}
+
+function addTimeDivider(ts) {
+  const el = document.createElement("div");
+  el.className = "msg-time";
+  el.textContent = fmtClock(ts);
+  $("#chatScroll").appendChild(el);
+}
+
+function openLiveChat() {
+  const lv = state.live, story = liveStoryDef();
+  if (!lv || !story) return;
+  chat.mode = "live";
+  $("#chatName").textContent = state.pet.name;
+  $("#chatStatus").textContent = story.title;
+  $("#chatScroll").innerHTML = "";
+  const av = $("#chatAvatar"); av.innerHTML = "";
+  createPet(av, 56, { static: true }).update("dramatisch", false, state.pet.hat);
+  let lastDividerDay = null;
+  for (const h of lv.history) {
+    const day = todayKey(new Date(h.at));
+    if (day !== lastDividerDay || lv.history.indexOf(h) === 0) { addTimeDivider(h.at); lastDividerDay = day; }
+    if (h.user) addMsg("msg-user", h.user);
+    else {
+      const node = story.nodes[h.id];
+      for (const line of node.m) addMsg("msg-mimo", fmt(line, ctx()));
+    }
+  }
+  renderLiveAnswers();
+  lv.unread = 0; save();
+  openSheet("sheet-chat");
+  chatScrollDown();
+}
+
+function renderLiveAnswers() {
+  const lv = state.live, story = liveStoryDef();
+  const box = $("#chatAnswers");
+  box.innerHTML = "";
+  if (!lv) return;
+  if (lv.waitingChoice) {
+    const node = story.nodes[lv.waitingChoice];
+    node.c.forEach((a, i) => {
+      const b = document.createElement("button");
+      b.textContent = a.l;
+      b.onclick = () => {
+        addMsg("msg-user", a.l);
+        chooseLive(i);
+        renderLiveAnswers();
+        chatScrollDown();
+      };
+      box.appendChild(b);
+    });
+  } else if (lv.done) {
+    const end = document.createElement("button");
+    end.className = "chat-end";
+    end.textContent = "Was für eine Geschichte";
+    end.onclick = () => { closeSheets(); renderAll(); };
+    box.appendChild(end);
+  } else {
+    const status = document.createElement("div");
+    status.className = "live-status";
+    const at = new Date(lv.availableAt);
+    const label = todayKey(at) === todayKey()
+      ? fmt(LIVE_TEXTS.nextAt, ctx({ S: at.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }) }))
+      : fmt(LIVE_TEXTS.nextAtTomorrow, ctx());
+    status.textContent = label;
+    box.appendChild(status);
+  }
+}
+
+function openPingsChat() {
+  ensurePings();
+  chat.mode = "pings";
+  $("#chatName").textContent = state.pet.name;
+  $("#chatStatus").textContent = "Nachrichten";
+  $("#chatScroll").innerHTML = "";
+  const av = $("#chatAvatar"); av.innerHTML = "";
+  createPet(av, 56, { static: true }).update("anhaenglich", false, state.pet.hat);
+  const items = state.pings.items.slice(-10);
+  items.forEach((item) => {
+    addTimeDivider(item.at);
+    addMsg("msg-mimo", item.text);
+    if (item.kind === "care") {
+      if (item.answered) {
+        addMsg("msg-user", item.reply);
+        addMsg("msg-mimo", item.reaction);
+      } else {
+        const wrap = document.createElement("div");
+        wrap.className = "ping-answers";
+        item.answers.forEach((l, ai) => {
+          const b = document.createElement("button");
+          b.textContent = l;
+          b.onclick = () => {
+            pingAnswer(state.pings.items.indexOf(item), ai);
+            openPingsChat(); // neu rendern mit Antwort + Reaktion
+          };
+          wrap.appendChild(b);
+        });
+        $("#chatScroll").appendChild(wrap);
+      }
+    }
+  });
+  $("#chatAnswers").innerHTML = "";
+  const end = document.createElement("button");
+  end.className = "chat-end";
+  end.textContent = "Schließen";
+  end.onclick = () => { closeSheets(); renderAll(); };
+  $("#chatAnswers").appendChild(end);
+  state.pings.unread = 0; save();
+  openSheet("sheet-chat");
+  chatScrollDown();
+}
 
 function startConversation(conv) {
   if (blockIfAway()) { closeSheets(); return; }
+  chat.mode = "convo";
   chat.conv = conv; chat.busy = false; chat.bondExtra = 0; chat.finished = false;
   $("#chatName").textContent = state.pet.name;
   $("#chatStatus").textContent = "tippt gleich los";
@@ -1755,6 +2004,34 @@ function renderAll() {
     $("#expedIdleText").textContent = fmt("%N steht bereit. Der unsichtbare Koffer ist immer gepackt.", ctx());
   }
 
+  // Live-Ticker
+  {
+    const lv = state.live;
+    const hasLive = lv && (lv.history.length || !lv.done);
+    const pingsUnread = state.pings?.unread || 0;
+    const show = (hasLive && !lv.done) || pingsUnread > 0;
+    $("#liveTicker").classList.toggle("hidden", !show);
+    if (show) {
+      let text, time = "", hot = false;
+      if (lv && lv.waitingChoice) { text = fmt(LIVE_TEXTS.menuWaiting, ctx()); hot = true; }
+      else if (lv && lv.unread) { text = fmt(LIVE_TEXTS.unread, ctx()) + ` (${lv.unread})`; hot = true; }
+      else if (pingsUnread) { text = `${state.pet.name} hat dir geschrieben (${pingsUnread})`; hot = true; }
+      else if (lv && lv.history.length && !lv.done) {
+        const last = lv.history[lv.history.length - 1];
+        const story = liveStoryDef();
+        const snippet = last.user ? last.user : story.nodes[last.id].m[story.nodes[last.id].m.length - 1];
+        text = "\u201E" + fmt(snippet, ctx()).slice(0, 64) + (snippet.length > 64 ? "\u2026" : "") + "\u201C";
+        time = fmtClock(last.at);
+      } else if (lv && !lv.history.length) {
+        text = fmt(LIVE_TEXTS.startTeaser, ctx());
+      }
+      $("#liveTickerText").textContent = text || "";
+      $("#liveTickerTime").textContent = time;
+      $("#liveTicker").classList.toggle("hot", hot);
+      $("#liveTicker").dataset.target = pingsUnread && !(lv && (lv.unread || lv.waitingChoice)) ? "pings" : "live";
+    }
+  }
+
   // Story-Arc-Karte
   {
     const a = arcState();
@@ -2029,6 +2306,14 @@ function updateExpedProgress() {
   const m = Math.floor(left / 60000), s = Math.floor((left % 60000) / 1000);
   $("#expedTimer").textContent = m >= 60 ? `${Math.floor(m / 60)} Std ${m % 60} Min` : m > 0 ? `${m} Min` : `${s} Sek`;
 }
+setInterval(() => {
+  const changed = processLive() | processPings();
+  if (changed) {
+    renderAll();
+    if (chat.mode === "live" && !$("#sheet-chat").classList.contains("hidden")) openLiveChat();
+  }
+}, 30000);
+
 setInterval(() => {
   if (!state.expedition) return;
   updateExpedProgress();
@@ -2682,12 +2967,25 @@ function buildSheets() {
   $("#talkSub").textContent = fmt("%N hat Zeit. %N hat immer Zeit.", ctx());
   const menu = availableConversations();
   const ICONS = { fact: "?", context: "\u2665", story: "\u2726", deep: "\u2727", quatsch: "\u263A" };
-  $("#talkOptions").innerHTML = menu.map((cv, i) =>
+  let liveRows = "";
+  if (state.live && !state.live.done) {
+    const story = liveStoryDef();
+    const label = state.live.waitingChoice ? fmt(LIVE_TEXTS.menuWaiting, ctx()) : fmt(LIVE_TEXTS.menuLive, ctx({ S: story.title }));
+    liveRows += `<button data-live="1"><em>\u2709</em><span>${label}<span class="talk-option-hint">${story.title}</span></span>${state.live.unread || state.live.waitingChoice ? '<span class="talk-new"></span>' : ""}</button>`;
+  } else if (state.live?.done) {
+    liveRows += `<button data-live="1"><em>\u2709</em><span>${liveStoryDef().title}<span class="talk-option-hint">Nochmal lesen</span></span></button>`;
+  }
+  if (state.pings?.items?.length) {
+    liveRows += `<button data-pings="1"><em>\u{1F4EC}</em><span>Nachrichten von ${state.pet.name}${state.pings.unread ? ` (${state.pings.unread} neu)` : ""}</span>${state.pings.unread ? '<span class="talk-new"></span>' : ""}</button>`;
+  }
+  $("#talkOptions").innerHTML = liveRows + menu.map((cv, i) =>
     `<button data-idx="${i}"><em>${ICONS[cv.type]}</em><span>${TALK_MENU_HINTS[cv.type]}
       ${cv.type === "fact" || cv.type === "deep" || cv.type === "context" ? "" : ""}</span>
       ${cv.type !== "quatsch" ? '<span class="talk-new"></span>' : ""}</button>`).join("");
   $$("#talkOptions button").forEach(b => b.onclick = () => {
     closeSheets();
+    if (b.dataset.live) { openLiveChat(); return; }
+    if (b.dataset.pings) { openPingsChat(); return; }
     startConversation(menu[+b.dataset.idx]);
   });
 }
@@ -2997,6 +3295,9 @@ function dailyGreeting() {
 function timeTick() {
   document.body.className = "phase-" + dayPhase();
   checkExpeditionReturn();
+  maybeStartLiveStory();
+  processLive();
+  processPings();
   const hrs = (Date.now() - state.pet.lastInteraction) / 36e5;
   applyDecay();
   if (hrs > 36 && state.onboarded && !state._neglectNoted) {
@@ -3027,6 +3328,9 @@ function bootApp() {
   showAway();
   showReturn();
   dailyGreeting();
+  maybeStartLiveStory();
+  processLive();
+  processPings();
   setInterval(timeTick, 60000);
   document.addEventListener("visibilitychange", () => { if (!document.hidden) { timeTick(); showReturn(); } });
 }
@@ -3078,6 +3382,9 @@ document.addEventListener("DOMContentLoaded", () => {
   $("#bathSkip").addEventListener("click", cancelBath);
   $("#spongeBtn").addEventListener("click", startBath);
   $("#arcRow").addEventListener("click", () => { if (arcGateCheck().ready) startArcChapter(); });
+  $("#liveTicker").addEventListener("click", () => {
+    if ($("#liveTicker").dataset.target === "pings") openPingsChat(); else openLiveChat();
+  });
 
   $("#chatClose").addEventListener("click", () => { closeSheets(); renderAll(); });
   $("#expedOpen").addEventListener("click", () => { buildSheets(); openSheet("sheet-exped"); });
