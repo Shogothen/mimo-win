@@ -1534,3 +1534,23 @@ ACHIEVEMENTS.push(
 );
 
 QUEST_TYPES.achtsam = { title:"Einen Moment für dich nehmen", target:1, ico:"breath" };
+
+// ============ v16: Wetter & lebendige Szene ============
+const WEATHER = {
+  sonnig: { label:"Sonnig", lines:["Die Sonne liegt heute wie eine warme Decke im Zimmer. %N hat schon dreimal den Platz gewechselt, um im besten Fleck zu sitzen.","Sonnentag. %N behauptet, sein Fell glänzt heute 12% mehr. Er hat es gemessen. Irgendwie."] },
+  wolkig: { label:"Wolkig", lines:["Draußen ziehen dicke Wolken. %N benotet sie im Vorbeiziehen. Bisher führt eine, die aussieht wie ein Kissen.","Wolkig heute. %N sagt, das ist Kuschelwetter. %N sagt das allerdings bei jedem Wetter."] },
+  regen:  { label:"Regen", lines:["Es regnet. %N sitzt am Fenster und verfolgt einzelne Tropfen wie ein Wettrennen. Er hat einen Favoriten.","Regentag. Die Welt klingt heute wie leises Trommeln. %N findet, drinnen ist heute der beste Ort der Welt."] },
+  nebel:  { label:"Nebel", lines:["Draußen: Nebel. %N behauptet, die Welt wird gerade neu geladen. Man solle nicht stören.","Nebeliger Tag. Alles ist weich und geheimnisvoll. %N flüstert heute grundlos."] }
+};
+const WEATHER_IDLE = {
+  regen: ["%N schaut einem Regentropfen nach, der das Rennen gewonnen hat.","%N hat dem Regen zugehört und nickt anerkennend. Guter Rhythmus."],
+  nebel: ["%N starrt in den Nebel und flüstert: 'Da könnte alles drin sein.'"],
+  sonnig: ["%N dreht sich ein Stück, um besser im Sonnenfleck zu sitzen."],
+  wolkig: ["%N hat einer Wolke eine 8 von 10 gegeben. Sie war fast ein Croissant."]
+};
+const STAR_TEXTS = {
+  pick: ["Eine Sternschnuppe! Direkt zu uns. %N hat sich was gewünscht. Er verrät nicht was, aber er guckt dich dabei an.","Gefangen! %N sagt, gefallene Sterne sind Staub in Reinform. Er sagt es sehr feierlich."],
+  done: "Genug gepflückt für heute Nacht. Der Himmel braucht den Rest selbst."
+};
+const CLOUD_POKE = ["Die Wolke plustert sich. %N ist zufrieden mit dir.","Angestupst. Die Wolke nimmt es sportlich."];
+ACHIEVEMENTS.push({ id:"sterne.30", title:"Sternenpflücker", detail:"30 Sterne vom Nachthimmel gepflückt", icon:"\u2B50" });

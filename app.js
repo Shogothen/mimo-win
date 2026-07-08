@@ -2229,6 +2229,8 @@ function renderAll() {
   // Schwamm bei Bedarf
   $("#spongeBtn").classList.toggle("hidden", !bathNeeded() || !!state.expedition);
 
+  renderWeather();
+
   // Geerdet-Status
   $("#calmChip").classList.toggle("hidden", !calmToday());
   $("#momentsSub").textContent = calmToday() ? "Heute schon bei dir gewesen" : "Fünf Wege zu dir";
@@ -2635,6 +2637,146 @@ function cancelBath() {
   renderAll();
 }
 
+// ---------- Wetter (deterministisch pro Tag) ----------
+function getWeather() {
+  const k = todayKey();
+  let h = 0;
+  for (let i = 0; i < k.length; i++) h = (h * 31 + k.charCodeAt(i)) >>> 0;
+  const r = h % 100;
+  return r < 45 ? "sonnig" : r < 70 ? "wolkig" : r < 90 ? "regen" : "nebel";
+}
+
+let weatherRendered = null;
+function renderWeather() {
+  const wtr = getWeather();
+  const stage = $(".stage");
+  if (!stage) return;
+  const key = wtr + ":" + dayPhase();
+  if (weatherRendered === key) { renderStars(); return; }
+  weatherRendered = key;
+  document.body.dataset.weather = wtr;
+  stage.querySelectorAll(".raindrop, .wcloud, .fog-layer").forEach(e => e.remove());
+  if (wtr === "regen") {
+    for (let i = 0; i < 14; i++) {
+      const r = document.createElement("span");
+      r.className = "raindrop";
+      r.style.left = (3 + Math.random() * 94) + "%";
+      r.style.animationDelay = (Math.random() * 1.4) + "s";
+      r.style.animationDuration = (0.9 + Math.random() * 0.5) + "s";
+      stage.appendChild(r);
+    }
+  }
+  if (wtr === "regen" || wtr === "wolkig") {
+    for (let i = 0; i < 2; i++) {
+      const cl = document.createElement("button");
+      cl.className = "wcloud";
+      cl.innerHTML = '<span></span><span></span><span></span>';
+      cl.style.top = (7 + i * 11) + "%";
+      cl.style.animationDuration = (46 + i * 22) + "s";
+      cl.style.animationDelay = (-i * 25) + "s";
+      cl.addEventListener("click", () => {
+        cl.classList.remove("poked"); void cl.offsetWidth; cl.classList.add("poked");
+        homePet?.lookAt(0, -1);
+        setTimeout(() => homePet?.lookAt(0, 0), 1200);
+        if (Math.random() < 0.5) showReaction(fmt(pick(CLOUD_POKE), ctx()));
+        applyDecay();
+        state.pet.stats.laune = clamp(state.pet.stats.laune + 1, 0, 100);
+        save();
+      });
+      stage.appendChild(cl);
+    }
+  }
+  if (wtr === "nebel") {
+    const f = document.createElement("div");
+    f.className = "fog-layer";
+    stage.appendChild(f);
+  }
+  renderStars();
+}
+
+// ---------- Sterne pfluecken (nachts) ----------
+function starState() {
+  if (!state.stars) state.stars = { day: null, picked: 0, total: 0 };
+  if (state.stars.day !== todayKey()) { state.stars.day = todayKey(); state.stars.picked = 0; }
+  return state.stars;
+}
+
+function renderStars() {
+  const stage = $(".stage");
+  if (!stage) return;
+  const night = dayPhase() === "nacht";
+  const ss = starState();
+  const want = night && ss.picked < 3 ? 3 - ss.picked : 0;
+  const have = stage.querySelectorAll(".pickstar").length;
+  if (!night || want === 0) { stage.querySelectorAll(".pickstar").forEach(e => e.remove()); return; }
+  for (let i = have; i < want; i++) {
+    const s = document.createElement("button");
+    s.className = "pickstar";
+    s.textContent = "\u2726";
+    s.style.left = (12 + Math.random() * 74) + "%";
+    s.style.top = (6 + Math.random() * 16) + "%";
+    s.style.animationDelay = (Math.random() * 2) + "s";
+    s.addEventListener("click", () => pickStar(s), { once: true });
+    stage.appendChild(s);
+  }
+}
+
+function pickStar(el) {
+  const ss = starState();
+  if (ss.picked >= 3) { el.remove(); return; }
+  ss.picked++; ss.total++;
+  const mount = $("#petMount").getBoundingClientRect();
+  const stage = $(".stage").getBoundingClientRect();
+  el.classList.add("falling");
+  el.style.left = (mount.left + mount.width / 2 - stage.left) + "px";
+  el.style.top = (mount.top + mount.height * 0.4 - stage.top) + "px";
+  homePet?.lookAt(0, -1);
+  setTimeout(() => {
+    el.remove();
+    homePet?.emote("star", 1400);
+    homePet?.play("jump", 550);
+    homePet?.lookAt(0, 0);
+    earnDust(2);
+    sceneFloat("+2 Staub", "#c9a13f");
+    showReaction(fmt(pick(ss.picked >= 3 ? [STAR_TEXTS.done] : STAR_TEXTS.pick), ctx()));
+    if (ss.total >= 30) unlockAchievement("sterne.30");
+    playSound("catch");
+    checkUnlocks(); save(); renderAll();
+  }, 620);
+}
+
+// ---------- Freies Herumlaufen in der Szene ----------
+let petPos = 0; // px-Versatz von der Mitte
+
+function petBounds() {
+  const stage = $(".stage");
+  return stage ? Math.max(60, stage.getBoundingClientRect().width / 2 - 95) : 100;
+}
+
+function applyPetPos(animate = true) {
+  const mount = $("#petMount");
+  if (!mount) return;
+  mount.style.transition = animate ? "transform .45s cubic-bezier(.4,1.25,.5,1)" : "none";
+  mount.style.transform = `translateX(${petPos}px)`;
+}
+
+function walkTo(x, done) {
+  const b = petBounds();
+  x = clamp(x, -b, b);
+  const hops = Math.max(1, Math.min(4, Math.round(Math.abs(x - petPos) / 95)));
+  const stepX = (x - petPos) / hops;
+  let i = 0;
+  idleBusy(hops * 480 + 400);
+  const hop = () => {
+    if (i++ >= hops) { done && done(); return; }
+    petPos += stepX;
+    homePet?.play("jump", 450);
+    applyPetPos();
+    setTimeout(hop, 470);
+  };
+  hop();
+}
+
 // ---------- Koerperzonen: gezielte Beruehrungen ----------
 function zoneFor(rx, ry) {
   if (ry < 0.3) return rx < 0.42 ? "earL" : rx > 0.58 ? "earR" : "head";
@@ -2691,6 +2833,14 @@ function idleTick() {
     homePet?.play("wiggle", 600);
   } else if (roll < 0.62) { // Schmetterling!
     spawnButterfly();
+  } else if (roll < 0.8) { // umherstreifen
+    const b = petBounds();
+    walkTo(petPos + (Math.random() < 0.5 ? -1 : 1) * (80 + Math.random() * 120));
+  } else if (roll < 0.88 && WEATHER_IDLE[getWeather()] && Math.random() < 0.5) {
+    idleBusy(2200);
+    homePet?.lookAt(0.6, -0.7);
+    showReaction(fmt(pick(WEATHER_IDLE[getWeather()]), ctx()));
+    setTimeout(() => homePet?.lookAt(0, 0), 1800);
   }
 }
 setInterval(idleTick, 9000);
@@ -2870,25 +3020,23 @@ function feedSequence(icon, celebrate, done) {
   scrollToScene();
   const stage = $(".stage"), mount = $("#petMount");
   if (!stage || !mount || !homePet) { done && done(); return; }
-  const side = Math.random() < 0.5 ? -1 : 1;
-  const offset = side * (60 + Math.random() * 40);
+  const b = petBounds();
+  const side = petPos > b * 0.45 ? -1 : petPos < -b * 0.45 ? 1 : (Math.random() < 0.5 ? -1 : 1);
+  const target = clamp(petPos + side * (70 + Math.random() * 50), -b, b);
   const el = document.createElement("div");
   el.className = "drop-snack";
   el.textContent = icon;
-  el.style.left = `calc(50% + ${offset}px)`;
+  el.style.left = `calc(50% + ${target}px)`;
   stage.appendChild(el);
   requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add("land")));
 
   // 1) Bemerken: grosse Augen, aufgeregtes Hopsen auf der Stelle
   homePet.emote("excite", 1300);
   homePet.play("excite", 800);
+  homePet.lookAt(target > petPos ? 1 : -1, 0.3);
 
-  // 2) Hinhuepfen
-  setTimeout(() => {
-    mount.style.transition = "transform .5s cubic-bezier(.4,1.3,.5,1)";
-    mount.style.transform = `translateX(${offset}px)`;
-    homePet.play("jump", 550);
-  }, 620);
+  // 2) Hinlaufen
+  setTimeout(() => { homePet.lookAt(0, 0); walkTo(target); }, 620);
 
   // 3) Mampfen: Kau-Bob + Backen-Beulen + Kruemel im Takt
   setTimeout(() => {
@@ -2914,14 +3062,12 @@ function feedSequence(icon, celebrate, done) {
           } else {
             homePet.chain([["jump", 550], ["wiggle", 600]]);
           }
-          mount.style.transform = "translateX(0)";
-          setTimeout(() => { mount.style.transition = ""; }, 550);
         }, 520);
       }
     }, 330);
   }, 1250);
 
-  setTimeout(() => el.remove(), 1600);
+  setTimeout(() => el.remove(), 1900);
 }
 
 function spawnNotes() {
@@ -3484,6 +3630,7 @@ function dailyGreeting() {
   else if (last === "super" && state.pet.lastCheckInDay === yesterdayKey()) text = GREETINGS.afterSuper;
   else text = pick(GREETINGS[dayPhase()]);
   setTimeout(() => showReaction(fmt(text, ctx())), 900);
+  setTimeout(() => showReaction(fmt(pick(WEATHER[getWeather()].lines), ctx())), 6200);
   save();
 }
 

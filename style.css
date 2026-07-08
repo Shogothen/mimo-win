@@ -800,3 +800,30 @@ body.phase-night #dock { border-color:rgba(255,255,255,.14); }
 .tc-puff { position:absolute; inset:-16px -22px; background:radial-gradient(ellipse, rgba(255,255,255,.95), rgba(255,255,255,.5) 60%, transparent 75%); border-radius:50%; }
 .tc-text { position:relative; display:block; max-width:180px; font-size:12px; font-weight:600; color:var(--ink-soft);
   text-align:center; padding:10px 6px; }
+
+/* ============ v16: Wetter & Szenen-Objekte ============ */
+.raindrop { position:absolute; top:-8%; z-index:4; width:2px; height:14px; border-radius:2px; pointer-events:none;
+  background:linear-gradient(180deg, transparent, rgba(160,190,220,.75)); animation: rainFall 1.1s linear infinite; }
+@keyframes rainFall { to { transform:translateY(560px); } }
+body[data-weather="regen"] .stage { filter:saturate(.88) brightness(.96); }
+body[data-weather="nebel"] .stage { filter:saturate(.8); }
+.fog-layer { position:absolute; inset:0; z-index:5; pointer-events:none; border-radius:inherit;
+  background:linear-gradient(180deg, rgba(235,238,242,.55), rgba(235,238,242,.15) 55%, transparent);
+  animation: fogBreathe 9s ease-in-out infinite alternate; }
+@keyframes fogBreathe { to { opacity:.6; } }
+.wcloud { position:absolute; left:-20%; z-index:4; width:74px; height:30px; background:none; cursor:pointer;
+  animation: cloudDrift linear infinite; }
+@keyframes cloudDrift { from { left:-18%; } to { left:112%; } }
+.wcloud span { position:absolute; bottom:0; border-radius:99px; background:rgba(255,255,255,.85);
+  box-shadow:0 3px 8px rgba(120,130,160,.15); }
+.wcloud span:nth-child(1) { left:0; width:40px; height:22px; }
+.wcloud span:nth-child(2) { left:20px; width:44px; height:30px; bottom:0; }
+.wcloud span:nth-child(3) { left:44px; width:30px; height:20px; }
+.wcloud.poked { animation-play-state:running; }
+.wcloud.poked span { animation: cloudPuff .5s ease; }
+@keyframes cloudPuff { 40% { transform:scale(1.18,1.28); } }
+.pickstar { position:absolute; z-index:6; background:none; font-size:19px; color:#f4d06f; cursor:pointer;
+  text-shadow:0 0 10px rgba(244,208,111,.8); animation: starTwinkle 2.2s ease-in-out infinite;
+  transition: left .6s ease-in, top .6s ease-in, font-size .6s ease; }
+@keyframes starTwinkle { 50% { opacity:.55; transform:scale(.85);} }
+.pickstar.falling { font-size:11px; animation:none; pointer-events:none; }
