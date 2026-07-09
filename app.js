@@ -740,6 +740,21 @@ function cupEnd(score) {
   finishMiniGame(score, "huetchen");
 }
 
+// ---------- Gesten-Hinweise: einmal zeigen, dann nie wieder ----------
+let hintTimer = null;
+function hintOnce(id) {
+  state.hints = state.hints || {};
+  if (state.hints[id] || !HINTS[id]) return;
+  state.hints[id] = true;
+  save();
+  const el = $("#coachHint");
+  if (!el) return;
+  $("#coachHintText").textContent = fmt(HINTS[id], ctx());
+  el.classList.remove("hidden");
+  clearTimeout(hintTimer);
+  hintTimer = setTimeout(() => el.classList.add("hidden"), 5200);
+}
+
 // ---------- Room: Deko zum Anfassen ----------
 function gongSound() {
   try {
@@ -2664,7 +2679,9 @@ function renderAll() {
   }
 
   // Schwamm bei Bedarf
-  $("#spongeBtn").classList.toggle("hidden", !bathNeeded() || !!state.expedition);
+  const spongeShow = bathNeeded() && !state.expedition;
+  $("#spongeBtn").classList.toggle("hidden", !spongeShow);
+  if (spongeShow) hintOnce("sponge");
 
   renderWeather();
 
@@ -3178,6 +3195,7 @@ function renderStars() {
     s.addEventListener("click", () => pickStar(s), { once: true });
     stage.appendChild(s);
   }
+  if (want > 0) hintOnce("stars");
 }
 
 function pickStar(el) {
@@ -3712,10 +3730,10 @@ function buildSheets() {
 
   $("#gamesSub").textContent = fmt("%N ist bereits in Position.", ctx());
   $("#gamesOptions").innerHTML = Object.keys(GAME_DEFS).map(m => {
-    const best = state.best[m] || 0 + `<button data-mode="huetchen"><em>\u{1F3A9}</em><span>${GAME_MENU_HUETCHEN.title}${state.best?.huetchen ? " \u00b7 Best: Runde " + state.best.huetchen : ""}<span class="talk-option-hint">${GAME_MENU_HUETCHEN.sub}</span></span></button>`;
+    const best = state.best[m] || 0;
     return `<button data-mode="${m}"><em>${m === "sterne" ? "\u2605" : "\u25EF"}</em>${GAME_DEFS[m].title}
       ${best ? `<span class="q-progress" style="margin-left:auto">Rekord ${best}</span>` : ""}</button>`;
-  }).join("");
+  }).join("") + `<button data-mode="huetchen"><em>\u{1F3A9}</em><span>${GAME_MENU_HUETCHEN.title}<span class="talk-option-hint">${GAME_MENU_HUETCHEN.sub}${state.best?.huetchen ? " \u00b7 Rekord: Runde " + state.best.huetchen : ""}</span></span></button>`;
   $$("#gamesOptions button").forEach(b => b.onclick = () => {
     closeSheets();
     if (b.dataset.mode === "huetchen") openCups(); else openGame(b.dataset.mode);
@@ -4086,6 +4104,7 @@ function completeOnboarding() {
 function switchTab(tab) {
   $$("main.screen").forEach(s => s.classList.add("hidden"));
   $("#screen-" + tab).classList.remove("hidden");
+  if (tab === "room") hintOnce("room");
   $$("#dock button").forEach(b => b.classList.toggle("active", b.dataset.tab === tab));
   const idx = ["home", "room", "diary", "profile"].indexOf(tab);
   $("#dockPill").style.left = `calc(6px + ${idx} * (25% - 3px))`;
@@ -4149,6 +4168,10 @@ function bootApp() {
   maybeStartLiveStory();
   processLive();
   processPings();
+  if (state.onboarded) {
+    setTimeout(() => hintOnce("rub"), 6000);
+    setTimeout(() => hintOnce("zones"), 40000);
+  }
   setInterval(timeTick, 60000);
   document.addEventListener("visibilitychange", () => { if (!document.hidden) { timeTick(); showReturn(); } });
 }

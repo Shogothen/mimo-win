@@ -906,3 +906,10 @@ g[id^="deco"] { cursor:pointer; }
 .cup.lifted svg { transform:rotate(-7deg); }
 #cupMimoMount { position:absolute; bottom:10px; left:50%; margin-left:-37px; z-index:2;
   transform:translateX(var(--cx,0)); transition:transform .3s ease; }
+
+/* ============ v22: Coach-Hinweise ============ */
+.coach-hint { display:flex; align-items:center; gap:9px; background:rgba(58,45,60,.92); color:#fdf6ee;
+  border-radius:16px; padding:11px 14px; margin-bottom:14px; font-size:13px; font-weight:600; line-height:1.35;
+  box-shadow:0 6px 18px rgba(40,25,45,.3); animation: coachIn .35s cubic-bezier(.3,1.3,.5,1); }
+.coach-bulb { flex:none; font-size:16px; }
+@keyframes coachIn { from { opacity:0; transform:translateY(-8px);} }

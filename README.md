@@ -3,6 +3,7 @@
 Virtuelles Haustier als Web-App. Vanilla JS/HTML/CSS, keine Dependencies, Speicherung in localStorage.
 Portiert vom nativen SwiftUI-Projekt (Repo "mimo") mit allen Systemen: Stimmung, Persönlichkeit,
 Erinnerungen, Macken, Quests, Erfolge, Garderobe, zwei Mini-Games, Tagesphasen-Himmel.
+v22 Fix & Führung: Hütchen-Spiel war durch fehlerhafte Menü-Injektion unsichtbar (bei vorhandenem Sterne-Rekord) - behoben mit Härtetest; Coach-Hinweise: fünf einmalige Entdecker-Tipps (Streichel-Geste, Körperzonen, Schwamm, Nacht-Sterne, Room-Objekte).
 v21 Room & Spiele: Kamin/Aquarium-SVG nachgerüstet (gekaufte Deko war unsichtbar), alle 14 Deko-Objekte interaktiv (Sounds, Animationen, Mimo-Reaktionen, Zimmer-Kenner-Erfolg), drittes Minispiel 'Brösels Hütchen' (Runden-Mischspiel mit steigendem Tempo, eigene Belohnungsskala und Erfolgen).
 v20 Klang: generative Ambient-Musik (folgt Tageszeit und Wetter, nie loopend), Wetter-Ambiente (Regen-Rauschen, Vögel am Morgen, Grillen nachts), vereinheitlichte Effekte inkl. Nachrichten-Ton, Klang-Einstellungen im Profil (Musik/Ambiente/Effekte getrennt), iOS-konformer Audio-Unlock und Hintergrund-Pause.
 v19 Tiefe: Lauf-Bug behoben (Mimo lief wegen zerstörter Zentrierung aus dem Bild), Live-Story 2 'Brösels Bitte' (Inventur im Archiv, Schachtel für schlechte Tage, Stellvertretender-Verwalter-Finale) mit generischen Story-Gates, Chronik im Profil: automatische Zeitleiste aller Meilensteine.

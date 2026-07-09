@@ -1649,3 +1649,12 @@ ACHIEVEMENTS.push(
   { id:"room.alle",       title:"Zimmer-Kenner",   detail:"Jede Deko einmal angetippt", icon:"\u{1F6CB}" }
 );
 QUEST_TYPES.huetchen = { title:"Eine Partie Hütchen mit Brösel", target:1, ico:"star" };
+
+// ============ v22: Gesten-Hinweise (einmalige Entdecker-Tipps) ============
+const HINTS = {
+  rub:    "Tipp: Streichle %N, indem du mit dem Finger sanft über ihn wischst.",
+  zones:  "Tipp: %N mag gezielte Berührungen \u2013 probier mal Ohren, Nase oder Bauch.",
+  sponge: "Tipp: Der Schwamm in der Szene startet die Badezeit. Rubbel den Schmutz weg!",
+  stars:  "Tipp: Nachts hängen Sterne am Himmel. Antippen lohnt sich.",
+  room:   "Tipp: Alles im Zimmer ist anfassbar \u2013 tippe Radio, Kamin oder die Bücher an."
+};
