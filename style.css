@@ -871,3 +871,38 @@ body[data-weather="nebel"] .stage { filter:saturate(.8); }
   background:#fff; box-shadow:0 1px 4px rgba(60,30,50,.3); transition:left .2s; }
 .sound-row input:checked { background:var(--accent); }
 .sound-row input:checked::after { left:22px; }
+
+/* ============ v21: Room-Leben ============ */
+.deco-wobble { animation: decoWobble .55s ease; transform-box:fill-box; transform-origin:center bottom; }
+@keyframes decoWobble { 25% { transform:rotate(-4deg) scale(1.03);} 60% { transform:rotate(3deg);} }
+.aq-fish { animation: fishSwim 7s ease-in-out infinite alternate; }
+@keyframes fishSwim { from { transform:translateX(-13px);} to { transform:translateX(13px) scaleX(-1);} }
+.aq-bubble { animation: aqBubble 3.2s linear infinite; }
+.aq-bubble.b2 { animation-delay:1.4s; }
+@keyframes aqBubble { from { transform:translateY(0); opacity:.7;} to { transform:translateY(-26px); opacity:0;} }
+.fire .flame { transform-box:fill-box; transform-origin:center bottom; }
+.fire .f1 { animation: flameFlick .5s ease-in-out infinite alternate; }
+.fire .f2 { animation: flameFlick .38s ease-in-out infinite alternate-reverse; }
+@keyframes flameFlick { from { transform:scaleY(.92) scaleX(1.04);} to { transform:scaleY(1.08) scaleX(.94);} }
+.radio-notes { opacity:0; transition:opacity .3s; }
+.radio-on .radio-notes { opacity:1; animation: notesFloat 1.6s ease-in-out infinite alternate; }
+@keyframes notesFloat { to { transform:translateY(-4px);} }
+.room-bubble { position:absolute; left:50%; top:10px; transform:translateX(-50%); max-width:82%; z-index:12; }
+g[id^="deco"] { cursor:pointer; }
+
+/* ============ v21: Brösels Hütchen ============ */
+#cupOverlay { position:fixed; inset:0; z-index:88; display:grid; place-items:center; text-align:center;
+  background:linear-gradient(180deg,#f2e2cf,#e0c4a8); animation:fadeIn .3s ease; }
+.cup-panel { width:min(380px, calc(100% - 36px)); }
+.cup-broesel { display:flex; flex-direction:column; align-items:center; gap:4px; }
+.cup-panel h2 { font-size:24px; }
+.cup-round { font-weight:800; color:var(--accent); min-height:20px; margin:6px 0 2px; }
+#cupSub { min-height:38px; }
+.cup-stage { position:relative; height:150px; display:grid; place-items:end center; margin:8px 0 18px; }
+.cup { position:absolute; bottom:14px; left:50%; margin-left:-35px; width:70px; height:62px; background:none;
+  transform:translate(var(--cx,0), 0); transition: transform .3s ease-in-out;
+  filter:drop-shadow(0 5px 8px rgba(90,50,30,.3)); cursor:pointer; z-index:3; }
+.cup.lifted { transform:translate(var(--cx,0), -52px); transition: transform .3s ease; }
+.cup.lifted svg { transform:rotate(-7deg); }
+#cupMimoMount { position:absolute; bottom:10px; left:50%; margin-left:-37px; z-index:2;
+  transform:translateX(var(--cx,0)); transition:transform .3s ease; }

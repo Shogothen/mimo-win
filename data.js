@@ -1608,3 +1608,44 @@ const CHRONICLE_TEXTS = {
   founding: "Der Tag, an dem ihr euch kennengelernt habt",
   empty: "Eure Geschichte beginnt gerade erst."
 };
+
+// ============ v21: Room-Leben + Brösels Hütchen ============
+const ROOM_TAP = {
+  lampe: ["Die Lampe. Beobachte sie ruhig. %N tut es seit Monaten.", "An. Aus. An. Die Lampe bleibt verdächtig kooperativ."],
+  radio: ["Das Radio spielt jetzt. %N wippt mit. Er nennt es Tanzen.", "Radio aus. %N verbeugt sich vor der Stille."],
+  pflanze: ["Die Pflanze wippt. %N ist überzeugt, sie winkt zurück.", "%N hat der Pflanze heute schon zweimal Hallo gesagt. Sie ist sein ruhigster Freund."],
+  uhr: ["Tick. Tack. %N sagt, die Uhr erzählt immer dieselbe Geschichte, aber sie erzählt sie gut.", "%N und die Uhr haben ein Abkommen: Sie tickt, er ignoriert es würdevoll."],
+  teleskop: ["%N schaut durchs Teleskop. Tagsüber sieht man darin hauptsächlich Zimmer. Er tut trotzdem beeindruckt.", "Nachts, sagt %N, gehören die Sterne durch dieses Rohr ein bisschen euch."],
+  kissen: ["%N hüpft aufs Kissen. Offiziell ein Möbeltest. Inoffiziell ein Nickerchen-Anlauf.", "Das Kissen: von %N geprüft und für weich befunden. Wieder."],
+  buecher: ["Zwischen den Büchern steckt ein winziges Notizbuch. %N sagt, es gehörte dem Wesen davor. Er liest es nur an guten Tagen.", "%N zieht ein Buch halb heraus und schiebt es zurück. Bibliothekars-Karate."],
+  zen: ["Der Zen-Stein tut nichts. %N atmet einmal tief mit ihm. Perfekte Zusammenarbeit.", "Gong. %N schließt kurz die Augen. Der Stein hat wieder recht."],
+  aquarium: ["Blubb. Der Kollege dreht eine Ehrenrunde. %N nickt ihm zu.", "%N und der Fisch schweigen sich freundschaftlich an. Beste Gespräche."],
+  kamin: ["Das Feuer knistert. %N rückt drei Zentimeter näher. Maximale Gemütlichkeit erreicht.", "Kaminabend. %N sagt, Knistern ist die Muttersprache der Gemütlichkeit."],
+  mobile: ["Das Mobile dreht sich. %N schaut zu, bis ihm feierlich schwindelig ist.", "%N dirigiert das Mobile mit einem Ärmchen. Es gehorcht dem Luftzug, aber er nimmt es persönlich."],
+  girlande: ["Die Wimpel wackeln. %N wackelt zurück. Diplomatie.", "Feststimmung auf Abruf. Die Girlande liefert."],
+  lichterkette: ["Die Lichterkette funkelt einmal extra. Für dich, behauptet %N.", "%N zählt die Lichter. Es sind immer gleich viele. Er zählt sie trotzdem."],
+  starwin: ["Das Sternenfenster. %N sagt, da wohnt der Ausblick für besondere Abende.", "%N poliert das Sternenfenster mit dem Ärmel. Man muss bereit sein, sagt er."]
+};
+
+const CUP_TEXTS = {
+  title: "Brösels Hütchen",
+  intro: "Herr Brösel mischt. Du verfolgst. Merk dir, wo %N sitzt \u2013 mit jeder Runde wird Brösel schneller.",
+  found: ["Gefunden! Brösel zieht anerkennend am Monokel.", "Richtig! %N kichert unterm Becher.", "Treffer. Brösel murmelt etwas von Anfängerglück. Er murmelt es jede Runde."],
+  lost: "Daneben. %N war nebenan. Brösel verbeugt sich: 'Bis zum nächsten Mal.'",
+  roundLabel: "Runde %S"
+};
+const GAME3_REACTIONS = {
+  newBest: "NEUER REKORD: Runde %S! Brösel hat sich das Ergebnis notiert. In sein Briefmarken-Buch.",
+  zero: "Runde eins direkt daneben. Brösel war heute in Bestform, sagen wir es so.",
+  low: "Runde %S. Solide. Brösel nickt, wie man einem vielversprechenden Lehrling zunickt.",
+  mid: "Runde %S! Brösel musste sich anstrengen. Man sah es an den Barthaaren.",
+  high: "Runde %S!! Brösel behauptet, er habe dich gewinnen LASSEN. Niemand glaubt ihm."
+};
+const GAME_MENU_HUETCHEN = { title:"Brösels Hütchen", sub:"Beobachten und merken \u00b7 mit Herrn Brösel" };
+
+ACHIEVEMENTS.push(
+  { id:"spiel.sterne40",  title:"Sternenfänger",   detail:"40 Punkte in Sternschnuppen", icon:"\u2604" },
+  { id:"spiel.huetchen7", title:"Brösels Ebenbürtiger", detail:"Runde 7 im Hütchenspiel erreicht", icon:"\u{1F3A9}" },
+  { id:"room.alle",       title:"Zimmer-Kenner",   detail:"Jede Deko einmal angetippt", icon:"\u{1F6CB}" }
+);
+QUEST_TYPES.huetchen = { title:"Eine Partie Hütchen mit Brösel", target:1, ico:"star" };

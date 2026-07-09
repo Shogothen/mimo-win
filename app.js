@@ -569,19 +569,22 @@ function finishMiniGame(score, mode = "sterne") {
   const gameRewarded = state.care.gamesCount < 3;
   if (gameRewarded) state.care.gamesCount++;
 
-  const pool = mode === "blasen" ? GAME2_REACTIONS : GAME_REACTIONS;
+  const pool = mode === "huetchen" ? GAME3_REACTIONS : mode === "blasen" ? GAME2_REACTIONS : GAME_REACTIONS;
+  const th = mode === "huetchen" ? [2, 5] : [5, 12];
   let text;
   if (isBest && score > 0) text = pool.newBest;
   else if (score === 0) text = pool.zero;
-  else if (score <= 5) text = pool.low;
-  else if (score <= 12) text = pool.mid;
+  else if (score <= th[0]) text = pool.low;
+  else if (score <= th[1]) text = pool.mid;
   else text = pool.high;
   if (!gameRewarded) text += " " + GAME_FUN_ONLY;
   showReaction(fmt(text, ctx({ S: score })));
   if (Math.random() < 0.34 || score >= 15) addDiary("game", { S: score, high: score >= 15 });
   if (gameRewarded) {
-    earnDust(Math.min(score, 15));
-    handleLevelUp(addXP(Math.min(4 + Math.floor(score / 2), 18)));
+    const dustGain = mode === "huetchen" ? Math.min(score * 3, 18) : Math.min(score, 15);
+    const xpGain = mode === "huetchen" ? Math.min(4 + score * 2, 20) : Math.min(4 + Math.floor(score / 2), 18);
+    earnDust(dustGain);
+    handleLevelUp(addXP(xpGain));
   }
   weeklyProgress("spiele");
   wishBump("spielen");
@@ -625,6 +628,185 @@ function wishBump(kind, snackId) {
     playSound("success");
     questProgress("wunsch");
   }
+}
+
+// ---------- Minispiel: Brösels Hütchen ----------
+const cup = { round: 0, mimoSlot: 0, slots: [0, 1, 2], busy: false, running: false, pet: null };
+
+function cupSlotX(slot) { return (slot - 1) * 92; }
+
+function openCups() {
+  if (blockIfAway()) return;
+  $("#cupOverlay").classList.remove("hidden");
+  $("#cupTitle").textContent = CUP_TEXTS.title;
+  $("#cupSub").textContent = fmt(CUP_TEXTS.intro, ctx());
+  $("#cupRound").textContent = "";
+  $("#cupStart").classList.remove("hidden");
+  if (!cup.pet) {
+    cup.pet = createPet($("#cupMimoMount"), 74, { static: true });
+    cup.pet.update("frech", false, "none");
+  }
+  $("#cupMimoMount").classList.add("hidden");
+  cupResetCups();
+}
+
+function cupResetCups() {
+  cup.slots = [0, 1, 2];
+  $$(".cup").forEach((el, i) => {
+    el.style.setProperty("--cx", cupSlotX(i) + "px");
+    el.classList.remove("lifted");
+    el.dataset.cup = i;
+  });
+}
+
+function startCupRound() {
+  cup.round = cup.round || 1;
+  cup.busy = true; cup.running = true;
+  $("#cupStart").classList.add("hidden");
+  $("#cupRound").textContent = fmt(CUP_TEXTS.roundLabel, ctx({ S: cup.round }));
+  cupResetCups();
+  // Mimo zeigen: sitzt unter zufaelligem Becher
+  cup.mimoSlot = Math.floor(Math.random() * 3);
+  const mm = $("#cupMimoMount");
+  mm.classList.remove("hidden");
+  mm.style.setProperty("--cx", cupSlotX(cup.mimoSlot) + "px");
+  $$(".cup")[cup.mimoSlot].classList.add("lifted");
+  setTimeout(() => {
+    $$(".cup").forEach(el => el.classList.remove("lifted"));
+    mm.classList.add("hidden");
+    setTimeout(() => cupShuffle(), 450);
+  }, 1100);
+}
+
+function cupShuffle() {
+  const swaps = 3 + cup.round;
+  const dur = Math.max(150, 420 - cup.round * 35);
+  let i = 0;
+  const doSwap = () => {
+    if (i++ >= swaps) { cup.busy = false; return; }
+    let a = Math.floor(Math.random() * 3), b = Math.floor(Math.random() * 3);
+    while (b === a) b = Math.floor(Math.random() * 3);
+    // slots[cupIndex] = slot-Position; tausche Positionen der Becher a und b
+    const cups = $$(".cup");
+    const slotA = cup.slots[a], slotB = cup.slots[b];
+    cup.slots[a] = slotB; cup.slots[b] = slotA;
+    cups[a].style.transition = `transform ${dur}ms ease-in-out`;
+    cups[b].style.transition = `transform ${dur}ms ease-in-out`;
+    cups[a].style.setProperty("--cx", cupSlotX(slotB) + "px");
+    cups[b].style.setProperty("--cx", cupSlotX(slotA) + "px");
+    setTimeout(doSwap, dur + 60);
+  };
+  // Mimo sitzt unter dem Becher, der auf mimoSlot startete: finde cupIndex mit slots[idx]===mimoSlot
+  cup.mimoCup = cup.slots.indexOf(cup.mimoSlot);
+  doSwap();
+}
+
+function cupPick(cupIndex) {
+  if (cup.busy || !cup.running) return;
+  cup.busy = true;
+  const el = $$(".cup")[cupIndex];
+  el.classList.add("lifted");
+  const mimoHere = cupIndex === cup.mimoCup;
+  const mm = $("#cupMimoMount");
+  if (mimoHere) {
+    mm.classList.remove("hidden");
+    mm.style.setProperty("--cx", cupSlotX(cup.slots[cupIndex]) + "px");
+    cup.pet.emote("star", 1200);
+    playSound("success");
+    $("#cupSub").textContent = fmt(pick(CUP_TEXTS.found), ctx());
+    const won = cup.round;
+    if (won >= 12) { cupEnd(won); return; }
+    cup.round++;
+    setTimeout(() => { mm.classList.add("hidden"); el.classList.remove("lifted"); startCupRound(); }, 1300);
+  } else {
+    // aufdecken, wo er wirklich war
+    const realEl = $$(".cup")[cup.mimoCup];
+    setTimeout(() => {
+      realEl.classList.add("lifted");
+      mm.classList.remove("hidden");
+      mm.style.setProperty("--cx", cupSlotX(cup.slots[cup.mimoCup]) + "px");
+      cup.pet.emote("bliss", 1200);
+    }, 350);
+    $("#cupSub").textContent = fmt(CUP_TEXTS.lost, ctx());
+    setTimeout(() => cupEnd(cup.round - 1), 1600);
+  }
+}
+
+function cupEnd(score) {
+  cup.running = false; cup.busy = false;
+  cup.round = 0;
+  $("#cupOverlay").classList.add("hidden");
+  questProgress("huetchen");
+  finishMiniGame(score, "huetchen");
+}
+
+// ---------- Room: Deko zum Anfassen ----------
+function gongSound() {
+  try {
+    if (state?.sound && !soundSettings().sfx) return;
+    if (!sndInit()) return;
+    const t = snd.ctx.currentTime;
+    const o = snd.ctx.createOscillator(), g = snd.ctx.createGain();
+    o.type = "sine"; o.frequency.setValueAtTime(220, t);
+    o.frequency.exponentialRampToValueAtTime(180, t + 1.6);
+    g.gain.setValueAtTime(0.14, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 1.8);
+    o.connect(g); g.connect(snd.sfx);
+    o.start(t); o.stop(t + 1.9);
+  } catch (e) {}
+}
+function crackleSound() {
+  try {
+    if (state?.sound && !soundSettings().sfx) return;
+    if (!sndInit()) return;
+    const t = snd.ctx.currentTime;
+    for (let i = 0; i < 5; i++) {
+      const o = snd.ctx.createOscillator(), g = snd.ctx.createGain();
+      o.type = "square"; o.frequency.value = 90 + Math.random() * 340;
+      const at = t + Math.random() * 0.5;
+      g.gain.setValueAtTime(0.05, at);
+      g.gain.exponentialRampToValueAtTime(0.001, at + 0.045);
+      o.connect(g); g.connect(snd.sfx);
+      o.start(at); o.stop(at + 0.05);
+    }
+  } catch (e) {}
+}
+
+let radioOn = false;
+function roomTap(id) {
+  if (!ROOM_TAP[id]) return;
+  const grp = $("#deco" + id.charAt(0).toUpperCase() + id.slice(1));
+  if (grp) { grp.classList.remove("deco-wobble"); void grp.getBoundingClientRect(); grp.classList.add("deco-wobble"); }
+  // Spezial-Effekte
+  if (id === "radio") {
+    radioOn = !radioOn;
+    grp?.classList.toggle("radio-on", radioOn);
+    if (radioOn && snd.unlocked && soundSettings().music) { playPadNote(392, 0.8); playPadNote(523.3, 0.8, 0.35); playPadNote(659.3, 1.2, 0.7); }
+  } else if (id === "zen") gongSound();
+  else if (id === "kamin") crackleSound();
+  else if (id === "aquarium") playSound("catch");
+  else if (id === "uhr") { playSound("msg"); }
+  // Mimo im Room reagiert
+  roomPet?.lookAt((Math.random() * 2 - 1) * 0.8, -0.3);
+  setTimeout(() => roomPet?.lookAt(0, 0), 1400);
+  if (Math.random() < 0.3) roomPet?.play("wiggle", 600);
+  // Zimmer-Kenner
+  state.roomTapped = state.roomTapped || {};
+  state.roomTapped[id] = true;
+  showRoomBubble(fmt(pick(ROOM_TAP[id]), ctx()));
+  applyDecay();
+  state.pet.stats.laune = clamp(state.pet.stats.laune + 1, 0, 100);
+  checkUnlocks(); save();
+}
+
+let roomBubbleTimer = null;
+function showRoomBubble(text) {
+  const b = $("#roomBubble");
+  if (!b) return;
+  $("#roomBubbleText").textContent = text;
+  b.classList.remove("hidden");
+  clearTimeout(roomBubbleTimer);
+  roomBubbleTimer = setTimeout(() => b.classList.add("hidden"), 4200);
 }
 
 // ---------- Engine: Chronik ----------
@@ -1719,7 +1901,10 @@ function checkUnlocks() {
     "bad.20": (state.bathsDone || 0) >= 20,
     "woche.10": state.weeklyDone >= 10,
     "facts.alle": CONVERSATIONS.filter(x => x.type === "fact").every(x => state.talkFacts[x.factKey]),
-    "album.30": state.souvenirs.length >= SOUVENIRS.length
+    "album.30": state.souvenirs.length >= SOUVENIRS.length,
+    "spiel.sterne40": (state.best?.sterne || 0) >= 40,
+    "spiel.huetchen7": (state.best?.huetchen || 0) >= 7,
+    "room.alle": Object.keys(state.roomTapped || {}).length >= 10
   };
   for (const id of Object.keys(cond)) if (cond[id]) unlockAchievement(id);
   checkBondTier();
@@ -2563,6 +2748,8 @@ function renderRoom(mood) {
   $("#decoGirlande").classList.toggle("hidden", !state.ownedDeco.includes("girlande"));
   $("#decoTeleskop").classList.toggle("hidden", !state.ownedDeco.includes("teleskop"));
   $("#decoRadio").classList.toggle("hidden", !state.ownedDeco.includes("radio"));
+  $("#decoAquarium").classList.toggle("hidden", !state.ownedDeco.includes("aquarium"));
+  $("#decoKamin").classList.toggle("hidden", !state.ownedDeco.includes("kamin"));
   roomPet?.update(mood, p.sleeping, p.hat);
 
   $("#wardrobe").innerHTML = HATS.map(h => {
@@ -3525,11 +3712,14 @@ function buildSheets() {
 
   $("#gamesSub").textContent = fmt("%N ist bereits in Position.", ctx());
   $("#gamesOptions").innerHTML = Object.keys(GAME_DEFS).map(m => {
-    const best = state.best[m] || 0;
+    const best = state.best[m] || 0 + `<button data-mode="huetchen"><em>\u{1F3A9}</em><span>${GAME_MENU_HUETCHEN.title}${state.best?.huetchen ? " \u00b7 Best: Runde " + state.best.huetchen : ""}<span class="talk-option-hint">${GAME_MENU_HUETCHEN.sub}</span></span></button>`;
     return `<button data-mode="${m}"><em>${m === "sterne" ? "\u2605" : "\u25EF"}</em>${GAME_DEFS[m].title}
       ${best ? `<span class="q-progress" style="margin-left:auto">Rekord ${best}</span>` : ""}</button>`;
   }).join("");
-  $$("#gamesOptions button").forEach(b => b.onclick = () => { closeSheets(); openGame(b.dataset.mode); });
+  $$("#gamesOptions button").forEach(b => b.onclick = () => {
+    closeSheets();
+    if (b.dataset.mode === "huetchen") openCups(); else openGame(b.dataset.mode);
+  });
 
   $("#expedSub").textContent = fmt("%N verspricht, unterwegs an dich zu denken. Mindestens zweimal.", ctx());
   $("#expedOptions").innerHTML = EXPED_TIERS.map(t => {
@@ -3938,6 +4128,11 @@ function bootApp() {
   $("#dock").classList.remove("hidden");
   homePet = createPet($("#petMount"), 210);
   roomPet = createPet($("#roomPetMount"), 135);
+  const roomSvg = $("#screen-room svg.room-scene") || $("#screen-room svg");
+  roomSvg?.addEventListener("pointerdown", (e) => {
+    const grp = e.target.closest?.('g[id^="deco"]');
+    if (grp && !grp.classList.contains("hidden")) roomTap(grp.id.replace("deco", "").toLowerCase());
+  });
   profilePet = createPet($("#profilePetMount"), 115);
   createPet($("#diaryPetMount"), 110).update("vertraeumt", false, "none");
   $("#petMount").addEventListener("click", () => {
@@ -4013,6 +4208,12 @@ document.addEventListener("DOMContentLoaded", () => {
   bathStage.addEventListener("pointermove", pm);
   bathStage.addEventListener("pointerleave", rubEnd);
   $("#bathSkip").addEventListener("click", cancelBath);
+  $("#cupStart").addEventListener("click", () => { cup.round = 1; startCupRound(); });
+  $("#cupClose").addEventListener("click", () => {
+    if (cup.running && cup.round > 1) { cupEnd(cup.round - 1); }
+    else { cup.running = false; cup.round = 0; $("#cupOverlay").classList.add("hidden"); }
+  });
+  $$(".cup").forEach(el => el.addEventListener("pointerdown", () => cupPick(+el.dataset.cup)));
   $("#spongeBtn").addEventListener("click", startBath);
   $("#arcRow").addEventListener("click", () => { if (arcGateCheck().ready) startArcChapter(); });
   $("#liveTicker").addEventListener("click", () => {

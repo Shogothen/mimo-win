@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=20">
+<link rel="stylesheet" href="style.css?v=21">
 </head>
 <body>
 
@@ -312,6 +312,24 @@
         <circle cx="34" cy="-64" r="5" class="tele-lens"/>
         <path d="M0,-40 L-14,26 M0,-40 L14,26 M0,-40 L0,26" class="tele-legs" fill="none"/>
       </g>
+      <g class="hidden" id="decoAquarium" transform="translate(78 300)">
+        <rect x="-30" y="-26" width="60" height="40" rx="9" fill="#bfe0ef" opacity=".85" stroke="#8fb9cf" stroke-width="2"/>
+        <path d="M-30,-14 q15,-5 30,0 t30,0 V14 H-30 z" fill="#a9d4e8" opacity=".7"/>
+        <g class="aq-fish"><ellipse cx="0" cy="0" rx="8" ry="5" fill="#f2a45b"/><path d="M7,0 L14,-5 L14,5 z" fill="#f2a45b"/><circle cx="-3.4" cy="-1.4" r="1.1" fill="#3a2531"/></g>
+        <circle class="aq-bubble b1" cx="-14" cy="4" r="2" fill="#fff" opacity=".7"/>
+        <circle class="aq-bubble b2" cx="16" cy="8" r="1.5" fill="#fff" opacity=".7"/>
+        <path d="M-22,12 q3,-9 0,-16 M-18,12 q-2,-7 1,-12" stroke="#5f9b6e" stroke-width="2" fill="none" stroke-linecap="round"/>
+      </g>
+      <g class="hidden" id="decoKamin" transform="translate(348 282)">
+        <rect x="-34" y="-34" width="68" height="58" rx="6" fill="#b98a6f"/>
+        <rect x="-34" y="-40" width="68" height="9" rx="4" fill="#8a5f47"/>
+        <rect x="-22" y="-18" width="44" height="42" rx="5" fill="#4a352c"/>
+        <g class="fire">
+          <path class="flame f1" d="M0,18 C-11,7 -8,-4 0,-12 C8,-4 11,7 0,18 z" fill="#f2a03d"/>
+          <path class="flame f2" d="M0,16 C-6,9 -5,1 0,-4 C5,1 6,9 0,16 z" fill="#f6c65b"/>
+        </g>
+        <ellipse cx="0" cy="21" rx="17" ry="3.4" fill="#2e211b"/>
+      </g>
       <g class="hidden" id="decoRadio" transform="translate(136 292)">
         <rect x="-26" y="-18" width="52" height="34" rx="8" class="radio-body"/>
         <circle cx="-11" cy="-1" r="8" class="radio-speaker"/>
@@ -322,6 +340,7 @@
       <rect class="room-vignette" x="0" y="0" width="420" height="380" rx="0"/>
     </svg>
     <div id="roomPetMount" class="room-pet"></div>
+    <div class="bubble room-bubble hidden" id="roomBubble"><span id="roomBubbleText"></span><i></i></div>
   </section>
   <section class="card">
     <div class="card-head"><span class="section-label">Garderobe</span></div>
@@ -541,6 +560,35 @@
   </div>
 </div>
 
+<div id="cupOverlay" class="hidden">
+  <div class="cup-panel">
+    <div class="cup-broesel">
+      <svg viewBox="0 0 90 60" width="90" height="60">
+        <ellipse cx="45" cy="42" rx="24" ry="15" fill="#9a938f"/>
+        <circle cx="63" cy="30" r="12" fill="#a8a19d"/>
+        <path d="M56,20 a6 6 0 1 1 5,-3 z" fill="#8a827e"/><path d="M69,17 a6 6 0 1 1 6,2 z" fill="#8a827e"/>
+        <circle cx="60" cy="28" r="1.7" fill="#2e2624"/>
+        <circle cx="68" cy="28" r="4.6" fill="none" stroke="#c9a13f" stroke-width="1.6"/>
+        <circle cx="68" cy="28" r="1.7" fill="#2e2624"/>
+        <path d="M72,32 q4,3 3,7" stroke="#c9a13f" stroke-width="1.2" fill="none"/>
+        <path d="M74,27 l9,-1 M74,29 l9,1" stroke="#7c7572" stroke-width="1" fill="none"/>
+        <path d="M22,44 q-8,-2 -12,3" stroke="#9a938f" stroke-width="3.4" fill="none" stroke-linecap="round"/>
+      </svg>
+      <h2 class="serif" id="cupTitle"></h2>
+    </div>
+    <p class="muted" id="cupSub"></p>
+    <p class="cup-round" id="cupRound"></p>
+    <div class="cup-stage">
+      <div id="cupMimoMount" class="hidden"></div>
+      <button class="cup" data-cup="0"><svg viewBox="0 0 70 62"><path d="M8,58 L16,6 Q35,-2 54,6 L62,58 Q35,66 8,58 z" fill="#c96b4f"/><path d="M16,6 Q35,-2 54,6 L52.5,16 Q35,9 17.5,16 z" fill="#a94f38"/></svg></button>
+      <button class="cup" data-cup="1"><svg viewBox="0 0 70 62"><path d="M8,58 L16,6 Q35,-2 54,6 L62,58 Q35,66 8,58 z" fill="#c96b4f"/><path d="M16,6 Q35,-2 54,6 L52.5,16 Q35,9 17.5,16 z" fill="#a94f38"/></svg></button>
+      <button class="cup" data-cup="2"><svg viewBox="0 0 70 62"><path d="M8,58 L16,6 Q35,-2 54,6 L62,58 Q35,66 8,58 z" fill="#c96b4f"/><path d="M16,6 Q35,-2 54,6 L52.5,16 Q35,9 17.5,16 z" fill="#a94f38"/></svg></button>
+    </div>
+    <button class="btn-primary" id="cupStart">Los, Brösel!</button>
+    <button class="btn-ghost" id="cupClose">Aufhören</button>
+  </div>
+</div>
+
 <div id="groundOverlay" class="hidden">
   <div class="breath-stage">
     <div id="groundPetMount" class="ground-pet"></div>
@@ -603,7 +651,7 @@
 
 <div id="toast" class="hidden"><span class="toast-icon" id="toastIcon">&#10022;</span><div><strong id="toastTitle"></strong><p id="toastDetail"></p></div></div>
 
-<script src="data.js?v=20"></script>
-<script src="app.js?v=20"></script>
+<script src="data.js?v=21"></script>
+<script src="app.js?v=21"></script>
 </body>
 </html>
