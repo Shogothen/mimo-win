@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=19">
+<link rel="stylesheet" href="style.css?v=20">
 </head>
 <body>
 
@@ -380,6 +380,16 @@
     <p class="muted small souv-detail hidden" id="souvDetail"></p>
   </section>
   <section class="card">
+    <div class="card-head"><span class="section-label">Klang</span></div>
+    <div class="sound-rows">
+      <label class="sound-row"><span>Musik<small>Leiser Klangteppich, folgt Tageszeit und Wetter</small></span><input type="checkbox" id="sndMusic"></label>
+      <label class="sound-row"><span>Ambiente<small>Regen, Vögel am Morgen, Grillen bei Nacht</small></span><input type="checkbox" id="sndAmb"></label>
+      <label class="sound-row"><span>Effekte<small>Schnurren, Mampfen, Nachrichten-Ton</small></span><input type="checkbox" id="sndSfx"></label>
+    </div>
+    <p class="muted" style="font-size:11.5px; margin:10px 0 0;">Hinweis: Der Stumm-Schalter des iPhones wirkt hier nicht \u2013 diese Regler sind maßgeblich.</p>
+  </section>
+
+  <section class="card">
     <div class="card-head"><span class="section-label">Eure Geschichte</span></div>
     <ul class="chronicle" id="chronicleList"></ul>
   </section>
@@ -593,7 +603,7 @@
 
 <div id="toast" class="hidden"><span class="toast-icon" id="toastIcon">&#10022;</span><div><strong id="toastTitle"></strong><p id="toastDetail"></p></div></div>
 
-<script src="data.js?v=19"></script>
-<script src="app.js?v=19"></script>
+<script src="data.js?v=20"></script>
+<script src="app.js?v=20"></script>
 </body>
 </html>

@@ -103,6 +103,7 @@ if (state.pings) {
   (state.pings.items || []).forEach(i => { if (i.read === undefined) i.read = true; });
   delete state.pings.unread;
 }
+if (!state.sound) state.sound = { music: true, ambience: true, sfx: true };
 if (!state.calm) state.calm = { points: 0, tierSeen: 0, lastDay: null, streak: 0, wolken: 0, erden: 0, abende: 0, lastGroundDay: null, lastCloudDay: null, lastEveningDay: null };
 // Neue XP-Kurve: bestehendes Level bleibt mindestens erhalten
 state.pet.stats.level = Math.max(state.pet.stats.level, (function () {
@@ -1733,18 +1734,196 @@ function checkUnlocks() {
 // ---------- Sound (WebAudio, dezent) ----------
 let audioCtx = null;
 function playSound(kind) {
+  if (state?.sound && !soundSettings().sfx) return;
   try {
     audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
     const notes = kind === "catch" ? [[880, 0.06]] :
                   kind === "giggle" ? [[740, 0.05], [988, 0.05], [880, 0.07]] :
+                  kind === "msg" ? [[698, 0.07], [932, 0.1]] :
                   kind === "level" ? [[523, 0.1], [784, 0.14]] : [[659, 0.09], [880, 0.12]];
     let t = audioCtx.currentTime;
     for (const [f, d] of notes) {
       const o = audioCtx.createOscillator(), g = audioCtx.createGain();
       o.frequency.value = f; o.type = "sine";
       g.gain.setValueAtTime(0.12, t); g.gain.exponentialRampToValueAtTime(0.001, t + d);
-      o.connect(g); g.connect(audioCtx.destination);
+      o.connect(g); g.connect(snd.sfx || audioCtx.destination);
       o.start(t); o.stop(t + d); t += d * 0.7;
+    }
+  } catch (e) {}
+}
+
+// ---------- Klang-System: Busse, Unlock, generative Musik, Ambiente ----------
+const snd = {
+  ctx: null, master: null, music: null, amb: null, sfx: null,
+  unlocked: false, musicTimer: null, ambNodes: [], chordIdx: 0,
+  notesPlayed: 0, // fuer Tests/Debug
+};
+
+function soundSettings() {
+  if (!state.sound) state.sound = { music: true, ambience: true, sfx: true };
+  return state.sound;
+}
+
+function sndInit() {
+  if (snd.ctx) return true;
+  try {
+    snd.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    audioCtx = snd.ctx; // bestehende Effekte auf denselben Kontext
+    snd.master = snd.ctx.createGain(); snd.master.gain.value = 1;
+    snd.music = snd.ctx.createGain();  snd.music.gain.value = 0.055;
+    snd.amb = snd.ctx.createGain();    snd.amb.gain.value = 0.05;
+    snd.sfx = snd.ctx.createGain();    snd.sfx.gain.value = 0.5;
+    snd.music.connect(snd.master); snd.amb.connect(snd.master); snd.sfx.connect(snd.master);
+    snd.master.connect(snd.ctx.destination);
+    return true;
+  } catch (e) { return false; }
+}
+
+// iOS: Audio darf erst nach einer Nutzer-Geste starten
+function sndUnlock() {
+  if (snd.unlocked) return;
+  if (!sndInit()) return;
+  snd.ctx.resume?.();
+  snd.unlocked = true;
+  applySoundSettings();
+}
+
+function applySoundSettings() {
+  const s = soundSettings();
+  if (!snd.ctx) return;
+  if (s.music && snd.unlocked) startMusic(); else stopMusic();
+  if (s.ambience && snd.unlocked) startAmbience(); else stopAmbience();
+}
+
+function sndSuspend(hidden) {
+  if (!snd.ctx) return;
+  try { hidden ? snd.ctx.suspend() : (snd.unlocked && snd.ctx.resume()); } catch (e) {}
+}
+
+// ---------- Generative Musik: Phase + Wetter formen den Klangteppich ----------
+const MUSIC_SCALES = {
+  morgen: [261.6, 293.7, 329.6, 392.0, 440.0, 523.3],
+  tag:    [261.6, 293.7, 329.6, 392.0, 440.0, 523.3, 587.3],
+  abend:  [220.0, 261.6, 293.7, 329.6, 392.0],
+  nacht:  [261.6, 392.0, 440.0]
+};
+const MUSIC_ROOTS = [130.8, 110.0, 174.6, 146.8]; // C3 A2 F3 D3
+
+function musicParams() {
+  const phase = dayPhase();
+  const wtr = typeof getWeather === "function" ? getWeather() : "sonnig";
+  return {
+    scale: MUSIC_SCALES[phase] || MUSIC_SCALES.tag,
+    gapMs: (phase === "nacht" ? [5200, 9500] : phase === "abend" ? [3400, 6400] : [2400, 5200]),
+    cutoff: wtr === "regen" ? 900 : wtr === "nebel" ? 1100 : 1600,
+    release: wtr === "nebel" ? 4.2 : 3.0
+  };
+}
+
+function playPadNote(freq, dur, whenOffset = 0) {
+  const t = snd.ctx.currentTime + whenOffset;
+  const p = musicParams();
+  const o1 = snd.ctx.createOscillator(), o2 = snd.ctx.createOscillator();
+  o1.type = "sine"; o2.type = "triangle";
+  o1.frequency.value = freq; o2.frequency.value = freq * 1.003; // leichte Schwebung
+  const lp = snd.ctx.createBiquadFilter();
+  lp.type = "lowpass"; lp.frequency.value = p.cutoff;
+  const g = snd.ctx.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(1, t + Math.min(1.4, dur * 0.4));
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur + p.release);
+  o1.connect(lp); o2.connect(lp); lp.connect(g); g.connect(snd.music);
+  o1.start(t); o2.start(t);
+  o1.stop(t + dur + p.release + 0.1); o2.stop(t + dur + p.release + 0.1);
+  snd.notesPlayed++;
+}
+
+function musicStep() {
+  if (!snd.ctx || !soundSettings().music) return;
+  const p = musicParams();
+  const roll = Math.random();
+  if (roll < 0.18) {
+    // Grundton-Pad, laenger
+    snd.chordIdx = (snd.chordIdx + (Math.random() < 0.6 ? 1 : 0)) % MUSIC_ROOTS.length;
+    playPadNote(MUSIC_ROOTS[snd.chordIdx], 3.2);
+  } else if (roll < 0.34) {
+    // kleines Zwei-Ton-Motiv
+    const a = pick(p.scale), b = pick(p.scale);
+    playPadNote(a, 1.2); playPadNote(b, 1.4, 0.9);
+  } else if (roll < 0.8) {
+    playPadNote(pick(p.scale), 1.6);
+  } // sonst: bewusste Stille
+  snd.musicTimer = setTimeout(musicStep, p.gapMs[0] + Math.random() * (p.gapMs[1] - p.gapMs[0]));
+}
+
+function startMusic() {
+  if (snd.musicTimer || !snd.ctx) return;
+  snd.musicTimer = setTimeout(musicStep, 800);
+}
+function stopMusic() {
+  clearTimeout(snd.musicTimer); snd.musicTimer = null;
+}
+
+// ---------- Ambiente: Regen-Rauschen, Vogel morgens, Grillen nachts ----------
+function startAmbience() {
+  stopAmbience();
+  if (!snd.ctx) return;
+  const wtr = typeof getWeather === "function" ? getWeather() : "sonnig";
+  if (wtr === "regen") {
+    const len = snd.ctx.sampleRate * 2;
+    const buf = snd.ctx.createBuffer(1, len, snd.ctx.sampleRate);
+    const ch = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) ch[i] = (Math.random() * 2 - 1) * 0.6;
+    const src = snd.ctx.createBufferSource();
+    src.buffer = buf; src.loop = true;
+    const lp = snd.ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 650;
+    const g = snd.ctx.createGain(); g.gain.value = 0.5;
+    src.connect(lp); lp.connect(g); g.connect(snd.amb);
+    src.start();
+    snd.ambNodes.push(src, g);
+  }
+  const phase = dayPhase();
+  if (phase === "morgen" || phase === "nacht") {
+    const chirpLoop = () => {
+      if (!snd.ambNodes.includes(chirpLoop)) return;
+      if (phase === "morgen") birdChirp(); else cricket();
+      setTimeout(chirpLoop, (phase === "morgen" ? 7000 : 2600) + Math.random() * 9000);
+    };
+    snd.ambNodes.push(chirpLoop);
+    setTimeout(chirpLoop, 2000);
+  }
+}
+function stopAmbience() {
+  snd.ambNodes.forEach(n => { try { n.stop?.(); n.disconnect?.(); } catch (e) {} });
+  snd.ambNodes = [];
+}
+
+function birdChirp() {
+  try {
+    const t = snd.ctx.currentTime;
+    for (let i = 0; i < 2 + Math.floor(Math.random() * 2); i++) {
+      const o = snd.ctx.createOscillator(), g = snd.ctx.createGain();
+      o.type = "sine";
+      const f0 = 2300 + Math.random() * 900;
+      o.frequency.setValueAtTime(f0, t + i * 0.14);
+      o.frequency.exponentialRampToValueAtTime(f0 * 1.4, t + i * 0.14 + 0.09);
+      g.gain.setValueAtTime(0.12, t + i * 0.14);
+      g.gain.exponentialRampToValueAtTime(0.001, t + i * 0.14 + 0.12);
+      o.connect(g); g.connect(snd.amb);
+      o.start(t + i * 0.14); o.stop(t + i * 0.14 + 0.14);
+    }
+  } catch (e) {}
+}
+function cricket() {
+  try {
+    const t = snd.ctx.currentTime;
+    for (let i = 0; i < 3; i++) {
+      const o = snd.ctx.createOscillator(), g = snd.ctx.createGain();
+      o.type = "square"; o.frequency.value = 4200 + Math.random() * 300;
+      g.gain.setValueAtTime(0.03, t + i * 0.07);
+      g.gain.exponentialRampToValueAtTime(0.001, t + i * 0.07 + 0.05);
+      o.connect(g); g.connect(snd.amb);
+      o.start(t + i * 0.07); o.stop(t + i * 0.07 + 0.06);
     }
   } catch (e) {}
 }
@@ -1753,13 +1932,14 @@ let purrNodes = null;
 function startPurrSound() {
   try {
     if (purrNodes) return;
+    if (state?.sound && !soundSettings().sfx) return;
     audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
     const o = audioCtx.createOscillator(), g = audioCtx.createGain(), lfo = audioCtx.createOscillator(), lg = audioCtx.createGain();
     o.type = "triangle"; o.frequency.value = 62;
     lfo.frequency.value = 21; lg.gain.value = 0.035;
     g.gain.value = 0.045;
     lfo.connect(lg); lg.connect(g.gain);
-    o.connect(g); g.connect(audioCtx.destination);
+    o.connect(g); g.connect(snd.sfx || audioCtx.destination);
     o.start(); lfo.start();
     purrNodes = { o, g, lfo };
   } catch (e) {}
@@ -1775,12 +1955,13 @@ function stopPurrSound() {
 }
 function munchSound() {
   try {
+    if (state?.sound && !soundSettings().sfx) return;
     audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
     const o = audioCtx.createOscillator(), g = audioCtx.createGain();
     o.type = "square"; o.frequency.value = 150 + Math.random() * 60;
     const t = audioCtx.currentTime;
     g.gain.setValueAtTime(0.05, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.07);
-    o.connect(g); g.connect(audioCtx.destination); o.start(t); o.stop(t + 0.07);
+    o.connect(g); g.connect(snd.sfx || audioCtx.destination); o.start(t); o.stop(t + 0.07);
   } catch (e) {}
 }
 
@@ -2495,6 +2676,13 @@ function renderDiary() {
 const PERS_COLORS = { frech: "#d97b40", lieb: "#e56b6b", chaotisch: "#efa93b", vertraeumt: "#7a8fcc", anhaenglich: "#9e486b" };
 const PERS_LABELS = { frech: "Frech", lieb: "Lieb", chaotisch: "Chaotisch", vertraeumt: "Verträumt", anhaenglich: "Anhänglich" };
 
+function renderSoundSettings() {
+  const s = soundSettings();
+  const m = $("#sndMusic"), a = $("#sndAmb"), x = $("#sndSfx");
+  if (!m) return;
+  m.checked = s.music; a.checked = s.ambience; x.checked = s.sfx;
+}
+
 function renderChronicle() {
   const box = $("#chronicleList");
   if (!box) return;
@@ -2506,6 +2694,7 @@ function renderChronicle() {
 
 function renderProfile(mood) {
   renderChronicle();
+  renderSoundSettings();
   const p = state.pet;
   profilePet?.update(mood, p.sleeping, p.hat);
   $("#profileName").textContent = p.name;
@@ -2559,6 +2748,7 @@ function updateExpedProgress() {
 setInterval(() => {
   const changed = processLive() | processPings();
   if (changed) {
+    if (snd.unlocked && !document.hidden) playSound("msg");
     renderAll();
     if (chat.mode === "live" && !$("#sheet-chat").classList.contains("hidden")) openLiveChat();
   }
@@ -2735,6 +2925,7 @@ function renderWeather() {
   const key = wtr + ":" + dayPhase();
   if (weatherRendered === key) { renderStars(); return; }
   weatherRendered = key;
+  if (snd.unlocked) { stopAmbience(); if (soundSettings().ambience) startAmbience(); }
   document.body.dataset.weather = wtr;
   stage.querySelectorAll(".raindrop, .wcloud, .fog-layer").forEach(e => e.remove());
   if (wtr === "regen") {
@@ -3798,6 +3989,16 @@ document.addEventListener("DOMContentLoaded", () => {
   const pm = (e) => rubMove(e.clientX, e.clientY);
   petArea.addEventListener("pointerdown", pd);
   stageEl.addEventListener("pointermove", pm);
+  document.addEventListener("pointerdown", sndUnlock, { once: false });
+  [["sndMusic", "music"], ["sndAmb", "ambience"], ["sndSfx", "sfx"]].forEach(([id, key]) => {
+    $("#" + id).addEventListener("change", (e) => {
+      soundSettings()[key] = e.target.checked;
+      save();
+      sndUnlock();
+      applySoundSettings();
+    });
+  });
+  document.addEventListener("visibilitychange", () => sndSuspend(document.hidden));
   window.addEventListener("pointerup", (e) => {
     if (tapInfo && Date.now() - tapInfo.t < 320 && Math.hypot(e.clientX - tapInfo.x, e.clientY - tapInfo.y) < 12) {
       petTap(zoneFor(tapInfo.rx, tapInfo.ry));
